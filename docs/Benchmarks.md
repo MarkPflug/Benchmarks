@@ -58,8 +58,8 @@ These benchmarks write a 100k sequence of object data containing several typed c
 | SylvanDataAsync |   470.0 ms |   4.01 ms |   3.75 ms |  0.68 |    0.01 |           - |     - |     - |    849.66 KB |
 |  SylvanDataSync |   466.7 ms |   6.38 ms |   5.96 ms |  0.67 |    0.01 |           - |     - |     - |    849.55 KB |
 
-### CsvHelper
-Josh Close's [CsvHelper](https://github.com/joshclose/CsvHelper) appears to be the go-to CSV parser for dotNET in 2020. It is a full feature library that does a lot more than just parsing CSV. I've used it as the baseline for benchmarks, since it is the most used CSV library on nuget.
+### [CsvHelper](https://github.com/JoshClose/CsvHelper)
+Josh Close's CsvHelper appears to be the go-to CSV parser for dotNET in 2020. It is a full feature library that does a lot more than just parsing CSV. I've used it as the baseline for benchmarks, since it is the most used CSV library on nuget.
 
 The performance of using the CSV writer's async APIs was slow enough that I'm assuming I'm using it incorrectly.
 I will update benchmarks if I figure out what's wrong.
@@ -69,10 +69,10 @@ This measures the naive approach of using `TextReader.ReadLine` and `string.Spli
 
 Likewise, the writing test is performed by writing commas and newlines, but ignoring escaping.
 
-### FSharp.Data
+### [FSharp.Data](https://github.com/fsharp/FSharp.Data)
 The FSharp.Data library works perfectly well with C# of course, it also happens to be pretty fast.
 
-### VisualBasic
+### [VisualBasic](https://github.com/dotnet/runtime/blob/master/src/libraries/Microsoft.VisualBasic.Core/src/Microsoft/VisualBasic/FileIO/TextFieldParser.vb)
 This is `TextFieldParser` included in the Microsoft.VisualBasic library that ships with dotNET. I include this, because it is the only option included as part of the framework libraries.
 
 ### OleDbCsv
@@ -82,20 +82,19 @@ My understanding is that this is done by analyzing the first N rows of the CSV. 
 I've had negative experiences with this feature mis-detecting a column type, when the errant values appear later in a file; the result is usually an exception being thrown.
 I suspect the memory metric is misrepresented, because it uses an unmanaged driver so it might not be detectable by the BenchmarkDotNet memory analyzer.
 
-### FastCsvParser
+### [FastCsvParser](https://github.com/bopohaa/CsvParser)
 As the name suggests, it is pretty fast.
 
-### CsvBySteve
+### [CsvBySteve](https://github.com/stevehansen/csv)
 This is the `Csv` nuget package, by "Steve".
 
-### FlatFilesCsv
+### [FlatFilesCsv](https://github.com/jehugaleahsa/FlatFiles)
 The csv parser from the `FlatFiles` nuget package.
 
-### NReco
-Vitaliy Fedorchenko's [NReco.Csv](https://github.com/nreco/csv) is an extremely fast CSV parser. 
-It uses a very similar technique to Sylvan to attain the performance it does.
+### [NReco.Csv](https://github.com/nreco/csv)
+Vitaliy Fedorchenko's NReco.Csv is an extremely fast CSV parser.
 
-### Sylvan
+### [Sylvan](https://github.com/MarkPflug/Sylvan)
 The Sylvan.Data.Csv library, is currently the fastest available CSV parser for dotNET that I'm aware of.
 
 Sylvan offers two CSV writing APIs: `CsvWriter` which offers raw writing capabilities similar to other libraries, and `CsvDataWriter` which writes `DbDataReader` data to a `CsvWriter`.
