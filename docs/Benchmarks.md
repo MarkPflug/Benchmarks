@@ -99,11 +99,5 @@ The Sylvan.Data.Csv library, is currently the fastest available CSV parser for d
 
 Sylvan offers two CSV writing APIs: `CsvWriter` which offers raw writing capabilities similar to other libraries, and `CsvDataWriter` which writes `DbDataReader` data to a `CsvWriter`.
 
-### SylvanSchema
-This measures using the Sylvan CsvDataReader with a provided schema. 
-The schema allows parsing primitive values directly out of the text buffer.
-This adds a slight amount of time to parse the primitive values, but this is time which would be spent in `Parse` methods anyway if consuming only strings.
-This also reduces allocations, since it avoid producing intermediate strings.
-
 ### *Select
 The approach that Sylvan and NReco use for processing CSV make them even more efficient when reading only a subset of the columns in a file. These benchmarks measures reading only 3 of the 85 columns.
