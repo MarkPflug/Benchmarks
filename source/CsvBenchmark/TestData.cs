@@ -44,6 +44,21 @@ namespace CsvBenchmark
 		public string Combined_Key { get; set; }
 	}
 
+	public class CovidRecordStrings
+	{
+		public string UID { get; set; }
+		public string iso2 { get; set; }
+		public string iso3 { get; set; }
+		public string code3 { get; set; }
+		public string FIPS { get; set; }
+		public string Admin2 { get; set; }
+		public string Province_State { get; set; }
+		public string Country_Region { get; set; }
+		public string Lat { get; set; }
+		public string Long_ { get; set; }
+		public string Combined_Key { get; set; }
+	}
+
 	public static class TestData
 	{
 		const string DataSetUrl = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/f7c2384622806d5297d16c314a7bc0b9cde24937/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv";
@@ -65,7 +80,7 @@ Combined_Key,
 		static ICsvSchemaProvider Schema;
 		static CsvDataReaderOptions Options;
 
-		static string CachedData;
+		public static string CachedData;
 		static byte[] CachedUtfData;
 
 		static void CacheData()

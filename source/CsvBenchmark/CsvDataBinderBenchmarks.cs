@@ -7,26 +7,21 @@ using Cesil;
 using Sylvan.Data;
 using Sylvan.Data.Csv;
 using System.Globalization;
-using System.IO;
-using System.Linq;
 using Sylvan;
+using Dapper;
+using TinyCsvParser;
+using TinyCsvParser.Mapping;
+using System.Data;
 
 namespace CsvBenchmark
 {
-    [MemoryDiagnoser]
+	[MemoryDiagnoser]
 	public class CsvDataBinderBenchmarks
 	{
-
-		const int BufferSize = 0x4000;
-		readonly StringFactory pool;
-		char[] buffer = new char[BufferSize];
-		readonly StringPool sp;
-
+		
 
 		public CsvDataBinderBenchmarks()
 		{
-			this.sp = new StringPool();
-			this.pool = new StringFactory(sp.GetString);
 		}
 
 		[Benchmark(Baseline = true)]
@@ -34,43 +29,142 @@ namespace CsvBenchmark
 		{
 			var tr = TestData.GetTextReader();
 			var csv = new CsvHelper.CsvReader(tr, new CsvHelper.Configuration.CsvConfiguration(CultureInfo.CurrentCulture));
-			var rows = csv.GetRecords<CovidRecord>();
-
-			foreach (var row in rows)
+			var data = csv.GetRecords<CovidRecord>();
+			int c = 0;
+			foreach (var record in data)
 			{
-
+				c++;
 			}
+			ValidateRowCount(c);
 		}
+
+		[Benchmark]
+		public void CsvHelperPlusDapper()
+		{
+			var tr = TestData.GetTextReader();
+			var csv = new CsvHelper.CsvReader(tr, new CsvHelper.Configuration.CsvConfiguration(CultureInfo.CurrentCulture));
+			var dr = new CsvHelper.CsvDataReader(csv);
+			var parser = dr.GetRowParser<CovidRecordStrings>();
+
+			int c = 0;
+			while (dr.Read())
+			{
+				var record = parser(dr);
+				c++;
+			}
+			ValidateRowCount(c);
+		}
+
 #if NET5_0
+
 		[Benchmark]
 		public void Cesil()
 		{
-			var tr = new StringReader(@"Name,Health,Armor,Strength,Agility,Intellect
-Gnoll,50,10,10,10,6
-Goblin,30,8,7,13,12
-Ogre,80,9,15,6,4
-");
-			var data = CesilUtils.Enumerate<Monster>(tr).ToArray();
-			//var o = Options.Default;
+			var tr = TestData.GetTextReader();
 
-			//var c = Configuration.For<CovidRecord>(o);
-			//var csv = c.CreateReader(tr);
-			//var rows = csv.ReadAll();
+			var opts =
+				Options
+				.CreateBuilder(Options.Default)
+				.WithRowEnding(RowEnding.LineFeed)
+				.ToOptions();
+
+			var data = CesilUtils.Enumerate<CovidRecord>(tr, opts);
+			int c = 0;
+			foreach (var record in data)
+			{
+				c++;
+			}
+			ValidateRowCount(c);
 		}
 #endif
+
 		[Benchmark]
-		public void SylvanBench()
+		public void SylvanDataBinder()
 		{
-			
-			var dr = (CsvDataReader)TestData.GetDataWithSchema(o => { o.StringFactory = pool; });
+			var dr = (CsvDataReader)TestData.GetDataWithSchema();
 
 			var binder = DataBinder<CovidRecord>.Create(dr.GetColumnSchema());
-
+			int c = 0;
 			while (dr.Read())
 			{
-				CovidRecord cr = new CovidRecord();
-				binder.Bind(dr, cr);
+				var record = new CovidRecord();
+				binder.Bind(dr, record);
+				c++;
 			}
+			ValidateRowCount(c);
+		}
+
+		[Benchmark]
+		public void SylvanPlusDapper()
+		{
+			var dr = (CsvDataReader)TestData.GetDataWithSchema();
+			var parser = dr.GetRowParser<CovidRecord>();
+			int c = 0;
+			while (dr.Read())
+			{
+				var record = parser(dr);
+				c++;
+			}
+			ValidateRowCount(c);
+		}
+
+		[Benchmark]
+		public void LumenworksPlusDapper()
+		{
+			var tr = TestData.GetTextReader();
+			var csv = new LumenWorks.Framework.IO.Csv.CsvReader(tr, true);
+			var dr = (IDataReader)csv;
+
+			var parser = dr.GetRowParser<CovidRecordStrings>();
+			int c = 0;
+			while (dr.Read())
+			{
+				var record = parser(dr);
+				c++;
+			}
+			ValidateRowCount(c);
+		}
+
+		[Benchmark]
+		public void TinyCsv()
+		{
+			var csvP = new CsvParser<CovidRecord>(new CsvParserOptions(true, ','), new CovidMapping());
+			var dr = csvP.ReadFromString(new CsvReaderOptions(new[] { "\r\n", "\n", "\r" }), TestData.CachedData);
+			int c = 0;
+			foreach (var record in dr)
+			{
+
+				c++;
+			}
+			ValidateRowCount(c);
+		}
+
+		static void ValidateRowCount(int c)
+		{
+			// validate that the correct number of rows were read
+			const int RowCount = 3253;
+			if (c != RowCount)
+			{
+				throw new System.Exception("Invalid row count " + c);
+			}
+		}
+	}
+
+	class CovidMapping : CsvMapping<CovidRecord>
+	{
+		public CovidMapping()
+		{
+			this.MapProperty(0, r => r.UID);
+			this.MapProperty(1, r => r.iso2);
+			this.MapProperty(2, r => r.iso3);
+			this.MapProperty(3, r => r.code3);
+			this.MapProperty(4, r => r.FIPS);
+			this.MapProperty(5, r => r.Admin2);
+			this.MapProperty(6, r => r.Province_State);
+			this.MapProperty(7, r => r.Country_Region);
+			this.MapProperty(8, r => r.Lat);
+			this.MapProperty(9, r => r.Long_);
+			this.MapProperty(10, r => r.Combined_Key);
 		}
 	}
 }
