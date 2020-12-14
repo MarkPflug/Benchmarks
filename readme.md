@@ -24,11 +24,11 @@ This will compile and run the benchmark project. Then select the benchmark set t
 
 
 
-## [CSV Reader Benchmarks](Docs/CsvReaderBenchmarks.md)
+## [CSV Reader Benchmarks](docs/CsvReaderBenchmarks.md)
 
 Benchmarks for libraries raw CSV reading capabilities.
 
-## [CSV Data Binder Benchmarks](Docs/CsvDataBinderBenchmarks.md)
+## [CSV Data Binder Benchmarks](docs/CsvDataBinderBenchmarks.md)
 
 Libraries that provide object data binding capabilities are reported here.
 
