@@ -29,6 +29,8 @@ bld/
 [Oo]bj/
 .vs/
 
+
+
 # Roslyn cache directories
 *.ide/
 
@@ -209,3 +211,5 @@ reports/
 
 #msbuild binary logs
 *.binlog
+
+*.csv

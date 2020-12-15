@@ -7,6 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CsvBenchmark", "CsvBenchmar
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Files", "Files", "{3440120F-356C-45AC-A793-6B5705685BBD}"
 	ProjectSection(SolutionItems) = preProject
+		..\.gitignore = ..\.gitignore
 		..\benchmark.cmd = ..\benchmark.cmd
 		..\Directory.Build.props = ..\Directory.Build.props
 		..\readme.md = ..\readme.md
