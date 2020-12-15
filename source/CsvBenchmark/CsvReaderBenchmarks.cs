@@ -142,7 +142,7 @@ namespace CsvBenchmark
 			}
 		}
 
-		[Benchmark]
+		//[Benchmark] // skip this, as most people won't be able to run it.
 		public void OleDbCsv()
 		{
 			//Requires: https://www.microsoft.com/en-us/download/details.aspx?id=54920

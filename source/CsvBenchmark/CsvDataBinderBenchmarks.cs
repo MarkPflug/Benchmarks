@@ -18,10 +18,38 @@ namespace CsvBenchmark
 	[MemoryDiagnoser]
 	public class CsvDataBinderBenchmarks
 	{
-		
-
 		public CsvDataBinderBenchmarks()
 		{
+		}
+
+		class ManualBinder
+		{
+			public CovidRecord Bind(IDataRecord dr)
+			{
+				var record = new CovidRecord();
+				record.UID = dr.GetInt32(0);
+				record.iso2 = dr.GetString(1);
+				record.iso3 = dr.GetString(2);
+				
+				if(!dr.IsDBNull(3))
+					record.code3 = dr.GetInt32(3);
+				
+				if (!dr.IsDBNull(4))
+					record.FIPS = dr.GetFloat(4);
+
+				record.Admin2 = dr.GetString(5);
+				record.Province_State = dr.GetString(6);
+				record.Country_Region = dr.GetString(7);
+				
+				if (!dr.IsDBNull(8))
+					record.Lat = dr.GetFloat(8);
+
+				if (!dr.IsDBNull(9))
+					record.Long_ = dr.GetFloat(9);
+
+				record.Country_Region = dr.GetString(10);
+				return record;
+			}
 		}
 
 		[Benchmark(Baseline = true)]
@@ -39,21 +67,28 @@ namespace CsvBenchmark
 		}
 
 		[Benchmark]
-		public void CsvHelperPlusDapper()
+		public void CsvHelperManual()
 		{
 			var tr = TestData.GetTextReader();
-			var csv = new CsvHelper.CsvReader(tr, new CsvHelper.Configuration.CsvConfiguration(CultureInfo.CurrentCulture));
+			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.CurrentCulture);
+			
+			var strOpts = new CsvHelper.TypeConversion.TypeConverterOptions();
+			strOpts.NullValues.Add(""); // this is needed to IsDbNull() detects empty fields as null
+			config.TypeConverterOptionsCache.AddOptions(typeof(string), strOpts);
+
+			var csv = new CsvHelper.CsvReader(tr, config);
 			var dr = new CsvHelper.CsvDataReader(csv);
-			var parser = dr.GetRowParser<CovidRecordStrings>();
+			
+			var binder = new ManualBinder();
 
 			int c = 0;
 			while (dr.Read())
 			{
-				var record = parser(dr);
+				var record = binder.Bind(dr);
 				c++;
 			}
 			ValidateRowCount(c);
-		}
+		}			
 
 #if NET5_0
 
@@ -79,7 +114,7 @@ namespace CsvBenchmark
 #endif
 
 		[Benchmark]
-		public void SylvanDataBinder()
+		public void SylvanData()
 		{
 			var dr = (CsvDataReader)TestData.GetDataWithSchema();
 
@@ -95,27 +130,24 @@ namespace CsvBenchmark
 		}
 
 		[Benchmark]
-		public void SylvanPlusDapper()
+		public void SylvanManual()
 		{
 			var dr = (CsvDataReader)TestData.GetDataWithSchema();
-			var parser = dr.GetRowParser<CovidRecord>();
+			var binder = new ManualBinder();
 			int c = 0;
 			while (dr.Read())
 			{
-				var record = parser(dr);
+				var record = binder.Bind(dr);
 				c++;
 			}
 			ValidateRowCount(c);
 		}
 
 		[Benchmark]
-		public void LumenworksPlusDapper()
+		public void SylvanDapper()
 		{
-			var tr = TestData.GetTextReader();
-			var csv = new LumenWorks.Framework.IO.Csv.CsvReader(tr, true);
-			var dr = (IDataReader)csv;
-
-			var parser = dr.GetRowParser<CovidRecordStrings>();
+			var dr = (CsvDataReader)TestData.GetDataWithSchema();
+			var parser = dr.GetRowParser<CovidRecord>();
 			int c = 0;
 			while (dr.Read())
 			{
