@@ -13,9 +13,12 @@
     <PackageReference Include="CsvTextFieldParser" Version="1.2.2-preview" />
     
     <PackageReference Include="Dapper" Version="2.0.78" />
+    
+    <PackageReference Include="DbfDataReader" Version="0.5.4" />
     <PackageReference Include="FastCsvParser" Version="1.1.1" />
     <PackageReference Include="FlatFiles" Version="4.13.0" />
     <PackageReference Include="LumenWorksCsvReader" Version="4.0.0" />
+    <PackageReference Include="NDbfReader" Version="2.3.0" />
     <PackageReference Include="NLight" Version="2.1.1" />
     <PackageReference Include="NReco.Csv" Version="1.0.0" />
     <PackageReference Include="FSharp.Data" Version="3.3.3" />
@@ -23,6 +26,7 @@
     <PackageReference Include="Sylvan.Common" Version="0.2.0" />
     <PackageReference Include="Sylvan.Data" Version="0.1.0-B0014" />
     <PackageReference Include="Sylvan.Data.Csv" Version="0.8.0" />
+    <PackageReference Include="Sylvan.Data.XBase" Version="0.1.0-B0002" />
     <PackageReference Include="System.Data.OleDb" Version="5.0.0" />
 
     <PackageReference Include="Microsoft.Win32.Primitives" Version="4.3.0" />

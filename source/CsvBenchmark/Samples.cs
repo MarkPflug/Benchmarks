@@ -47,18 +47,6 @@ namespace CsvBenchmark
 		public DateTime? ModifiedDate { get; set; }
 	}
 
-	public static class DataExtensions
-	{
-		public static IEnumerable<T> GetRecords<T>(this DbDataReader dr)
-		{
-			var binder = dr.GetRowParser<T>();
-			while (dr.Read())
-			{
-				yield return binder(dr);
-			}
-		}
-	}
-
 	static class Samples
 	{
 		public static void SylvanWithDapper()
@@ -80,7 +68,7 @@ namespace CsvBenchmark
 			var reader = new StringReader(csvData);
 			//var reader = File.OpenText("mydata.csv");
 			using var csv = CsvDataReader.Create(reader, options);
-			foreach (MyDataRecord record in csv.GetRecords<MyDataRecord>())
+			foreach (MyDataRecord record in csv.GetRecordsDapper<MyDataRecord>())
 			{
 				Console.WriteLine($"{record.Name} {record.Value}");
 			}
