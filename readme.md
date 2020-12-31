@@ -33,7 +33,7 @@ Benchmarks for libraries that supporting writing CSV data.
 
 Libraries that provide object data binding capabilities are reported here.
 
-## [XBase Reader Benchmarks](docs/XBaseDataREaderBenchmarks.md)
+## [XBase Reader Benchmarks](docs/XBaseDataReaderBenchmarks.md)
 
 Benchmarks for .dbf data reader libraries.
 
