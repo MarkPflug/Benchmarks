@@ -54,6 +54,7 @@ namespace CsvBenchmark
 		[Benchmark]
 		public void DbfData()
 		{
+			
 			var ms = new MemoryStream(dbfData);
 			var dr = new DbfDataReader.DbfDataReader(ms, new DbfDataReader.DbfDataReaderOptions() { SkipDeletedRecords = true });
 			dr.Process();
@@ -64,36 +65,47 @@ namespace CsvBenchmark
 	{
 		public static void Process(this Reader reader)
 		{
+			var cols = reader.Table.Columns;
+			TypeCode[] code = new TypeCode[cols.Count];
+
+			int colIdx = 0;
+			foreach (var col in cols)
+			{
+				var type = col.Type;
+				type = Nullable.GetUnderlyingType(type) ?? type;
+				code[colIdx++] = Type.GetTypeCode(type);
+			}
+
 			while (reader.Read())
 			{
-				reader.ProcessRecord();
-			}
-		}
-
-		public static void ProcessRecord(this Reader record)
-		{
-			foreach(var col in record.Table.Columns)
-			{
-				switch (Type.GetTypeCode(col.Type))
+				colIdx = 0;
+				foreach (var col in cols)
 				{
-					case TypeCode.Boolean:
-						record.GetBoolean(col);
-						break;
-					case TypeCode.Int32:
-						record.GetInt32(col);
-						break;
-					case TypeCode.DateTime:
-						record.GetDateTime(col);
-						break;
-					case TypeCode.Decimal:
-						record.GetDecimal(col);
-						break;
-					case TypeCode.String:
-						record.GetString(col);
-						break;
-					default:
-						continue;
+					var type = code[colIdx++];
+				
+					switch (type)
+					{
+						case TypeCode.Boolean:
+							reader.GetBoolean(col);
+							break;
+						case TypeCode.Int32:
+							reader.GetInt32(col);
+							break;
+						case TypeCode.DateTime:
+							reader.GetDateTime(col);
+							break;
+						case TypeCode.Decimal:
+							reader.GetDecimal(col);
+							break;
+						case TypeCode.String:
+							reader.GetString(col);
+							break;
+						default:
+							break;
+					}
+
 				}
+
 			}
 		}
 	}

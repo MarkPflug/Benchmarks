@@ -26,11 +26,12 @@
     <PackageReference Include="Sylvan.Common" Version="0.2.0" />
     <PackageReference Include="Sylvan.Data" Version="0.1.0-B0014" />
     <PackageReference Include="Sylvan.Data.Csv" Version="0.8.0" />
-    <PackageReference Include="Sylvan.Data.XBase" Version="0.1.0-B0002" />
+    <PackageReference Include="Sylvan.Data.XBase" Version="0.1.0-B0004" />
     <PackageReference Include="System.Data.OleDb" Version="5.0.0" />
 
     <PackageReference Include="Microsoft.Win32.Primitives" Version="4.3.0" />
     <PackageReference Include="System.Net.Primitives" Version="4.3.1" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="5.0.0" />
     <PackageReference Include="TinyCsvParser" Version="2.6.0" />
    
   </ItemGroup>
