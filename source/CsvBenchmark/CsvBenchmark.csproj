@@ -27,7 +27,7 @@
     <PackageReference Include="Microsoft.VisualBasic" Version="10.3.0" />
     <PackageReference Include="Sylvan.Common" Version="0.2.0" />
     <PackageReference Include="Sylvan.Data" Version="0.1.0-B0016" />
-    <PackageReference Include="Sylvan.Data.Csv" Version="0.8.1" />
+    <PackageReference Include="Sylvan.Data.Csv" Version="0.8.2" />
     <PackageReference Include="Sylvan.Data.XBase" Version="0.1.0-B0004" />
     <PackageReference Include="System.Data.OleDb" Version="5.0.0" />
 

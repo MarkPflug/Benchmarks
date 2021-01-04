@@ -98,7 +98,7 @@ Philipp Wagner's TinyCsvParser allows binding CSV data to objects, but no raw da
 Aurélien Boudoux's FluentCSV parser, for people who enjoy fluent APIs.
 
 ### [mhgolam.fastCSV](https://github.com/mgholam/fastCSV)
-Mehdi Gholam's fastCSV parser is fast. 
+Mehdi Gholam's fastCSV parser is decently fast. 
 
 ### [NReco.Csv](https://github.com/nreco/csv)
 Vitaliy Fedorchenko's NReco.Csv is an extremely fast CSV parser. 
@@ -111,4 +111,4 @@ such as the [Dapper](https://github.com/StackExchange/Dapper) library.
 
 Sylvan CSV supports defining a schema for the CSV data so that the `CsvDataReader` (`DbDataReader`)
 can be consumed by APIs that support schemas, such as `DataTable.Load`, `SqlBulkCopy.WriteToServer`
-or using the Dapper's `GetRowParser<T>()` method.
+or binding to objects using Dapper's `GetRowParser<T>()` method.
