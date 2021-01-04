@@ -7,11 +7,11 @@ using Cesil;
 using Sylvan.Data;
 using Sylvan.Data.Csv;
 using System.Globalization;
-using Sylvan;
 using Dapper;
 using TinyCsvParser;
 using TinyCsvParser.Mapping;
 using System.Data;
+using System;
 
 namespace CsvBenchmark
 {
@@ -112,13 +112,16 @@ namespace CsvBenchmark
 			ValidateRowCount(c);
 		}
 #endif
+		static IDataBinder<CovidRecord> Binder;
+
+		static Func<IDataReader,CovidRecord> Parser;
 
 		[Benchmark]
 		public void SylvanData()
 		{
 			var dr = (CsvDataReader)TestData.GetDataWithSchema();
 
-			var binder = DataBinder<CovidRecord>.Create(dr.GetColumnSchema());
+			var binder = Binder ?? (Binder = DataBinder<CovidRecord>.Create(dr.GetColumnSchema()));
 			int c = 0;
 			while (dr.Read())
 			{
@@ -147,7 +150,7 @@ namespace CsvBenchmark
 		public void SylvanDapper()
 		{
 			var dr = (CsvDataReader)TestData.GetDataWithSchema();
-			var parser = dr.GetRowParser<CovidRecord>();
+			var parser = (Parser ?? (Parser = dr.GetRowParser<CovidRecord>()));
 			int c = 0;
 			while (dr.Read())
 			{

@@ -1,12 +1,15 @@
 ﻿using BenchmarkDotNet.Attributes;
+using FluentCsv.FluentReader;
 using Microsoft.VisualBasic.FileIO;
 using Sylvan.Data.Csv;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.OleDb;
 using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
+using static fastCSV;
 
 namespace CsvBenchmark
 {
@@ -77,6 +80,8 @@ namespace CsvBenchmark
 				}
 			}
 		}
+
+
 
 
 		[Benchmark]
@@ -327,6 +332,60 @@ namespace CsvBenchmark
 				var val = dr.GetInt32(20);
 			}
 		}
-	}
 
+		[Benchmark]
+		public void FluentSelect()
+		{
+			var rows =
+				Read.Csv.FromString(TestData.CachedData)
+				.ThatReturns.ArrayOf<(int id, string name, int count)>()
+				.Put.Column(0).As<int>().Into(a => a.id)
+				.Put.Column(10).Into(a => a.name)
+				.Put.Column(20).As<int>().Into(a => a.count)
+				.GetAll();
+
+			foreach (var row in rows.ResultSet)
+			{
+
+			}
+		}
+
+		// This class is a hack to adapt the mgholam.fastCSV library to these benchmarks
+		class Hack
+		{
+			// Imagine we don't know this number.
+			// for best performance this is preallocating the array here
+			// and also using it in the binder loop in the benchmark below
+			internal const int Count = 85;
+
+			public string[] data;
+
+			public Hack()
+			{
+				data = new string[Count];
+			}
+		}
+
+		[Benchmark]
+		public void MgholamFastCSV()
+		{
+			// first of all... who puts classes in the root namespace?!
+			// second, is there a way to stream records? The API returns a List, so the entire dataset needs to fit in memory?
+			// third, how does one handle unknown data sets? It wants me to bind to a known type, 
+			// but I can't access the data dynamically? I can't even determine the number of columns in a record?
+			var rows =
+				fastCSV.ReadStream<Hack>(
+					TestData.GetTextReader(),
+					',',
+					(Hack obj, COLUMNS cols) =>
+					{
+						for (int i = 0; i < Hack.Count; i++)
+						{
+							obj.data[i] = cols[i];
+						}
+						return true;
+					}
+				);
+		}
+	}
 }

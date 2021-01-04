@@ -94,6 +94,13 @@ Travis Parks' FlatFiles nuget package.
 ### [TinyCsvParser](https://github.com/bytefish/TinyCsvParser)
 Philipp Wagner's TinyCsvParser allows binding CSV data to objects, but no raw data access mechanism.
 
+### [FluentCSV](https://github.com/aboudoux/FluentCSV)
+Aurélien Boudoux's FluentCSV parser, for people who enjoy fluent APIs.
+
+### [mhgolam.fastCSV](https://github.com/mgholam/fastCSV)
+Mehdi Gholam's fastCSV parser is... fast. There are a number of shortcommings in the API that would dissuade me from recommending it
+to anyone.
+
 ### [NReco.Csv](https://github.com/nreco/csv)
 Vitaliy Fedorchenko's NReco.Csv is an extremely fast CSV parser. 
 It uses a very similar technique to Sylvan to attain the performance it does.
