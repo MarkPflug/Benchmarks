@@ -53,7 +53,7 @@ namespace CsvBenchmark
 		}
 
 		[Benchmark(Baseline = true)]
-		public void CsvHelper()
+		public void CsvHelperAuto()
 		{
 			var tr = TestData.GetTextReader();
 			var csv = new CsvHelper.CsvReader(tr, new CsvHelper.Configuration.CsvConfiguration(CultureInfo.CurrentCulture));
@@ -93,7 +93,7 @@ namespace CsvBenchmark
 #if NET5_0
 
 		[Benchmark]
-		public void Cesil()
+		public void CesilAuto()
 		{
 			var tr = TestData.GetTextReader();
 
@@ -112,6 +112,56 @@ namespace CsvBenchmark
 			ValidateRowCount(c);
 		}
 #endif
+
+		[Benchmark]
+		public void MgholamCsvManual()
+		{
+			var data = fastCSV.ReadStream<CovidRecord>(TestData.GetTextReader(), ',',
+				(obj, cols) =>
+				{
+					obj.UID = fastCSV.ToInt(cols[0]);
+					obj.iso2 = cols[1];
+					obj.iso3 = cols[2];
+
+					var str = cols[3];
+					if (!string.IsNullOrEmpty(str))
+						obj.code3 = fastCSV.ToInt(str);
+
+					str = cols[4];
+					if (!string.IsNullOrEmpty(str))
+						obj.FIPS = fastCSV.ToInt(str);
+
+					obj.Admin2 = cols[5];
+					obj.Province_State = cols[6];
+					obj.Country_Region = cols[7];
+
+					str = cols[8];
+					if (!string.IsNullOrEmpty(str))
+						obj.Lat = float.Parse(str);
+
+					str = cols[9];
+					if (!string.IsNullOrEmpty(str))
+						obj.Long_ = float.Parse(str);
+
+					obj.Country_Region = cols[10];
+					return true;
+				}
+			);
+		}
+
+		[Benchmark]
+		public void TinyCsvManual()
+		{
+			var csvP = new CsvParser<CovidRecord>(new CsvParserOptions(true, ','), new CovidMapping());
+			var dr = csvP.ReadFromString(new CsvReaderOptions(new[] { "\r\n", "\n", "\r" }), TestData.CachedData);
+			int c = 0;
+			foreach (var record in dr)
+			{
+				c++;
+			}
+			ValidateRowCount(c);
+		}
+
 		static IDataBinder<CovidRecord> Binder;
 
 		static Func<IDataReader,CovidRecord> Parser;
@@ -160,19 +210,7 @@ namespace CsvBenchmark
 			ValidateRowCount(c);
 		}
 
-		[Benchmark]
-		public void TinyCsv()
-		{
-			var csvP = new CsvParser<CovidRecord>(new CsvParserOptions(true, ','), new CovidMapping());
-			var dr = csvP.ReadFromString(new CsvReaderOptions(new[] { "\r\n", "\n", "\r" }), TestData.CachedData);
-			int c = 0;
-			foreach (var record in dr)
-			{
-
-				c++;
-			}
-			ValidateRowCount(c);
-		}
+	
 
 		static void ValidateRowCount(int c)
 		{
