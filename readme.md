@@ -98,8 +98,7 @@ Philipp Wagner's TinyCsvParser allows binding CSV data to objects, but no raw da
 Aurélien Boudoux's FluentCSV parser, for people who enjoy fluent APIs.
 
 ### [mhgolam.fastCSV](https://github.com/mgholam/fastCSV)
-Mehdi Gholam's fastCSV parser is... fast. There are a number of shortcommings in the API that would dissuade me from recommending it
-to anyone.
+Mehdi Gholam's fastCSV parser is fast. 
 
 ### [NReco.Csv](https://github.com/nreco/csv)
 Vitaliy Fedorchenko's NReco.Csv is an extremely fast CSV parser. 
