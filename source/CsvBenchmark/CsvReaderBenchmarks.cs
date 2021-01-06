@@ -1,10 +1,8 @@
 ﻿using BenchmarkDotNet.Attributes;
 using FluentCsv.FluentReader;
 using Microsoft.VisualBasic.FileIO;
+using Sylvan;
 using Sylvan.Data.Csv;
-using System;
-using System.Collections.Generic;
-using System.Data;
 using System.Data.OleDb;
 using System.Globalization;
 using System.IO;
@@ -16,35 +14,24 @@ namespace CsvBenchmark
 	[MemoryDiagnoser]
 	public class CsvReaderBenchmarks
 	{
-		const int BufferSize = 0x4000;
+		const int BufferSize = 0x10000;
 
 		char[] buffer = new char[BufferSize];
-
-		public CsvReaderBenchmarks()
-		{
-
-		}
 
 		[Benchmark(Baseline = true)]
 		public void CsvHelper()
 		{
 			var tr = TestData.GetTextReader();
-			var csv = new CsvHelper.CsvDataReader(new CsvHelper.CsvReader(tr, new CsvHelper.Configuration.CsvConfiguration(CultureInfo.CurrentCulture)));
-			var dr = (IDataReader)csv;
-			while (dr.Read())
-			{
-				for (int i = 0; i < dr.FieldCount; i++)
-				{
-					var s = dr.GetString(i);
-				}
-			}
+			var dr = new CsvHelper.CsvDataReader(new CsvHelper.CsvReader(tr, new CsvHelper.Configuration.CsvConfiguration(CultureInfo.CurrentCulture)));
+			dr.ProcessStrings();
 		}
 
 		[Benchmark]
-		public void CsvTextFieldParser()
+		public void NotVBTextFieldParser()
 		{
 			var tr = TestData.GetTextReader();
 			var csv = new NotVisualBasic.FileIO.CsvTextFieldParser(tr);
+			// what an absolutely amazing API: requires negation for the common case. lul.
 			while (!csv.EndOfData)
 			{
 				var fields = csv.ReadFields();
@@ -81,24 +68,12 @@ namespace CsvBenchmark
 			}
 		}
 
-
-
-
 		[Benchmark]
 		public void Lumenworks()
 		{
 			var tr = TestData.GetTextReader();
-			var csv = new LumenWorks.Framework.IO.Csv.CsvReader(tr, true);
-			var dr = (IDataReader)csv;
-			long l = 0;
-			while (dr.Read())
-			{
-				for (int i = 0; i < dr.FieldCount; i++)
-				{
-					var s = dr.GetString(i);
-					l += s.Length;
-				}
-			}
+			var dr = new LumenWorks.Framework.IO.Csv.CsvReader(tr, true);
+			dr.ProcessStrings();
 		}
 
 		[Benchmark]
@@ -120,14 +95,8 @@ namespace CsvBenchmark
 		public void NLightCsv()
 		{
 			var tr = TestData.GetTextReader();
-			var dr = (IDataReader)new NLight.IO.Text.DelimitedRecordReader(tr, 0x10000);
-			while (dr.Read())
-			{
-				for (int i = 0; i < dr.FieldCount; i++)
-				{
-					var s = dr.GetString(i);
-				}
-			}
+			var dr = new NLight.IO.Text.DelimitedRecordReader(tr, 0x10000);
+			dr.ProcessStrings();
 		}
 
 		[Benchmark]
@@ -137,6 +106,8 @@ namespace CsvBenchmark
 			var dr = new TextFieldParser(tr);
 			dr.SetDelimiters(",");
 			dr.HasFieldsEnclosedInQuotes = true;
+			// I see... someone (above) copied this abomination.
+			// fair enough, actually; at least *they* made it fast.
 			while (!dr.EndOfData)
 			{
 				var cols = dr.ReadFields();
@@ -147,7 +118,7 @@ namespace CsvBenchmark
 			}
 		}
 
-		//[Benchmark] // skip this, as most people won't be able to run it.
+		[Benchmark] // skip this, as most people won't be able to run it.
 		public void OleDbCsv()
 		{
 			//Requires: https://www.microsoft.com/en-us/download/details.aspx?id=54920
@@ -155,20 +126,13 @@ namespace CsvBenchmark
 				@"Provider=Microsoft.ACE.OLEDB.12.0; Data Source={0};Extended Properties=""Text;HDR=YES;FMT=Delimited""",
 				Path.GetDirectoryName(Path.GetFullPath(TestData.DataFile))
 			);
-			using (var conn = new OleDbConnection(connString))
-			{
-				conn.Open();
-				var cmd = conn.CreateCommand();
-				cmd.CommandText = "SELECT * FROM [" + Path.GetFileName(TestData.DataFile) + "]";
-				var dr = cmd.ExecuteReader();
-				while (dr.Read())
-				{
-					for (int i = 0; i < dr.FieldCount; i++)
-					{
-						var s = dr.GetValue(i).ToString();
-					}
-				}
-			}
+			using var conn = new OleDbConnection(connString);
+			conn.Open();
+			var cmd = conn.CreateCommand();
+			cmd.CommandText = "SELECT * FROM [" + Path.GetFileName(TestData.DataFile) + "]";
+			var dr = cmd.ExecuteReader();
+
+			dr.ProcessValues();
 		}
 
 		[Benchmark]
@@ -177,14 +141,7 @@ namespace CsvBenchmark
 			var tr = TestData.GetTextReader();
 			var opts = new FlatFiles.SeparatedValueOptions() { IsFirstRecordSchema = true };
 			var dr = new FlatFiles.FlatFileDataReader(new FlatFiles.SeparatedValueReader(tr, opts));
-
-			while (dr.Read())
-			{
-				for (int i = 0; i < dr.FieldCount; i++)
-				{
-					var s = dr.GetValue(i);
-				}
-			}
+			dr.ProcessValues();
 		}
 
 		[Benchmark]
@@ -219,30 +176,24 @@ namespace CsvBenchmark
 			}
 		}
 
-		// This class is a hack to adapt the mgholam.fastCSV library to these benchmarks
-		class Hack
-		{
-			public string[] data;
-		}
-
 		[Benchmark]
 		public void MgholamFastCSV()
 		{
-			// first of all... who puts classes in the root namespace?!
-			// second, is there a way to stream records? The API returns a List, so the entire dataset needs to fit in memory?
+			string[] values = null;
 			var rows =
-				fastCSV.ReadStream<Hack>(
+				fastCSV.ReadStream<object>(
 					TestData.GetTextReader(),
 					',',
-					(Hack obj, COLUMNS cols) =>
+					(object obj, COLUMNS cols) =>
 					{
 						var c = cols.Count;
-						obj.data = new string[c];
+						if (values == null)
+							values = new string[c];
 						for (int i = 0; i < c; i++)
 						{
-							obj.data[i] = cols[i];
+							values[i] = cols[i];
 						}
-						return true;
+						return false;
 					}
 				);
 		}
@@ -253,7 +204,7 @@ namespace CsvBenchmark
 			var tr = TestData.GetTextReader();
 			var dr = new NReco.Csv.CsvReader(tr);
 			dr.BufferSize = BufferSize;
-			dr.Read(); // read the headers
+			dr.Read(); // strip the header row
 			while (dr.Read())
 			{
 				for (int i = 0; i < dr.FieldsCount; i++)
@@ -264,89 +215,66 @@ namespace CsvBenchmark
 		}
 
 		[Benchmark]
-		public async Task Sylvan()
+		public void Sylvan()
 		{
 			using var tr = TestData.GetTextReader();
-			using var dr = await CsvDataReader.CreateAsync(tr, new CsvDataReaderOptions() { Buffer = buffer });
-			while (await dr.ReadAsync())
+			using var dr = CsvDataReader.Create(tr);
+			dr.ProcessStrings();
+		}
+
+		static readonly string[] pool = new string[128];
+
+		static CsvReaderBenchmarks()
+		{
+			for(int i = 0; i < pool.Length; i++)
 			{
-				for (int i = 0; i < dr.FieldCount; i++)
-				{
-					var s = dr.GetString(i);
-				}
+				pool[i] = ((char)i).ToString();
 			}
+		}
+
+		static string Pool(char[] buf, int offset, int length)
+		{
+			if(length == 1)
+			{
+				var c = buf[offset];
+				if (c < 128)
+					return pool[c];				
+			}
+			return new string(buf, offset, length);
 		}
 
 		[Benchmark]
-		public async Task SylvanSchema()
+		public void SylvanSimplePool()
 		{
 			using var tr = TestData.GetTextReader();
-			using var dr = await CsvDataReader.CreateAsync(tr, new CsvDataReaderOptions { Schema = TestData.TestDataSchema });
-			await ProcessDataAsync(dr);
+			using var dr = CsvDataReader.Create(tr, new CsvDataReaderOptions { StringFactory = Pool });
+			dr.ProcessStrings();
 		}
 
-		static void ProcessData(CsvDataReader dr)
+		[Benchmark]
+		public void SylvanSchema()
 		{
-			var types = new TypeCode[dr.FieldCount];
-
-			for (int i = 0; i < types.Length; i++)
-			{
-				types[i] = Type.GetTypeCode(dr.GetFieldType(i));
-			}
-			while (dr.Read())
-			{
-				for (int i = 0; i < dr.FieldCount; i++)
-				{
-					switch (types[i])
-					{
-						case TypeCode.Int32:
-							var v = dr.GetInt32(i);
-							break;
-						case TypeCode.Double:
-							if (i == 4 && dr.IsDBNull(i))
-								break;
-							var d = dr.GetDouble(i);
-							break;
-						case TypeCode.String:
-							var s = dr.GetString(i);
-							break;
-						default:
-							break;
-					}
-				}
-			}
+			using var tr = TestData.GetTextReader();
+			using var dr = CsvDataReader.Create(tr, new CsvDataReaderOptions { Schema = TestData.TestDataSchema });
+			dr.Process();
 		}
 
-		static async Task ProcessDataAsync(CsvDataReader dr)
+		[Benchmark]
+		public void MgholamFastCSVSelect()
 		{
-			var types = new TypeCode[dr.FieldCount];
-
-			for (int i = 0; i < types.Length; i++)
-			{
-				types[i] = Type.GetTypeCode(dr.GetFieldType(i));
-			}
-			while (await dr.ReadAsync())
-			{
-				for (int i = 0; i < dr.FieldCount; i++)
-				{
-					switch (types[i])
+			string id, name, val;
+			var rows =
+				fastCSV.ReadStream<object>(
+					TestData.GetTextReader(),
+					',',
+					(object obj, COLUMNS cols) =>
 					{
-						case TypeCode.Int32:
-							var v = dr.GetInt32(i);
-							break;
-						case TypeCode.Double:
-							if (i == 4 && dr.IsDBNull(i))
-								break;
-							var d = dr.GetDouble(i);
-							break;
-						case TypeCode.String:
-							var s = dr.GetString(i);
-							break;
-						default:
-							break;
+						id = cols[0];
+						name = cols[10];
+						val = cols[20];
+						return false;
 					}
-				}
-			}
+				);
 		}
 
 		[Benchmark]
@@ -358,9 +286,9 @@ namespace CsvBenchmark
 			dr.Read(); // read the headers
 			while (dr.Read())
 			{
-				var id = int.Parse(dr[0]);
+				var id = dr[0];
 				var name = dr[10];
-				var val = int.Parse(dr[20]);
+				var val = dr[20];
 			}
 		}
 
@@ -371,10 +299,10 @@ namespace CsvBenchmark
 			using var dr = CsvDataReader.Create(tr);
 			while (dr.Read())
 			{
-				var id = dr.GetInt32(0);
+				var id = dr.GetString(0);
 				var name = dr.GetString(10);
-				var val = dr.GetInt32(20);
+				var val = dr.GetString(20);
 			}
-		}		
+		}
 	}
 }
