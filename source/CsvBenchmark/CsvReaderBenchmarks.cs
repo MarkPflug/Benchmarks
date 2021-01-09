@@ -1,12 +1,10 @@
 ﻿using BenchmarkDotNet.Attributes;
 using FluentCsv.FluentReader;
 using Microsoft.VisualBasic.FileIO;
-using Sylvan;
 using Sylvan.Data.Csv;
 using System.Data.OleDb;
 using System.Globalization;
 using System.IO;
-using System.Threading.Tasks;
 using static fastCSV;
 
 namespace CsvBenchmark
