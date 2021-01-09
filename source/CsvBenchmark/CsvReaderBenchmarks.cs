@@ -1,4 +1,5 @@
 ﻿using BenchmarkDotNet.Attributes;
+using Cursively;
 using FluentCsv.FluentReader;
 using Microsoft.VisualBasic.FileIO;
 using Sylvan.Data.Csv;
@@ -197,6 +198,29 @@ namespace CsvBenchmark
 		}
 
 		[Benchmark]
+		public void CtlData()
+		{
+			var s = TestData.GetTextReader();
+			var opts = new Ctl.Data.CsvObjectOptions()
+			{
+				BufferLength = BufferSize,
+				Separator = ',',
+				ReadHeader = true,
+			};
+			var csv = new Ctl.Data.CsvReader(s, opts);
+
+			while (csv.Read())
+			{
+				var row = csv.CurrentRow;
+				var c = row.Count;
+				for (int i = 0; i < c; i++)
+				{
+					var str = row[i].Value;
+				}
+			}
+		}
+
+		[Benchmark]
 		public void NReco()
 		{
 			var tr = TestData.GetTextReader();
@@ -224,7 +248,7 @@ namespace CsvBenchmark
 
 		static CsvReaderBenchmarks()
 		{
-			for(int i = 0; i < pool.Length; i++)
+			for (int i = 0; i < pool.Length; i++)
 			{
 				pool[i] = ((char)i).ToString();
 			}
@@ -232,11 +256,11 @@ namespace CsvBenchmark
 
 		static string Pool(char[] buf, int offset, int length)
 		{
-			if(length == 1)
+			if (length == 1)
 			{
 				var c = buf[offset];
 				if (c < 128)
-					return pool[c];				
+					return pool[c];
 			}
 			return new string(buf, offset, length);
 		}

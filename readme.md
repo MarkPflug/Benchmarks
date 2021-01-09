@@ -104,6 +104,10 @@ This can make it difficult to use it in forward-only streaming scenarios where t
 might be too large to fit in memory. It also exposes some custom-parsing methods that are downright
 dangerous, as they will produce nonsense values in the presense of bad data.
 
+### [Ctl.Data](https://github.com/ctl-global/ctl-data/)
+
+Cory Nelson's Ctl.Data is an extremely fast csv parser.
+
 ### [NReco.Csv](https://github.com/nreco/csv)
 Vitaliy Fedorchenko's NReco.Csv is an extremely fast CSV parser. 
 It uses a very similar technique to Sylvan to attain the performance it does.
