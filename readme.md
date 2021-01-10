@@ -98,11 +98,17 @@ Philipp Wagner's TinyCsvParser allows binding CSV data to objects, but no raw da
 Aurélien Boudoux's FluentCSV parser, for people who enjoy fluent APIs.
 
 ### [mhgolam.fastCSV](https://github.com/mgholam/fastCSV)
-Mehdi Gholam's fastCSV parser is quite fast. It is the fastest parser in some scenarios.
+
+Mehdi Gholam's fastCSV parser is quite fast.
 It has a flaw in its design that it owns the loop and wants to produce a List<T> of objects.
 This can make it difficult to use it in forward-only streaming scenarios where the dataset 
 might be too large to fit in memory. It also exposes some custom-parsing methods that are downright
-dangerous, as they will produce nonsense values in the presense of bad data.
+dangerous, as they will produce nonsense values in the presense of bad data. 
+
+### [Cursively](https://github.com/airbreather/Cursively)
+
+Joe Amenta's Cursively parser is among the fastest. Indeed, it is *the* fastest in some scenarios.
+It employs a visitor/callback technique that can make it cumbersome to adapt to common scenarios.
 
 ### [Ctl.Data](https://github.com/ctl-global/ctl-data/)
 
@@ -113,11 +119,11 @@ Vitaliy Fedorchenko's NReco.Csv is an extremely fast CSV parser.
 It uses a very similar technique to Sylvan to attain the performance it does.
 
 ### [Sylvan](https://github.com/MarkPflug/Sylvan/blob/master/docs/Sylvan.Data.Csv.md)
-My own Sylvan.Data.Csv library. It is the fastest, and least allocating parser in most common scenarios.
+My own Sylvan.Data.Csv library. It is among the fastest, and least allocating parser in most common scenarios.
 It does not offer any automatic data binding capabilities out of the box, 
 but can be used by general purpose data binders 
-such as the [Dapper](https://github.com/StackExchange/Dapper) library.
+such as the [Dapper](https://github.com/StackExchange/Dapper) library, or anything that operates on IDataReader/DbDataReader.
 
-Sylvan CSV supports defining a schema for the CSV data so that the `CsvDataReader` (`DbDataReader`)
-can be consumed by APIs that support schemas, such as `DataTable.Load`, `SqlBulkCopy.WriteToServer`
+Sylvan CSV supports defining a schema for the CSV data so that it can be consumed in a strongly-typed manner
+by APIs that support schemas, such as `DataTable.Load`, `SqlBulkCopy.WriteToServer`
 or binding to objects using Dapper's `GetRowParser<T>()` method.

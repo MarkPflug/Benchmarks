@@ -6,9 +6,6 @@ namespace CsvBenchmark
 	{
 		public static void Main(string[] args)
 		{
-			var n = new CsvReaderBenchmarks();
-			n.Sylvan();
-			n.MgholamFastCSV();
 			var summary = 
 				BenchmarkSwitcher
 				.FromAssembly(typeof(Program).Assembly).Run(args);

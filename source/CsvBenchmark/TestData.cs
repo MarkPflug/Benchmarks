@@ -104,7 +104,7 @@ Combined_Key,
 
 		public static TextReader GetTextReader()
 		{
-			return new StringReader(CachedData);
+			return new StreamReader(GetUtf8Stream(), Encoding.UTF8);
 		}
 
 		public static Stream GetUtf8Stream()
