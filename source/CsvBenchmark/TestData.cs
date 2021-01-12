@@ -112,6 +112,11 @@ Combined_Key,
 			return new MemoryStream(CachedUtfData);
 		}
 
+		public static ReadOnlyMemory<byte> GetUtf8Array()
+		{
+			return CachedUtfData;
+		}
+
 		public static DbDataReader GetData()
 		{
 

@@ -201,12 +201,29 @@ namespace CsvBenchmark
 
 		class CursivelyStringVisitor : CsvReaderVisitorBase
 		{
+			readonly bool doPooling;
+			readonly byte[] bytes = new byte[1024];
+			int bytesUsed = 0;
+
 			// in any realistic scenario we'd need to at least know the column oridnal to do anything with the record
 			int ordinal = 0;
 
+			public CursivelyStringVisitor(bool doPooling)
+			{
+				this.doPooling = doPooling;
+			}
+
 			public override void VisitEndOfField(System.ReadOnlySpan<byte> chunk)
 			{
-				var str = Encoding.UTF8.GetString(chunk);
+				if (bytesUsed != 0)
+				{
+					chunk.CopyTo(bytes.AsSpan(bytesUsed, chunk.Length));
+					chunk = new ReadOnlySpan<byte>(bytes, 0, bytesUsed + chunk.Length);
+					bytesUsed = 0;
+				}
+				var str = chunk.Length == 1 && chunk[0] < 128 && doPooling
+					? pool[chunk[0]]
+					: Encoding.UTF8.GetString(chunk);
 				ordinal++;
 			}
 
@@ -217,17 +234,20 @@ namespace CsvBenchmark
 
 			public override void VisitPartialFieldContents(System.ReadOnlySpan<byte> chunk)
 			{
+				chunk.CopyTo(bytes.AsSpan(bytesUsed, chunk.Length));
+				bytesUsed += chunk.Length;
 			}
 		}
 
 		[Benchmark]
-		public void CursivelyCsv()
+		[Arguments(false)]
+		[Arguments(true)]
+		public void CursivelyCsv(bool doPooling)
 		{
-			var s = TestData.GetUtf8Stream();
-			var proc = new CursivelyStringVisitor();
+			var d = TestData.GetUtf8Array();
+			var proc = new CursivelyStringVisitor(doPooling);
 			CsvSyncInput
-				.ForStream(s)
-				.WithMinReadBufferByteCount(BufferSize)
+				.ForMemory(d)
 				.Process(proc);
 		}
 
@@ -352,6 +372,9 @@ namespace CsvBenchmark
 
 		class CursivelySelectVisitor : CsvReaderVisitorBase
 		{
+			readonly byte[] bytes = new byte[1024];
+			int bytesUsed = 0;
+
 			int ordinal = 0;
 			int row = 0;
 
@@ -361,6 +384,12 @@ namespace CsvBenchmark
 
 			public override void VisitEndOfField(ReadOnlySpan<byte> chunk)
 			{
+				if (bytesUsed != 0)
+				{
+					chunk.CopyTo(bytes.AsSpan(bytesUsed, chunk.Length));
+					chunk = new ReadOnlySpan<byte>(bytes, 0, bytesUsed + chunk.Length);
+					bytesUsed = 0;
+				}
 				if (row != 0) // skip the header row
 				{
 					switch (ordinal)
@@ -398,17 +427,21 @@ namespace CsvBenchmark
 
 			public override void VisitPartialFieldContents(System.ReadOnlySpan<byte> chunk)
 			{
+				if (row > 0)
+				{
+					chunk.CopyTo(bytes.AsSpan(bytesUsed, chunk.Length));
+					bytesUsed += chunk.Length;
+				}
 			}
 		}
 
 		[Benchmark]
 		public void CursivelyCsvSelect()
 		{
-			var s = TestData.GetUtf8Stream();
+			var d = TestData.GetUtf8Array();
 			var proc = new CursivelySelectVisitor();
 			CsvSyncInput
-				.ForStream(s)
-				.WithMinReadBufferByteCount(BufferSize)
+				.ForMemory(d)
 				.Process(proc);
 		}
 
