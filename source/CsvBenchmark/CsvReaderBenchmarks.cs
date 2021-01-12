@@ -221,7 +221,7 @@ namespace CsvBenchmark
 					chunk = new ReadOnlySpan<byte>(bytes, 0, bytesUsed + chunk.Length);
 					bytesUsed = 0;
 				}
-				var str = chunk.Length == 1 && chunk[0] < 128 && doPooling
+				var str = doPooling && chunk.Length == 1 && chunk[0] < 128
 					? pool[chunk[0]]
 					: Encoding.UTF8.GetString(chunk);
 				ordinal++;
