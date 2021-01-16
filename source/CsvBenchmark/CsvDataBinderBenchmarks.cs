@@ -11,7 +11,6 @@ using Dapper;
 using TinyCsvParser;
 using TinyCsvParser.Mapping;
 using System.Data;
-using System;
 
 namespace CsvBenchmark
 {
@@ -58,12 +57,10 @@ namespace CsvBenchmark
 			var tr = TestData.GetTextReader();
 			var csv = new CsvHelper.CsvReader(tr, new CsvHelper.Configuration.CsvConfiguration(CultureInfo.CurrentCulture));
 			var data = csv.GetRecords<CovidRecord>();
-			int c = 0;
+
 			foreach (var record in data)
 			{
-				c++;
 			}
-			ValidateRowCount(c);
 		}
 
 		[Benchmark]
@@ -81,13 +78,10 @@ namespace CsvBenchmark
 			
 			var binder = new ManualBinder();
 
-			int c = 0;
 			while (dr.Read())
 			{
-				var record = binder.Bind(dr);
-				c++;
+				var record = binder.Bind(dr);			
 			}
-			ValidateRowCount(c);
 		}			
 
 #if NET5_0
@@ -104,12 +98,10 @@ namespace CsvBenchmark
 				.ToOptions();
 
 			var data = CesilUtils.Enumerate<CovidRecord>(tr, opts);
-			int c = 0;
 			foreach (var record in data)
 			{
-				c++;
+
 			}
-			ValidateRowCount(c);
 		}
 #endif
 
@@ -154,32 +146,22 @@ namespace CsvBenchmark
 		{
 			var csvP = new CsvParser<CovidRecord>(new CsvParserOptions(true, ','), new CovidMapping());
 			var dr = csvP.ReadFromString(new CsvReaderOptions(new[] { "\r\n", "\n", "\r" }), TestData.CachedData);
-			int c = 0;
 			foreach (var record in dr)
 			{
-				c++;
 			}
-			ValidateRowCount(c);
 		}
-
-		static IDataBinder<CovidRecord> Binder;
-
-		static Func<IDataReader,CovidRecord> Parser;
 
 		[Benchmark]
 		public void SylvanData()
 		{
 			var dr = (CsvDataReader)TestData.GetDataWithSchema();
 
-			var binder = Binder ?? (Binder = DataBinder<CovidRecord>.Create(dr.GetColumnSchema()));
-			int c = 0;
+			var binder = DataBinder<CovidRecord>.Create(dr.GetColumnSchema());
 			while (dr.Read())
 			{
 				var record = new CovidRecord();
 				binder.Bind(dr, record);
-				c++;
 			}
-			ValidateRowCount(c);
 		}
 
 		[Benchmark]
@@ -187,30 +169,22 @@ namespace CsvBenchmark
 		{
 			var dr = (CsvDataReader)TestData.GetDataWithSchema();
 			var binder = new ManualBinder();
-			int c = 0;
 			while (dr.Read())
 			{
 				var record = binder.Bind(dr);
-				c++;
 			}
-			ValidateRowCount(c);
 		}
 
 		[Benchmark]
 		public void SylvanDapper()
 		{
 			var dr = (CsvDataReader)TestData.GetDataWithSchema();
-			var parser = (Parser ?? (Parser = dr.GetRowParser<CovidRecord>()));
-			int c = 0;
+			var parser = dr.GetRowParser<CovidRecord>();
 			while (dr.Read())
 			{
 				var record = parser(dr);
-				c++;
 			}
-			ValidateRowCount(c);
 		}
-
-	
 
 		static void ValidateRowCount(int c)
 		{

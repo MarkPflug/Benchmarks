@@ -1,8 +1,13 @@
 # CSV Benchmarks
 
-This repository contains benchmarks for various .NET CSV libraries. These benchmarks were created to validate the performance of my own CSV library [Sylvan.Data.Csv](https://github.com/MarkPflug/Sylvan) and Sylvan.Data.
+This repository contains benchmarks for various .NET CSV libraries. 
+These benchmarks were created to validate the performance of my own CSV library 
+[Sylvan.Data.Csv](https://github.com/MarkPflug/Sylvan) and Sylvan.Data.
 
-The benchmarks are authored using [BenchmarkDotNet](https://github.com/dotnet/BenchmarkDotNet). The various libraries provide different APIs, so the while each benchmark has slightly different construction, I believe they provide a fair comparison. If any of the benchmarks are found to be incorrectly setup, I'd happily welcome a pull request with a fix.
+The benchmarks are authored using [BenchmarkDotNet](https://github.com/dotnet/BenchmarkDotNet). 
+The various libraries provide different APIs, so the while each benchmark has slightly different construction, 
+I believe they provide a fair comparison. 
+If any of the benchmarks are found to be incorrectly setup, I'd happily welcome a pull request with a fix.
 
 ## Running benchmarks
 
@@ -39,91 +44,34 @@ Benchmarks for .dbf data reader libraries.
 
 ## Libraries Tested
 
-I've created benchmarks that cover many of the most common open-source .NET CSV libraries. 
-I'd welcome any additions to this list.
+I've created benchmarks that cover many of the most common open-source .NET CSV libraries.
+These are primarily third-party open source libraries, but also tested are the Visual Basic TextFieldParser which included as
+part of the .NET framework libraries, and OleDb text file driver, which is a windows-only and maintained by Microsoft.
+I'd welcome any additions to this list as a pull request.
 
-### [CsvHelper](https://github.com/JoshClose/CsvHelper)
-Josh Close's CsvHelper is the most popular CSV parsing library for dotNET, as indicated by nuget package downloads. 
-It is a full-featured library that supports raw data access, and also binding data to objects. 
-I've used it as the baseline for benchmarks, since it is the most popular library.
+All libraries are using the latest version as of 2021-01-15.
 
-### [Cesil](https://github.com/kevin-montrose/Cesil)
-Kevin Montrose's Cesil library is still in pre-release development. 
-As far as I know it only allows directly binding CSV data to objects and doesn't provide any raw data access mechanism.
+- Naive, Broken
 
-### Naive, Broken
-This measures the naive approach of using `TextReader.ReadLine` and `string.Split` to process CSV data. 
+	This measures the naive approach of using `TextReader.ReadLine` and `String.Split` to process CSV data. 
+	Likewise, writing is performed by writing commas and newlines, but ignoring escaping.
+	These approaches are fast, but don't handle the edge cases of quoted fields, embedded commas, etc; and thus are not [RFC 4180](https://tools.ietf.org/html/rfc4180) compliant.
+	This is used as the benchmark baseline, since its performance is unlikely to change much.
 
-Likewise, writing is performed by writing commas and newlines, but ignoring escaping.
-
-These approaches are fast, but don't handle the edge cases of quoted fields, embedded commas, etc; and thus are not [RFC 4180](https://tools.ietf.org/html/rfc4180) compliant.
-
-### [Lumenworks](https://www.codeproject.com/Articles/9258/A-Fast-CSV-Reader)
-Sebastien Lorion's Lumenworks CSV reader is possibly the oldest mature CSV parser for .NET. 
-I remember using this library back in 2005/6.
-It is now maintained as [LumenWorksCsvReader](https://github.com/phatcher/CsvReader) by Paul Hatcher.
-
-### [NLight](https://github.com/slorion/nlight)
-Sometimes one isn't enough, as this is Sebastien Lorion second CSV parser.
-This library also contains a variety of other APIs unrelated to CSV.
-
-### [FSharp.Data](https://github.com/fsharp/FSharp.Data)
-The FSharp.Data library works perfectly well with C# of course, it also happens to be pretty fast.
-
-### [VisualBasic](https://github.com/dotnet/runtime/blob/master/src/libraries/Microsoft.VisualBasic.Core/src/Microsoft/VisualBasic/FileIO/TextFieldParser.vb)
-The `Microsoft.VisualBasic.FileIO.TextFieldParser` class included in the `Microsoft.VisualBasic` library that ships with dotNET.
-Of course, even though it is in the VisualBasic namespace, it works just fine from any .NET language.
-This type is notably only because it ships as part of the framework libraries.
-
-### OleDbCsv
-This uses the MS Access database driver via OleDb (Windows only, requires a separate install). 
-It will try to automatically detect the data types of the columns in the CSV file. 
-It appears that this schema detection comes at the cost of being one of the slowest CSV parsers I've tested. 
-I've had negative experiences with this feature mis-detecting a column type, when the errant values appear late in a file; the result is usually an exception being thrown.
-I suspect the memory metric is misrepresented, because it uses an unmanaged driver so it might not be detectable by the BenchmarkDotNet memory analyzer.
-
-### [FastCsvParser](https://github.com/bopohaa/CsvParser)
-Nikolay Vorobev's FastCsvParser is, as the name suggests, pretty fast.
-
-### [CsvBySteve](https://github.com/stevehansen/csv/)
-Steve Hansen's "Csv" library.
-
-### [FlatFilesCsv](https://github.com/jehugaleahsa/FlatFiles)
-Travis Parks' FlatFiles nuget package.
-
-### [TinyCsvParser](https://github.com/bytefish/TinyCsvParser)
-Philipp Wagner's TinyCsvParser allows binding CSV data to objects, but no raw data access mechanism.
-
-### [FluentCSV](https://github.com/aboudoux/FluentCSV)
-Aurélien Boudoux's FluentCSV parser, for people who enjoy fluent APIs.
-
-### [mhgolam.fastCSV](https://github.com/mgholam/fastCSV)
-
-Mehdi Gholam's fastCSV parser is quite fast.
-It has a flaw in its design that it owns the loop and wants to produce a List<T> of objects.
-This can make it difficult to use it in forward-only streaming scenarios where the dataset 
-might be too large to fit in memory. It also exposes some custom-parsing methods that are downright
-dangerous, as they will produce nonsense values in the presense of bad data. 
-
-### [Cursively](https://github.com/airbreather/Cursively)
-
-Joe Amenta's Cursively parser is among the fastest. Indeed, it is *the* fastest in some scenarios.
-It employs a visitor/callback technique that can make it cumbersome to adapt to common scenarios.
-
-### [Ctl.Data](https://github.com/ctl-global/ctl-data/)
-
-Cory Nelson's Ctl.Data is an extremely fast csv parser.
-
-### [NReco.Csv](https://github.com/nreco/csv)
-Vitaliy Fedorchenko's NReco.Csv is an extremely fast CSV parser. 
-It uses a very similar technique to Sylvan to attain the performance it does.
-
-### [Sylvan](https://github.com/MarkPflug/Sylvan/blob/master/docs/Sylvan.Data.Csv.md)
-My own Sylvan.Data.Csv library. It is among the fastest, and least allocating parser in most common scenarios.
-It does not offer any automatic data binding capabilities out of the box, 
-but can be used by general purpose data binders 
-such as the [Dapper](https://github.com/StackExchange/Dapper) library, or anything that operates on IDataReader/DbDataReader.
-
-Sylvan CSV supports defining a schema for the CSV data so that it can be consumed in a strongly-typed manner
-by APIs that support schemas, such as `DataTable.Load`, `SqlBulkCopy.WriteToServer`
-or binding to objects using Dapper's `GetRowParser<T>()` method.
+- [Cesil](https://github.com/kevin-montrose/Cesil)
+- [CsvHelper](https://github.com/JoshClose/CsvHelper)
+- [CsvBySteve](https://github.com/stevehansen/csv/)
+- [Ctl.Data](https://github.com/ctl-global/ctl-data/)
+- [Cursively](https://github.com/airbreather/Cursively)
+- [FastCsvParser](https://github.com/bopohaa/CsvParser)
+- [FlatFilesCsv](https://github.com/jehugaleahsa/FlatFiles)
+- [FluentCSV](https://github.com/aboudoux/FluentCSV)
+- [FSharp.Data](https://github.com/fsharp/FSharp.Data)
+- [Lumenworks](https://www.codeproject.com/Articles/9258/A-Fast-CSV-Reader) now maintained as [LumenWorksCsvReader](https://github.com/phatcher/CsvReader).
+- [mhgolam.fastCSV](https://github.com/mgholam/fastCSV)
+- [NLight](https://github.com/slorion/nlight)
+- [NReco.Csv](https://github.com/nreco/csv)
+- [OleDbCsv](https://www.microsoft.com/en-us/download/details.aspx?id=54920)
+- [Sylvan](https://github.com/MarkPflug/Sylvan/blob/master/docs/Sylvan.Data.Csv.md)
+- [TinyCsvParser](https://github.com/bytefish/TinyCsvParser)
+- [VisualBasic](https://github.com/dotnet/runtime/blob/master/src/libraries/Microsoft.VisualBasic.Core/src/Microsoft/VisualBasic/FileIO/TextFieldParser.vb)

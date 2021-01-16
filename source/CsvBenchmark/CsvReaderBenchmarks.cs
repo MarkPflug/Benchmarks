@@ -3,12 +3,9 @@ using Cursively;
 using FluentCsv.FluentReader;
 using Microsoft.VisualBasic.FileIO;
 using Sylvan.Data.Csv;
-using System;
-using System.Buffers.Text;
 using System.Data.OleDb;
 using System.Globalization;
 using System.IO;
-using System.Text;
 using static fastCSV;
 
 namespace CsvBenchmark
@@ -16,15 +13,35 @@ namespace CsvBenchmark
 	[MemoryDiagnoser]
 	public class CsvReaderBenchmarks
 	{
+		// buffer size for libraries that allow configuration
 		const int BufferSize = 0x10000;
 
-		char[] buffer = new char[BufferSize];
-
 		[Benchmark(Baseline = true)]
-		public void CsvHelper()
+		public void NaiveBroken()
 		{
 			var tr = TestData.GetTextReader();
-			var dr = new CsvHelper.CsvDataReader(new CsvHelper.CsvReader(tr, new CsvHelper.Configuration.CsvConfiguration(CultureInfo.CurrentCulture)));
+			string line;
+			while ((line = tr.ReadLine()) != null)
+			{
+				var cols = line.Split(',');
+				for (int i = 0; i < cols.Length; i++)
+				{
+					var s = cols[i];
+				}
+			}
+		}
+
+		[Benchmark]
+		public void CsvHelperCsv()
+		{
+			var tr = TestData.GetTextReader();
+			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.CurrentCulture)
+			{
+				BufferSize = BufferSize
+			};
+
+			var r = new CsvHelper.CsvReader(tr, config);
+			var dr = new CsvHelper.CsvDataReader(r);
 			dr.ProcessStrings();
 		}
 
@@ -44,7 +61,8 @@ namespace CsvBenchmark
 		public void FastCsvParser()
 		{
 			var s = TestData.GetUtf8Stream();
-			var csv = new CsvParser.CsvReader(s, System.Text.Encoding.UTF8);
+			var config = new CsvParser.CsvReader.Config() { ReadinBufferSize = BufferSize };
+			var csv = new CsvParser.CsvReader(s, System.Text.Encoding.UTF8, config);
 			while (csv.MoveNext())
 			{
 				var row = csv.Current;
@@ -74,30 +92,15 @@ namespace CsvBenchmark
 		public void Lumenworks()
 		{
 			var tr = TestData.GetTextReader();
-			var dr = new LumenWorks.Framework.IO.Csv.CsvReader(tr, true);
+			var dr = new LumenWorks.Framework.IO.Csv.CsvReader(tr, true, BufferSize);
 			dr.ProcessStrings();
-		}
-
-		[Benchmark]
-		public void NaiveBroken()
-		{
-			var tr = TestData.GetTextReader();
-			string line;
-			while ((line = tr.ReadLine()) != null)
-			{
-				var cols = line.Split(',');
-				for (int i = 0; i < cols.Length; i++)
-				{
-					var s = cols[i];
-				}
-			}
 		}
 
 		[Benchmark]
 		public void NLightCsv()
 		{
 			var tr = TestData.GetTextReader();
-			var dr = new NLight.IO.Text.DelimitedRecordReader(tr, 0x10000);
+			var dr = new NLight.IO.Text.DelimitedRecordReader(tr, BufferSize);
 			dr.ProcessStrings();
 		}
 
@@ -119,9 +122,13 @@ namespace CsvBenchmark
 			}
 		}
 
-		[Benchmark] // most people won't be able to run it.
+		[Benchmark] // most people won't be able to run this.
 		public void OleDbCsv()
 		{
+			// NOTE: I don't know how to disable the column type detection here
+			// so this is a bit inconsistent with other libraries in that it doesn't 
+			// process raw string values.
+
 			//Requires: https://www.microsoft.com/en-us/download/details.aspx?id=54920
 			var connString = string.Format(
 				@"Provider=Microsoft.ACE.OLEDB.12.0; Data Source={0};Extended Properties=""Text;HDR=YES;FMT=Delimited""",
@@ -199,53 +206,11 @@ namespace CsvBenchmark
 				);
 		}
 
-		class CursivelyStringVisitor : CsvReaderVisitorBase
-		{
-			readonly bool doPooling;
-			readonly byte[] bytes = new byte[1024];
-			int bytesUsed = 0;
-
-			// in any realistic scenario we'd need to at least know the column oridnal to do anything with the record
-			int ordinal = 0;
-
-			public CursivelyStringVisitor(bool doPooling)
-			{
-				this.doPooling = doPooling;
-			}
-
-			public override void VisitEndOfField(System.ReadOnlySpan<byte> chunk)
-			{
-				if (bytesUsed != 0)
-				{
-					chunk.CopyTo(bytes.AsSpan(bytesUsed, chunk.Length));
-					chunk = new ReadOnlySpan<byte>(bytes, 0, bytesUsed + chunk.Length);
-					bytesUsed = 0;
-				}
-				var str = doPooling && chunk.Length == 1 && chunk[0] < 128
-					? pool[chunk[0]]
-					: Encoding.UTF8.GetString(chunk);
-				ordinal++;
-			}
-
-			public override void VisitEndOfRecord()
-			{
-				ordinal = 0;
-			}
-
-			public override void VisitPartialFieldContents(System.ReadOnlySpan<byte> chunk)
-			{
-				chunk.CopyTo(bytes.AsSpan(bytesUsed, chunk.Length));
-				bytesUsed += chunk.Length;
-			}
-		}
-
 		[Benchmark]
-		[Arguments(false)]
-		[Arguments(true)]
-		public void CursivelyCsv(bool doPooling)
+		public void CursivelyCsv()
 		{
 			var d = TestData.GetUtf8Array();
-			var proc = new CursivelyStringVisitor(doPooling);
+			var proc = new CursivelyStringVisitor(false);
 			CsvSyncInput
 				.ForMemory(d)
 				.Process(proc);
@@ -294,168 +259,9 @@ namespace CsvBenchmark
 		public void Sylvan()
 		{
 			using var tr = TestData.GetTextReader();
-			using var dr = CsvDataReader.Create(tr);
+			var opts = new CsvDataReaderOptions { BufferSize = BufferSize };
+			using var dr = CsvDataReader.Create(tr, opts);
 			dr.ProcessStrings();
-		}
-
-		static readonly string[] pool = new string[128];
-
-		static CsvReaderBenchmarks()
-		{
-			for (int i = 0; i < pool.Length; i++)
-			{
-				pool[i] = ((char)i).ToString();
-			}
-		}
-
-		static string Pool(char[] buf, int offset, int length)
-		{
-			if (length == 1)
-			{
-				var c = buf[offset];
-				if (c < 128)
-					return pool[c];
-			}
-			return new string(buf, offset, length);
-		}
-
-		[Benchmark]
-		public void SylvanSimplePool()
-		{
-			using var tr = TestData.GetTextReader();
-			using var dr = CsvDataReader.Create(tr, new CsvDataReaderOptions { StringFactory = Pool });
-			dr.ProcessStrings();
-		}
-
-		[Benchmark]
-		public void SylvanSchema()
-		{
-			using var tr = TestData.GetTextReader();
-			using var dr = CsvDataReader.Create(tr, new CsvDataReaderOptions { Schema = TestData.TestDataSchema });
-			dr.Process();
-		}
-
-		[Benchmark]
-		public void MgholamFastCsvSelect()
-		{
-			int id;
-			string name;
-			int val;
-			var rows =
-				fastCSV.ReadStream<object>(
-					TestData.GetTextReader(),
-					',',
-					(object obj, COLUMNS cols) =>
-					{
-						id = int.Parse(cols[0]);
-						name = cols[10];
-						val = int.Parse(cols[20]);
-						return false;
-					}
-				);
-		}
-
-		[Benchmark]
-		public void NRecoSelect()
-		{
-			using var tr = TestData.GetTextReader();
-			var dr = new NReco.Csv.CsvReader(tr);
-			dr.BufferSize = BufferSize;
-			dr.Read(); // read the headers
-			while (dr.Read())
-			{
-				var id = int.Parse(dr[0]);
-				var name = dr[10];
-				var val = int.Parse(dr[20]);
-			}
-		}
-
-		class CursivelySelectVisitor : CsvReaderVisitorBase
-		{
-			readonly byte[] bytes = new byte[1024];
-			int bytesUsed = 0;
-
-			int ordinal = 0;
-			int row = 0;
-
-			int id;
-			string name;
-			int value;
-
-			public override void VisitEndOfField(ReadOnlySpan<byte> chunk)
-			{
-				if (bytesUsed != 0)
-				{
-					chunk.CopyTo(bytes.AsSpan(bytesUsed, chunk.Length));
-					chunk = new ReadOnlySpan<byte>(bytes, 0, bytesUsed + chunk.Length);
-					bytesUsed = 0;
-				}
-				if (row != 0) // skip the header row
-				{
-					switch (ordinal)
-					{
-						case 0:
-							if (!Utf8Parser.TryParse(chunk, out id, out _))
-							{
-								throw new FormatException();
-							}
-							break;
-						case 10:
-							name = Encoding.UTF8.GetString(chunk);
-							break;
-						case 20:
-							if (!Utf8Parser.TryParse(chunk, out value, out _))
-							{
-								throw new FormatException();
-							}
-							break;
-					}
-				}
-				ordinal++;
-			}
-
-			public override void VisitEndOfRecord()
-			{
-				if (row > 0)
-				{
-					// presumably, at this point something would be done with the field values collected for this row.
-					// Dealing with the data as an IEnumerable, for example would be difficult
-				}
-				ordinal = 0;
-				row++;
-			}
-
-			public override void VisitPartialFieldContents(System.ReadOnlySpan<byte> chunk)
-			{
-				if (row > 0)
-				{
-					chunk.CopyTo(bytes.AsSpan(bytesUsed, chunk.Length));
-					bytesUsed += chunk.Length;
-				}
-			}
-		}
-
-		[Benchmark]
-		public void CursivelyCsvSelect()
-		{
-			var d = TestData.GetUtf8Array();
-			var proc = new CursivelySelectVisitor();
-			CsvSyncInput
-				.ForMemory(d)
-				.Process(proc);
-		}
-
-		[Benchmark]
-		public void SylvanSelect()
-		{
-			using var tr = TestData.GetTextReader();
-			using var dr = CsvDataReader.Create(tr);
-			while (dr.Read())
-			{
-				var id = dr.GetInt32(0);
-				var name = dr.GetString(10);
-				var val = dr.GetInt32(20);
-			}
 		}
 	}
 }

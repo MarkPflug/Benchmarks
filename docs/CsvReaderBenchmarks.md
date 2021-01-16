@@ -1,44 +1,38 @@
 # CSV Reader Benchmarks
 
-|               Method |       Mean | Ratio |   Allocated |
-|--------------------- |-----------:|------:|------------:|
-|            CsvHelper |  23.666 ms |  1.00 | 27261.96 KB |
-| NotVBTextFieldParser |  11.900 ms |  0.50 | 22238.45 KB |
-|        FastCsvParser |   8.824 ms |  0.37 |  7548.92 KB |
-|           CsvBySteve | 106.636 ms |  4.49 | 93808.72 KB |
-|           Lumenworks |  18.742 ms |  0.80 | 42801.48 KB |
-|          NaiveBroken |   5.053 ms |  0.21 | 11867.72 KB |
-|            NLightCsv |  13.833 ms |  0.58 |  7327.44 KB |
-|          VisualBasic | 108.816 ms |  4.59 | 187061.7 KB |
-|             OleDbCsv | 237.363 ms | 10.03 |  6848.06 KB |
-|         FlatFilesCsv |  37.692 ms |  1.59 | 25885.99 KB |
-|           FSharpData |  15.733 ms |  0.66 | 62953.31 KB |
-|         FluentSelect |  94.929 ms |  4.01 |  1734.57 KB |
-|       MgholamFastCSV |   6.071 ms |  0.26 |  7884.31 KB |
-|         CursivelyCsv |   6.927 ms |  0.29 |   7164.4 KB |
-|              CtlData |   7.059 ms |  0.30 |  20466.5 KB |
-|                NReco |   6.672 ms |  0.28 |  7313.96 KB |
-|               Sylvan |   5.770 ms |  0.24 |  7323.12 KB |
-|     SylvanSimplePool |   4.386 ms |  0.19 |  1926.67 KB |
-|         SylvanSchema |   7.136 ms |  0.30 |   952.35 KB |
-| MgholamFastCsvSelect |   2.928 ms |  0.12 |  1140.07 KB |
-|          NRecoSelect |   2.959 ms |  0.13 |   570.38 KB |
-|   CursivelyCsvSelect |   1.732 ms |  0.07 |   214.35 KB |
-|         SylvanSelect |   2.082 ms |  0.09 |   376.23 KB |
+The main benchmark set measures CSV readers processing every field in the dataset
+as a string. This is the functionality that is common to all CSV parsers.
 
-### SylvanSchema
+|               Method |       Mean | Ratio | Allocated |
+|--------------------- |-----------:|------:|----------:|
+|          NaiveBroken |   5.479 ms |  1.00 |  11.59 MB |
+|               Sylvan |   5.908 ms |  1.10 |   7.15 MB |
+|       MgholamFastCSV |   6.057 ms |  1.12 |    7.7 MB |
+|                NReco |   6.606 ms |  1.23 |   7.14 MB |
+|              CtlData |   7.099 ms |  1.31 |  19.99 MB |
+|         CursivelyCsv |   7.302 ms |  1.36 |      7 MB |
+|        FastCsvParser |   9.033 ms |  1.68 |   7.37 MB |
+| NotVBTextFieldParser |  12.036 ms |  2.23 |  21.72 MB |
+|            NLightCsv |  14.744 ms |  2.74 |   7.17 MB |
+|           FSharpData |  16.882 ms |  3.09 |  61.48 MB |
+|           Lumenworks |  19.501 ms |  3.62 |  41.92 MB |
+|            CsvHelper |  23.961 ms |  4.44 |  26.81 MB |
+|         FlatFilesCsv |  40.281 ms |  7.45 |  25.28 MB |
+|           CsvBySteve | 103.463 ms | 19.00 |  91.61 MB |
+|         FluentSelect | 108.925 ms | 20.25 |   1.69 MB |
+|          VisualBasic | 115.329 ms | 21.23 | 182.68 MB |
+|             OleDbCsv | 189.211 ms | 34.51 |   6.69 MB |
 
-This measures using the Sylvan CsvDataReader with a provided schema and processing columns as their appropriate type.
-This adds some amount of time to process the data as it must parse the values,
-but this is time which would be spent in `Parse` methods anyway when using other libraries that only expose strings.
+### Select
 
-### SylvanSimplePool
-
-This measures applying a very simple string-pooling strategy to the Sylvan data reader where all 1-char-length strings 
-are precalculated and reused rather than allocating a new string for each value. Admittedly, this does take some advantage of
-fore-knowledge of the dataset.
-
-### *Select
-Some CSV parsers are more efficient when reading only a subset of the columns in a file. 
-These benchmarks measures reading only 3 of the 85 columns. Two of these columns are processed as integer values, and one as a string.
+Some CSV parsers are more efficient when accessing only a subset of the columns in a file.
+These benchmarks measure reading only 3 of the 85 columns. Two of these columns are processed as integer values, and one as a string.
 Notably, these are all faster than even the naive approach to parsing CSV.
+
+|               Method |      Mean | Ratio |   Allocated |
+|--------------------- |----------:|------:|------------:|
+|          NaiveBroken |  5.176 ms |  1.00 | 11867.72 KB |
+|   CursivelyCsvSelect |  1.820 ms |  0.35 |   215.28 KB |
+|         SylvanSelect |  2.148 ms |  0.41 |   376.25 KB |
+| MgholamFastCsvSelect |  2.934 ms |  0.57 |  1140.07 KB |
+|          NRecoSelect |  2.944 ms |  0.57 |    570.4 KB |
