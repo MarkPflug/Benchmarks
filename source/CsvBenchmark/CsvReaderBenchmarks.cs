@@ -168,19 +168,15 @@ namespace CsvBenchmark
 		}
 
 		[Benchmark]
-		public void FluentSelect()
+		public void Fluent()
 		{
-			var rows =
-				Read.Csv.FromString(TestData.CachedData)
-				.ThatReturns.ArrayOf<(int id, string name, int count)>()
-				.Put.Column(0).As<int>().Into(a => a.id)
-				.Put.Column(10).Into(a => a.name)
-				.Put.Column(20).As<int>().Into(a => a.count)
-				.GetAll();
+			var tr = TestData.GetTextReader();
 
-			foreach (var row in rows.ResultSet)
+			var splitter = new global::FluentCsv.CsvParser.Splitters.Rfc4180DataSplitter();
+			string line;
+			while ((line = tr.ReadLine()) != null)
 			{
-
+				var row = splitter.SplitColumns(line, ",");
 			}
 		}
 

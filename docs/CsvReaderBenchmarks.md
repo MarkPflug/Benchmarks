@@ -19,8 +19,8 @@ as a string. This is the functionality that is common to all CSV parsers.
 |            CsvHelper |  23.961 ms |  4.44 |  26.81 MB |
 |         FlatFilesCsv |  40.281 ms |  7.45 |  25.28 MB |
 |           CsvBySteve | 103.463 ms | 19.00 |  91.61 MB |
-|         FluentSelect | 108.925 ms | 20.25 |   1.69 MB |
 |          VisualBasic | 115.329 ms | 21.23 | 182.68 MB |
+|               Fluent | 188.762 ms | 34.93 | 119.29 MB |
 |             OleDbCsv | 189.211 ms | 34.51 |   6.69 MB |
 
 ### Select
