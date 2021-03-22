@@ -10,7 +10,6 @@ namespace CsvBenchmark
 {
 	static class DataExtensions
 	{
-		// this is the "fast path" for test cases that only deal in strings.
 		public static void ProcessStrings(this IDataReader reader)
 		{
 			while (reader.Read())
@@ -22,7 +21,6 @@ namespace CsvBenchmark
 			}
 		}
 
-		// this is the "fast path" for test cases that only deal in strings.
 		public static void ProcessValues(this IDataReader reader)
 		{
 			while (reader.Read())
@@ -36,13 +34,21 @@ namespace CsvBenchmark
 
 		public static void Process(this IDataReader reader)
 		{
+			TypeCode[] types = new TypeCode[reader.FieldCount];
+			for (int i = 0; i < reader.FieldCount; i++)
+			{
+				var t = reader.GetFieldType(i);
+				t = Nullable.GetUnderlyingType(t) ?? t;
+				types[i] = Type.GetTypeCode(t);
+			}
+
 			while (reader.Read())
 			{
 				for (int i = 0; i < reader.FieldCount; i++)
 				{
 					if (reader.IsDBNull(i))
 						continue;
-					ProcessField(reader, i);
+					ProcessField(reader, i, types[i]);
 				}
 			}
 		}
@@ -51,13 +57,14 @@ namespace CsvBenchmark
 		{
 			var cols = reader.GetColumnSchema();
 			bool[] allowDbNull = cols.Select(c => c.AllowDBNull != false).ToArray();
+			TypeCode[] types = cols.Select(c => Type.GetTypeCode(c.DataType)).ToArray();
 			while (reader.Read())
 			{
 				for (int i = 0; i < reader.FieldCount; i++)
 				{
 					if (allowDbNull[i] && reader.IsDBNull(i))
 						continue;
-					ProcessField(reader, i);
+					ProcessField(reader, i, types[i]);
 				}
 			}
 		}
@@ -66,6 +73,7 @@ namespace CsvBenchmark
 		{
 			var cols = reader.GetColumnSchema();
 			bool[] allowDbNull = cols.Select(c => c.AllowDBNull != false).ToArray();
+			TypeCode[] types = cols.Select(c => Type.GetTypeCode(c.DataType)).ToArray();
 			while (await reader.ReadAsync())
 			{
 				for (int i = 0; i < reader.FieldCount; i++)
@@ -73,14 +81,14 @@ namespace CsvBenchmark
 					if (allowDbNull[i] && await reader.IsDBNullAsync(i))
 						continue;
 
-					ProcessField(reader, i);
+					ProcessField(reader, i, types[i]);
 				}
 			}
 		}
 
-		static void ProcessField(this IDataReader reader, int i)
+		static void ProcessField(this IDataReader reader, int i, TypeCode typeCode)
 		{
-			switch (Type.GetTypeCode(reader.GetFieldType(i)))
+			switch (typeCode)
 			{
 				case TypeCode.Boolean:
 					reader.GetBoolean(i);
@@ -105,7 +113,7 @@ namespace CsvBenchmark
 					break;
 				default:
 					// no cheating
-					throw new NotSupportedException();
+					throw new NotSupportedException("" + typeCode);
 			}
 		}
 

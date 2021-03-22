@@ -6,6 +6,7 @@ namespace CsvBenchmark
 	{
 		public static void Main(string[] args)
 		{
+			//new DbfDataReaderBenchmarks().DbfData();
 			BenchmarkSwitcher
 			.FromAssembly(typeof(Program).Assembly).Run(args);
 		}

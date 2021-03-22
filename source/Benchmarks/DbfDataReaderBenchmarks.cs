@@ -9,6 +9,7 @@ using System.Net.Http;
 namespace CsvBenchmark
 {
 	[MemoryDiagnoser]
+	[SimpleJob(1, 2, 4, 1)]
 	public class DbfDataReaderBenchmarks
 	{
 		const string Url = "https://www2.census.gov/geo/tiger/GENZ2018/shp/cb_2018_us_county_20m.zip";
@@ -101,11 +102,10 @@ namespace CsvBenchmark
 							reader.GetString(col);
 							break;
 						default:
-							break;
+							// shouldn't get here if we do, our benchmarks are bogus anyway.
+							throw new NotSupportedException(type.ToString());
 					}
-
 				}
-
 			}
 		}
 	}
