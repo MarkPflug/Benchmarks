@@ -3,7 +3,7 @@ using System;
 using System.Buffers.Text;
 using System.Text;
 
-namespace CsvBenchmark
+namespace Benchmarks
 {
 
 	class CursivelyStringVisitor : CsvReaderVisitorBase

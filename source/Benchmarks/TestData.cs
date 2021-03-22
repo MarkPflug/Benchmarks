@@ -11,7 +11,7 @@ using System.Net.Http;
 using System.Runtime.Serialization;
 using System.Text;
 
-namespace CsvBenchmark
+namespace Benchmarks
 {
 	public sealed class TestRecord
 	{

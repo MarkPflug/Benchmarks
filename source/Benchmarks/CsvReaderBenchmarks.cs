@@ -7,7 +7,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 
-namespace CsvBenchmark
+namespace Benchmarks
 {
 	[MemoryDiagnoser]
 	[SimpleJob(1, 2, 4, 1)]

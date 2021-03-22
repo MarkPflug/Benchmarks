@@ -6,7 +6,7 @@ using System.Data.Common;
 using System.Threading.Tasks;
 using System.Linq;
 
-namespace CsvBenchmark
+namespace Benchmarks
 {
 	static class DataExtensions
 	{

@@ -1,6 +1,6 @@
 ﻿using BenchmarkDotNet.Attributes;
 
-namespace CsvBenchmark
+namespace Benchmarks
 {
 	[MemoryDiagnoser]
 	[SimpleJob(1, 2, 4, 1)]

@@ -4,7 +4,7 @@ using Sylvan.Data.Csv;
 using System.Globalization;
 using static fastCSV;
 
-namespace CsvBenchmark
+namespace Benchmarks
 {
 	[MemoryDiagnoser]
 	public class CsvReaderSelectBenchmarks

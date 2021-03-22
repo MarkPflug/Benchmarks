@@ -1,14 +1,19 @@
-﻿using BenchmarkDotNet.Running;
+﻿using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Running;
 
-namespace CsvBenchmark
+namespace Benchmarks
 {
 	static class Program
 	{
 		public static void Main(string[] args)
 		{
-			//new DbfDataReaderBenchmarks().DbfData();
+
+			new XlsBenchmarks().NpoiXls();
+
+			// NPOI is not optimized, so we disable this validation
+			var config = DefaultConfig.Instance.WithOption(ConfigOptions.DisableOptimizationsValidator, true);
 			BenchmarkSwitcher
-			.FromAssembly(typeof(Program).Assembly).Run(args);
+			.FromAssembly(typeof(Program).Assembly).Run(args,config);
 		}
 	}
 }

@@ -5,7 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace CsvBenchmark
+namespace Benchmarks
 {
 	[MemoryDiagnoser]
 	[SimpleJob(1, 2, 4, 1)]

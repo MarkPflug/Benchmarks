@@ -13,7 +13,7 @@ using TinyCsvParser;
 using TinyCsvParser.Mapping;
 using static Dapper.SqlMapper;
 
-namespace CsvBenchmark
+namespace Benchmarks
 {
 	[MemoryDiagnoser]
 	[SimpleJob(1, 2, 4, 1)]

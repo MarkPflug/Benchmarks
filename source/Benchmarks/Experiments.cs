@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.IO;
 
-namespace CsvBenchmark
+namespace Benchmarks
 {
 	static class Experiments
 	{

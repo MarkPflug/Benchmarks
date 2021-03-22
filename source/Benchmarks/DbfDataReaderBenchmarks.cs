@@ -6,7 +6,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
 
-namespace CsvBenchmark
+namespace Benchmarks
 {
 	[MemoryDiagnoser]
 	[SimpleJob(1, 2, 4, 1)]
