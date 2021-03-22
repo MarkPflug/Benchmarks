@@ -8,16 +8,14 @@ namespace CsvBenchmark
 
 	class CursivelyStringVisitor : CsvReaderVisitorBase
 	{
-		readonly bool doPooling;
 		readonly byte[] bytes = new byte[1024];
 		int bytesUsed = 0;
 
 		// in any realistic scenario we'd need to at least know the column oridnal to do anything with the record
 		int ordinal = 0;
 
-		public CursivelyStringVisitor(bool doPooling)
+		public CursivelyStringVisitor()
 		{
-			this.doPooling = doPooling;
 		}
 
 		public override void VisitEndOfField(System.ReadOnlySpan<byte> chunk)
@@ -28,9 +26,7 @@ namespace CsvBenchmark
 				chunk = new ReadOnlySpan<byte>(bytes, 0, bytesUsed + chunk.Length);
 				bytesUsed = 0;
 			}
-			var str = doPooling && chunk.Length == 1 && chunk[0] < 128
-				? StringPool.Strings[chunk[0]]
-				: Encoding.UTF8.GetString(chunk);
+			var str = Encoding.UTF8.GetString(chunk);
 			ordinal++;
 		}
 

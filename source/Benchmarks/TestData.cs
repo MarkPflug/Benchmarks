@@ -1,11 +1,14 @@
-﻿using Sylvan.Data;
+﻿using CsvHelper.Configuration.Attributes;
+using Sylvan.Data;
 using Sylvan.Data.Csv;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.Serialization;
 using System.Text;
 
 namespace CsvBenchmark
@@ -19,56 +22,93 @@ namespace CsvBenchmark
 		public double[] DataSet { get; set; }
 	}
 
-	public class CovidRecord
+	public class SalesRecord
 	{
-		public int UID { get; set; }
-		public string iso2 { get; set; }
-		public string iso3 { get; set; }
-		public int? code3 { get; set; }
-		public float? FIPS { get; set; }
-		public string Admin2 { get; set; }
-		public string Province_State { get; set; }
-		public string Country_Region { get; set; }
-		public float? Lat { get; set; }
-		public float? Long_ { get; set; }
-		public string Combined_Key { get; set; }
+		[Name("Region")]
+		[DataMember(Name = "Region")]
+		public string Region { get; set; }
+		[Name("Country")]
+		[DataMember(Name = "Country")]
+		public string Country { get; set; }
+		[Name("Item Type")]
+		[DataMember(Name = "Item Type")]
+		public string ItemType { get; set; }
+		[Name("Sales Channel")]
+		[DataMember(Name = "Sales Channel")]
+		public string SalesChannel { get; set; }
+		[Name("Order Priority")]
+		[DataMember(Name = "Order Priority")]
+		public string OrderPriority { get; set; }
+		[Name("Order Date")]
+		[DataMember(Name = "Order Date")]
+		public DateTime OrderDate { get; set; }
+		[Name("Order ID")]
+		[DataMember(Name = "Order ID")]
+		public int OrderId { get; set; }
+		[Name("Ship Date")]
+		[DataMember(Name = "Ship Date")]
+		public DateTime ShipDate { get; set; }
+		[Name("Units Sold")]
+		[DataMember(Name = "Units Sold")]
+		public int UnitsSold { get; set; }
+		[Name("Unit Price")]
+		[DataMember(Name = "Unit Price")]
+		public decimal UnitPrice { get; set; }
+		[Name("Unit Cost")]
+		[DataMember(Name = "Unit Cost")]
+		public decimal UnitCost { get; set; }
+		[Name("Total Revenue")]
+		[DataMember(Name = "Total Revenue")]
+		public decimal TotalRevenue { get; set; }
+		[Name("Total Cost")]
+		[DataMember(Name = "Total Cost")]
+		public decimal TotalCost { get; set; }
+		[Name("Total Profit")]
+		[DataMember(Name = "Total Profit")]
+		public decimal TotalProfit { get; set; }
 	}
 
-	public class CovidRecordStrings
+	public class SalesRecordStrings
 	{
-		public string UID { get; set; }
-		public string iso2 { get; set; }
-		public string iso3 { get; set; }
-		public string code3 { get; set; }
-		public string FIPS { get; set; }
-		public string Admin2 { get; set; }
-		public string Province_State { get; set; }
-		public string Country_Region { get; set; }
-		public string Lat { get; set; }
-		public string Long_ { get; set; }
-		public string Combined_Key { get; set; }
+		public string Region { get; set; }
+		public string Country { get; set; }
+		public string ItemType { get; set; }
+		public string SalesChannel { get; set; }
+		public string OrderPriority { get; set; }
+		public string OrderDate { get; set; }
+		public string OrderId { get; set; }
+		public string ShipDate { get; set; }
+		public string UnitsSold { get; set; }
+		public string UnitPrice { get; set; }
+		public string UnitCost { get; set; }
+		public string TotalRevenue { get; set; }
+		public string TotalCost { get; set; }
+		public string TotalProfit { get; set; }
 	}
 
 	public static class TestData
 	{
-		const string DataSetUrl = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/f7c2384622806d5297d16c314a7bc0b9cde24937/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv";
-		const string DataFileName = "Data.csv";
+		const string DataSetUrl = "http://eforexcel.com/wp/wp-content/uploads/2017/07/1000000%20Sales%20Records.zip";
+		const string ZipFileName = "SalesData.zip";
+		const string DataFileName = "SalesData.csv";
 
-		const string DataSetSchema = @"UID:int,
-iso2,
-iso3,
-code3:int?,
-FIPS:float?,
-Admin2,
-Province_State,
-Country_Region,
-Lat:float?,
-Long_:float?,
-Combined_Key,
-{Date}>Values*:int";
-
-		static ICsvSchemaProvider Schema;
-		static CsvDataReaderOptions Options;
+		const string DataSetSchema = @"
+Region,
+Country,
+Item Type,
+Sales Channel,
+Order Priority,
+Order Date:DateTime,
+Order ID:int,
+Ship Date:DateTime,
+Units Sold:int,
+Unit Price:decimal,
+Unit Cost:decimal,
+Total Revenue:decimal,
+Total Cost:decimal,
+Total Profit:decimal
+";
+		static CsvSchema Schema = new CsvSchema(Sylvan.Data.Schema.Parse(DataSetSchema).GetColumnSchema());
 
 		public static string CachedData;
 		static byte[] CachedUtfData;
@@ -77,9 +117,17 @@ Combined_Key,
 		{
 			if (!File.Exists(DataFileName))
 			{
-				using var oStream = File.OpenWrite(DataFileName);
-				using var iStream = new HttpClient().GetStreamAsync(DataSetUrl).Result;
-				iStream.CopyTo(oStream);
+				using (var oStream = File.OpenWrite(ZipFileName))
+				using (var iStream = new HttpClient().GetStreamAsync(DataSetUrl).Result)
+				{
+					iStream.CopyTo(oStream);
+				}
+
+				var s = File.OpenRead(ZipFileName);
+				var a = new ZipArchive(s);
+				using var ds = a.Entries.First().Open();
+				using var os = File.Create(DataFileName);
+				ds.CopyTo(os);
 			}
 			CachedData = File.ReadAllText(DataFileName);
 			CachedUtfData = Encoding.UTF8.GetBytes(CachedData);
@@ -90,9 +138,9 @@ Combined_Key,
 			// is it a bad idea to do this in a static constructor?
 			// probably, but this is only used in test/benchmarks.
 			CacheData();
-			Schema = new CsvSchema(Sylvan.Data.Schema.Parse(DataSetSchema).GetColumnSchema());
-			Options = new CsvDataReaderOptions { Schema = Schema };
 		}
+
+		
 
 		public static string DataFile
 		{
@@ -125,8 +173,12 @@ Combined_Key,
 
 		public static DbDataReader GetDataWithSchema(Action<CsvDataReaderOptions> opts = null)
 		{
-			opts?.Invoke(Options);
-			return CsvDataReader.Create(GetTextReader(), Options);
+			
+			var options = new CsvDataReaderOptions { 
+				Schema = Schema 
+			};
+			opts?.Invoke(options);
+			return CsvDataReader.Create(GetTextReader(), options);
 		}
 
 		public static DbDataReader GetTypedData()
@@ -146,22 +198,16 @@ Combined_Key,
 
 			private DataSchema()
 			{
-				Type i = typeof(int), s = typeof(string), f = typeof(float);
-				types = new Type[] { i, s, s, i, f, s, s, s, f, f, s };
-				nullable = new bool[] { false, false, false, false, true };
+				Type i = typeof(int);
+				Type s = typeof(string);
+				Type d = typeof(DateTime);
+				Type m = typeof(decimal);
+				types = new Type[] { s, s, s, s, s, d, i, d, i, m, m, m, m, m };
 			}
 
 			public DbColumn GetColumn(string name, int ordinal)
 			{
-				Type type =
-					ordinal < types.Length
-					? types[ordinal]
-					: typeof(int);
-				bool allowNull =
-					ordinal < nullable.Length
-					? nullable[ordinal]
-					: false;
-				return new TypedCsvColumn(type, allowNull);
+				return new TypedCsvColumn(types[ordinal], false);
 			}
 		}
 

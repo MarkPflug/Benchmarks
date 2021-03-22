@@ -1,2 +1,2 @@
-dotnet build -c Release source/CsvBenchmark.sln
-bin\release\net5.0\CsvBenchmark.exe --iterationTime 1000
+dotnet build -c Release source/Benchmarks.sln
+bin\release\net5.0\Benchmarks.exe --iterationTime 1000

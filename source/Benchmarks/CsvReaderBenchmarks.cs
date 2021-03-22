@@ -11,10 +11,17 @@ using static fastCSV;
 namespace CsvBenchmark
 {
 	[MemoryDiagnoser]
+	[SimpleJob(1, 2, 4, 1)]
 	public class CsvReaderBenchmarks
 	{
 		// buffer size for libraries that allow configuration
 		const int BufferSize = 0x10000;
+
+		static Sylvan.StringPool pool;
+		static CsvReaderBenchmarks()
+		{
+			pool = new Sylvan.StringPool(64);
+		}
 
 		[Benchmark(Baseline = true)]
 		public void NaiveBroken()
@@ -206,7 +213,7 @@ namespace CsvBenchmark
 		public void CursivelyCsv()
 		{
 			var d = TestData.GetUtf8Array();
-			var proc = new CursivelyStringVisitor(false);
+			var proc = new CursivelyStringVisitor();
 			CsvSyncInput
 				.ForMemory(d)
 				.Process(proc);

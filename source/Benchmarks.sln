@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30717.126
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CsvBenchmark", "CsvBenchmark\CsvBenchmark.csproj", "{32ACC069-03E8-46B2-82A0-0FDB6F708B40}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmarks", "Benchmarks\Benchmarks.csproj", "{32ACC069-03E8-46B2-82A0-0FDB6F708B40}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Files", "Files", "{3440120F-356C-45AC-A793-6B5705685BBD}"
 	ProjectSection(SolutionItems) = preProject
@@ -22,6 +22,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{87D6758C-F
 		..\docs\XBaseDataReaderBenchmarks.md = ..\docs\XBaseDataReaderBenchmarks.md
 	EndProjectSection
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sylvan.Data.Csv", "..\..\Sylvan\source\Sylvan.Data.Csv\Sylvan.Data.Csv.csproj", "{C2666983-AC1C-4135-8599-0D2D6913CCCF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,6 +34,10 @@ Global
 		{32ACC069-03E8-46B2-82A0-0FDB6F708B40}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{32ACC069-03E8-46B2-82A0-0FDB6F708B40}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{32ACC069-03E8-46B2-82A0-0FDB6F708B40}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2666983-AC1C-4135-8599-0D2D6913CCCF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2666983-AC1C-4135-8599-0D2D6913CCCF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2666983-AC1C-4135-8599-0D2D6913CCCF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2666983-AC1C-4135-8599-0D2D6913CCCF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

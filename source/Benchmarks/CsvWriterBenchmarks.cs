@@ -8,76 +8,12 @@ using System.Threading.Tasks;
 namespace CsvBenchmark
 {
 	[MemoryDiagnoser]
+	[SimpleJob(1, 2, 4, 1)]
 	public class CsvWriterBenchmarks
 	{
 		static readonly int ValueCount = TestData.DefaultDataValueCount;
 
 		[Benchmark(Baseline = true)]
-		public void CsvHelperSync()
-		{
-			TextWriter tw = TextWriter.Null;
-			var items = TestData.GetTestObjects();
-			var csv = new CsvHelper.CsvWriter(tw, new CsvConfiguration(CultureInfo.InvariantCulture));
-			csv.WriteField("Id");
-			csv.WriteField("Name");
-			csv.WriteField("Date");
-			csv.WriteField("IsActive");
-			for (int i = 0; i < ValueCount; i++)
-			{
-				csv.WriteField("Value" + i);
-			}
-			csv.NextRecord();
-
-			foreach (var item in items)
-			{
-				csv.WriteField(item.Id);
-				csv.WriteField(item.Name);
-				csv.WriteField(item.Date);
-				csv.WriteField(item.IsActive);
-				for (int i = 0; i < ValueCount; i++)
-				{
-					csv.WriteField(item.DataSet[i]);
-				}
-				csv.NextRecord();
-			}
-			csv.Flush();
-		}
-
-
-		// this is horrifically slow: I might be doing something wrong.
-		[Benchmark]
-		public async Task CsvHelperAsync()
-		{
-			TextWriter tw = TextWriter.Null;
-			var items = TestData.GetTestObjects();
-			var csv = new CsvHelper.CsvWriter(tw, new CsvConfiguration(CultureInfo.InvariantCulture));
-			csv.WriteField("Id");
-			csv.WriteField("Name");
-			csv.WriteField("Date");
-			csv.WriteField("IsActive");
-			for (int i = 0; i < ValueCount; i++)
-			{
-				csv.WriteField("Value" + i);
-			}
-			await csv.NextRecordAsync();
-
-			foreach (var item in items)
-			{
-				csv.WriteField(item.Id);
-				csv.WriteField(item.Name);
-				csv.WriteField(item.Date);
-				csv.WriteField(item.IsActive);
-				for (int i = 0; i < ValueCount; i++)
-				{
-					csv.WriteField(item.DataSet[i]);
-				}
-				await csv.NextRecordAsync();
-				await csv.FlushAsync();
-			}
-			await csv.FlushAsync();
-		}
-
-		[Benchmark]
 		public void NaiveBroken()
 		{
 			TextWriter tw = TextWriter.Null;
@@ -113,6 +49,69 @@ namespace CsvBenchmark
 				}
 				tw.WriteLine();
 			}
+		}
+
+		[Benchmark]
+		public void CsvHelperSync()
+		{
+			TextWriter tw = TextWriter.Null;
+			var items = TestData.GetTestObjects();
+			var csv = new CsvHelper.CsvWriter(tw, new CsvConfiguration(CultureInfo.InvariantCulture));
+			csv.WriteField("Id");
+			csv.WriteField("Name");
+			csv.WriteField("Date");
+			csv.WriteField("IsActive");
+			for (int i = 0; i < ValueCount; i++)
+			{
+				csv.WriteField("Value" + i);
+			}
+			csv.NextRecord();
+
+			foreach (var item in items)
+			{
+				csv.WriteField(item.Id);
+				csv.WriteField(item.Name);
+				csv.WriteField(item.Date);
+				csv.WriteField(item.IsActive);
+				for (int i = 0; i < ValueCount; i++)
+				{
+					csv.WriteField(item.DataSet[i]);
+				}
+				csv.NextRecord();
+			}
+			csv.Flush();
+		}
+
+		[Benchmark]
+		public async Task CsvHelperAsync()
+		{
+			TextWriter tw = TextWriter.Null;
+			var items = TestData.GetTestObjects();
+			var csv = new CsvHelper.CsvWriter(tw, new CsvConfiguration(CultureInfo.InvariantCulture));
+			csv.WriteField("Id");
+			csv.WriteField("Name");
+			csv.WriteField("Date");
+			csv.WriteField("IsActive");
+			for (int i = 0; i < ValueCount; i++)
+			{
+				csv.WriteField("Value" + i);
+			}
+			await csv.NextRecordAsync();
+
+			foreach (var item in items)
+			{
+				csv.WriteField(item.Id);
+				csv.WriteField(item.Name);
+				csv.WriteField(item.Date);
+				csv.WriteField(item.IsActive);
+				for (int i = 0; i < ValueCount; i++)
+				{
+					csv.WriteField(item.DataSet[i]);
+				}
+				await csv.NextRecordAsync();
+				await csv.FlushAsync();
+			}
+			await csv.FlushAsync();
 		}
 
 		[Benchmark]
@@ -175,80 +174,22 @@ namespace CsvBenchmark
 			}
 		}
 
-		[Benchmark]
-		public async Task SylvanAsync()
-		{
-			TextWriter tw = TextWriter.Null;
-			var items = TestData.GetTestObjects();
-			var csv = new CsvWriter(tw);
-			await csv.WriteFieldAsync("Id");
-			await csv.WriteFieldAsync("Name");
-			await csv.WriteFieldAsync("Date");
-			await csv.WriteFieldAsync("IsActive");
-			for (int i = 0; i < ValueCount; i++)
-			{
-				await csv.WriteFieldAsync("Value" + i);
-			}
-			await csv.EndRecordAsync();
-			foreach (var item in items)
-			{
-				await csv.WriteFieldAsync(item.Id);
-				await csv.WriteFieldAsync(item.Name);
-				await csv.WriteFieldAsync(item.Date);
-				await csv.WriteFieldAsync(item.IsActive);
-				for (int i = 0; i < ValueCount; i++)
-				{
-					await csv.WriteFieldAsync(item.DataSet[i]);
-				}
-				await csv.EndRecordAsync();
-			}
-		}
+		//[Benchmark]
+		//public async Task SylvanDataAsync()
+		//{
+		//	var tw = TextWriter.Null;
+		//	var dr = TestData.GetTestDataReader();
+		//	var csv = new CsvDataWriter(tw);
+		//	await csv.WriteAsync(dr);
+		//}
 
-		[Benchmark]
-		public void SylvanSync()
-		{
-			TextWriter tw = TextWriter.Null;
-			var items = TestData.GetTestObjects();
-			var csv = new CsvWriter(tw);
-			csv.WriteField("Id");
-			csv.WriteField("Name");
-			csv.WriteField("Date");
-			csv.WriteField("IsActive");
-			for (int i = 0; i < ValueCount; i++)
-			{
-				csv.WriteField("Value" + i);
-			}
-			csv.EndRecord();
-			foreach (var item in items)
-			{
-				csv.WriteField(item.Id);
-				csv.WriteField(item.Name);
-				csv.WriteField(item.Date);
-				csv.WriteField(item.IsActive);
-				for (int i = 0; i < ValueCount; i++)
-				{
-					csv.WriteField(item.DataSet[i]);
-				}
-				csv.EndRecord();
-			}
-		}
-
-		[Benchmark]
-		public async Task SylvanDataAsync()
-		{
-			var tw = TextWriter.Null;
-			var dr = TestData.GetTestDataReader();
-			var csv = new CsvDataWriter(tw);
-			await csv.WriteAsync(dr);
-		}
-
-		[Benchmark]
-		public void SylvanDataSync()
-		{
-			var tw = TextWriter.Null;
-			var dr = TestData.GetTestDataReader();
-			var csv = new CsvDataWriter(tw);
-			csv.Write(dr);
-		}
+		//[Benchmark]
+		//public void SylvanDataSync()
+		//{
+		//	var tw = TextWriter.Null;
+		//	var dr = TestData.GetTestDataReader();
+		//	var csv = new CsvDataWriter(tw);
+		//	csv.Write(dr);
+		//}
 	}
 }

@@ -1,13 +1,6 @@
-# CSV Benchmarks
+# Sylvan Benchmarks
 
-This repository contains benchmarks for various .NET CSV libraries. 
-These benchmarks were created to validate the performance of my own CSV library 
-[Sylvan.Data.Csv](https://github.com/MarkPflug/Sylvan) and Sylvan.Data.
-
-The benchmarks are authored using [BenchmarkDotNet](https://github.com/dotnet/BenchmarkDotNet). 
-The various libraries provide different APIs, so the while each benchmark has slightly different construction, 
-I believe they provide a fair comparison. 
-If any of the benchmarks are found to be incorrectly setup, I'd happily welcome a pull request with a fix.
+This repository contains benchmarks for [Sylvan](https://github.com/MarkPflug/Sylvan) .NET libraries, comparing them with other libraries in the .NET ecosystem, using [BenchmarkDotNet](https://github.com/dotnet/BenchmarkDotNet). The various libraries provide different APIs, so the while each benchmark has slightly different construction, I believe they provide a fair comparison.  If any of the benchmarks are found to be incorrectly setup, I'd happily welcome a pull request with a fix.
 
 ## Running benchmarks
 
@@ -49,7 +42,7 @@ These are primarily third-party open source libraries, but also tested are the V
 part of the .NET framework libraries, and OleDb text file driver, which is a windows-only and maintained by Microsoft.
 I'd welcome any additions to this list as a pull request.
 
-All libraries are using the latest version as of 2021-01-15.
+All libraries are using the latest version as of 2021-03-22.
 
 - Naive, Broken
 

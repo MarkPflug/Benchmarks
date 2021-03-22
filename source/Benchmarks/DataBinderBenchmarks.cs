@@ -13,8 +13,6 @@ namespace Sylvan.Benchmarks
 	{
 		class TestRecord : IDataReader
 		{
-
-
 			string[] columns;
 			Type[] types;
 			Dictionary<string, int> ordinals;
@@ -204,12 +202,12 @@ namespace Sylvan.Benchmarks
 
 		public DataBinderBenchmarks()
 		{
-			var schema = Schema.Parse("B:Boolean,D:DateTime,V:Double,G:Guid,I:Int32,S:String");
-			this.record = new TestRecord();
-			this.item = new Record();
-			this.compiled = DataBinder<Record>.Create(schema.GetColumnSchema());
+			//var schema = Schema.Parse("B:Boolean,D:DateTime,V:Double,G:Guid,I:Int32,S:String");
+			//this.record = new TestRecord();
+			//this.item = new Record();
+			//this.compiled = DataBinder.Create<Record>(schema);
 
-			dp = record.GetRowParser<Record>();
+			//dp = record.GetRowParser<Record>();
 		}
 
 		class ManualBinder : IDataBinder<Record>
