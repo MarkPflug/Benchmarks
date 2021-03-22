@@ -6,9 +6,6 @@ namespace CsvBenchmark
 	[SimpleJob(1, 2, 4, 1)]
 	public class CsvReaderLeaderBenchmarks
 	{
-		// buffer size for libraries that allow configuration
-		const int BufferSize = 0x10000;
-
 		CsvReaderBenchmarks bench;
 
 		public CsvReaderLeaderBenchmarks()
@@ -26,6 +23,12 @@ namespace CsvBenchmark
 		public void CsvHelperCsv()
 		{
 			bench.CsvHelperCsv();
+		}
+
+		[Benchmark]
+		public void SoftCircuits()
+		{
+			bench.SoftCircuits();
 		}
 
 		[Benchmark]

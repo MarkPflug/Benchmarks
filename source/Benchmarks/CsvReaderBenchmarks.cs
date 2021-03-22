@@ -1,12 +1,11 @@
 ﻿using BenchmarkDotNet.Attributes;
 using Cursively;
-using FluentCsv.FluentReader;
 using Microsoft.VisualBasic.FileIO;
 using Sylvan.Data.Csv;
 using System.Data.OleDb;
 using System.Globalization;
 using System.IO;
-using static fastCSV;
+using System.Text;
 
 namespace CsvBenchmark
 {
@@ -68,8 +67,8 @@ namespace CsvBenchmark
 		public void FastCsvParser()
 		{
 			var s = TestData.GetUtf8Stream();
-			var config = new CsvParser.CsvReader.Config() { ReadinBufferSize = BufferSize };
-			var csv = new CsvParser.CsvReader(s, System.Text.Encoding.UTF8, config);
+			var config = new FastCsvParser.CsvReader.Config() { ReadinBufferSize = BufferSize };
+			var csv = new FastCsvParser.CsvReader(s, Encoding.UTF8, config);
 			while (csv.MoveNext())
 			{
 				var row = csv.Current;
@@ -195,7 +194,7 @@ namespace CsvBenchmark
 				fastCSV.ReadStream<object>(
 					TestData.GetTextReader(),
 					',',
-					(object obj, COLUMNS cols) =>
+					(object obj, fastCSV.COLUMNS cols) =>
 					{
 						var c = cols.Count;
 						if (values == null)
@@ -254,6 +253,19 @@ namespace CsvBenchmark
 				for (int i = 0; i < dr.FieldsCount; i++)
 				{
 					var s = dr[i];
+				}
+			}
+		}
+
+		[Benchmark]
+		public void SoftCircuits()
+		{
+			var stream = TestData.GetUtf8Stream();
+			using (var reader = new SoftCircuits.CsvParser.CsvReader(stream, Encoding.UTF8))
+			{
+				string[]? columns = null;
+				while (reader.ReadRow(ref columns))
+				{					
 				}
 			}
 		}
