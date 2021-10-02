@@ -1,0 +1,64 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <OutputType>exe</OutputType>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
+    <PackageReference Include="Csv" Version="2.0.62" />
+    <PackageReference Include="CsvHelper" Version="27.1.1" />
+    <PackageReference Include="CsvTextFieldParser" Version="1.2.2-preview" />
+    <PackageReference Include="Ctl.Data" Version="2.0.0.2" />
+    <PackageReference Include="Cursively" Version="1.2.0" />
+    
+    <PackageReference Include="Dapper" Version="2.0.90" />
+    
+    <PackageReference Include="DbfDataReader" Version="0.8.0" />
+    <PackageReference Include="FastCsvParser" Version="1.1.1" />
+    <PackageReference Include="FlatFiles" Version="4.16.0" />
+    <PackageReference Include="FluentCSV" Version="3.0.0" />
+    <PackageReference Include="Knapcode.FastCsvParser" Version="1.1.0" />
+    <PackageReference Include="LumenWorksCsvReader" Version="4.0.0" />
+    <PackageReference Include="mgholam.fastCSV" Version="2.0.9" />
+    <PackageReference Include="NDbfReader" Version="2.3.0" />
+    <PackageReference Include="NLight" Version="2.1.1" />
+    <PackageReference Include="NReco.Csv" Version="1.0.0" />
+    <PackageReference Include="FSharp.Data" Version="4.2.3" />
+    <PackageReference Include="Microsoft.VisualBasic" Version="10.4.0-preview.18571.3" />
+    <PackageReference Include="SoftCircuits.CsvParser" Version="3.0.1" />
+    <PackageReference Include="Aspose.Cells" Version="21.9.0" />
+    <PackageReference Include="ClosedXML" Version="0.95.4" />
+    <PackageReference Include="EPPlus" Version="5.7.5" />
+    <PackageReference Include="BenchmarkDotNet" Version="0.13.1" />
+    <PackageReference Include="ExcelDataReader" Version="3.7.0-develop00310" />
+    <PackageReference Include="FastExcel" Version="3.0.13" />
+    <PackageReference Include="NPOI" Version="2.5.4" />
+    <PackageReference Include="Sylvan.Data.Csv" Version="1.1.8" />
+    <PackageReference Include="Sylvan.Common" Version="0.3.0-B0001" />
+    <PackageReference Include="Sylvan.Data" Version="0.1.0-b0024" />
+    <PackageReference Include="Sylvan.Data.Excel" Version="0.1.0-B0005" />
+    <PackageReference Include="Sylvan.Data.XBase" Version="0.1.0" />
+    <PackageReference Include="System.Data.OleDb" Version="6.0.0-rc.1.21451.13" />
+
+    <PackageReference Include="Microsoft.Win32.Primitives" Version="4.3.0" />
+    <PackageReference Include="System.Net.Primitives" Version="4.3.1" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="6.0.0-rc.1.21451.13" />
+    <PackageReference Include="TinyCsvParser" Version="2.6.1" />
+    <PackageReference Include="Cesil" Version="0.9.0" />
+   
+  </ItemGroup>
+
+  <!--<ItemGroup>
+    <ProjectReference Include="..\..\..\Sylvan.Data.Excel\source\Sylvan.Data.Excel\Sylvan.Data.Excel.csproj" />
+  </ItemGroup>-->
+
+  <ItemGroup>
+    <None Update="Data/**/*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

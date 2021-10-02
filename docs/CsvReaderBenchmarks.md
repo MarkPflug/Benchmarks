@@ -1,38 +1,29 @@
 # CSV Reader Benchmarks
 
-The main benchmark set measures CSV readers processing every field in the dataset
-as a string. This is the functionality that is common to all CSV parsers.
+This benchmark set measures CSV readers processing every field in the dataset
+as a string. 
+The test dataset is 1 million sample sales records from [eforexcel.com].
+This measures functionality that is common to all CSV parsers.
+This data set does not include any quoted fields, this so doesn't test correctness of any implementation.
 
-|               Method |       Mean | Ratio | Allocated |
-|--------------------- |-----------:|------:|----------:|
-|          NaiveBroken |   5.479 ms |  1.00 |  11.59 MB |
-|               Sylvan |   5.908 ms |  1.10 |   7.15 MB |
-|       MgholamFastCSV |   6.057 ms |  1.12 |    7.7 MB |
-|                NReco |   6.606 ms |  1.23 |   7.14 MB |
-|              CtlData |   7.099 ms |  1.31 |  19.99 MB |
-|         CursivelyCsv |   7.302 ms |  1.36 |      7 MB |
-|        FastCsvParser |   9.033 ms |  1.68 |   7.37 MB |
-| NotVBTextFieldParser |  12.036 ms |  2.23 |  21.72 MB |
-|            NLightCsv |  14.744 ms |  2.74 |   7.17 MB |
-|           FSharpData |  16.882 ms |  3.09 |  61.48 MB |
-|           Lumenworks |  19.501 ms |  3.62 |  41.92 MB |
-|            CsvHelper |  23.961 ms |  4.44 |  26.81 MB |
-|         FlatFilesCsv |  40.281 ms |  7.45 |  25.28 MB |
-|           CsvBySteve | 103.463 ms | 19.00 |  91.61 MB |
-|          VisualBasic | 115.329 ms | 21.23 | 182.68 MB |
-|               Fluent | 188.762 ms | 34.93 | 119.29 MB |
-|             OleDbCsv | 189.211 ms | 34.51 |   6.69 MB |
+|               Method |        Mean |       Error |    StdDev | Ratio | RatioSD |        Gen 0 |     Gen 1 | Allocated |
+|--------------------- |------------:|------------:|----------:|------:|--------:|-------------:|----------:|----------:|
+|          NaiveBroken |    486.1 ms |    37.94 ms |  13.53 ms |  1.00 |    0.00 |  244000.0000 |         - |    975 MB |
+|         CsvHelperCsv |  1,169.8 ms |    38.17 ms |   9.91 ms |  2.40 |    0.08 |  301000.0000 |         - |  1,201 MB |
+| NotVBTextFieldParser |  1,342.9 ms |   110.10 ms |  39.26 ms |  2.77 |    0.13 |  504000.0000 |         - |  2,012 MB |
+|        FastCsvParser |    707.1 ms |    24.46 ms |   8.72 ms |  1.46 |    0.05 |  134000.0000 |         - |    536 MB |
+|           CsvBySteve | 11,261.5 ms | 2,771.08 ms | 988.19 ms | 23.21 |    2.48 | 1315000.0000 | 1000.0000 |  5,246 MB |
+|           Lumenworks |  1,072.7 ms |    12.17 ms |   3.16 ms |  2.20 |    0.07 |  632000.0000 |         - |  2,525 MB |
+|            NLightCsv |    974.9 ms |    82.35 ms |  21.39 ms |  2.00 |    0.06 |  134000.0000 |         - |    535 MB |
+|          VisualBasic |  9,870.7 ms |   410.44 ms | 146.37 ms | 20.32 |    0.66 | 6347000.0000 |         - | 25,333 MB |
+|             OleDbCsv |  6,655.1 ms |   289.76 ms |  75.25 ms | 13.63 |    0.25 |  100000.0000 |         - |    403 MB |
+|         FlatFilesCsv |  3,347.3 ms |   386.95 ms | 137.99 ms |  6.89 |    0.39 |  469000.0000 |         - |  1,872 MB |
+|           FSharpData |  1,262.1 ms |    58.80 ms |  20.97 ms |  2.60 |    0.09 |  940000.0000 |         - |  3,750 MB |
+|               Fluent |    560.3 ms |    73.41 ms |  26.18 ms |  1.15 |    0.06 |  244000.0000 |         - |    975 MB |
+|       MgholamFastCSV |    548.0 ms |    20.19 ms |   7.20 ms |  1.13 |    0.03 |  140000.0000 |         - |    559 MB |
+|         CursivelyCsv |    472.5 ms |    14.38 ms |   5.13 ms |  0.97 |    0.03 |  134000.0000 |         - |    535 MB |
+|              CtlData |    496.8 ms |    12.21 ms |   3.17 ms |  1.02 |    0.03 |  310000.0000 |         - |  1,238 MB |
+|                NReco |    670.8 ms |    20.13 ms |   5.23 ms |  1.37 |    0.04 |  134000.0000 |         - |    536 MB |
+|         SoftCircuits |    597.4 ms |    16.24 ms |   5.79 ms |  1.23 |    0.03 |  219000.0000 |         - |    876 MB |
+|               Sylvan |    376.1 ms |    11.44 ms |   4.08 ms |  0.77 |    0.02 |  134000.0000 |         - |    536 MB |
 
-### Select
-
-Some CSV parsers are more efficient when accessing only a subset of the columns in a file.
-These benchmarks measure reading only 3 of the 85 columns. Two of these columns are processed as integer values, and one as a string.
-Notably, these are all faster than even the naive approach to parsing CSV.
-
-|               Method |      Mean | Ratio |   Allocated |
-|--------------------- |----------:|------:|------------:|
-|          NaiveBroken |  5.176 ms |  1.00 | 11867.72 KB |
-|   CursivelyCsvSelect |  1.820 ms |  0.35 |   215.28 KB |
-|         SylvanSelect |  2.148 ms |  0.41 |   376.25 KB |
-| MgholamFastCsvSelect |  2.934 ms |  0.57 |  1140.07 KB |
-|          NRecoSelect |  2.944 ms |  0.57 |    570.4 KB |

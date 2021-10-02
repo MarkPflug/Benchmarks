@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31710.8
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmarks", "Benchmarks\Benchmarks.csproj", "{32ACC069-03E8-46B2-82A0-0FDB6F708B40}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Files", "Files", "{3440120F-356C-45AC-A793-6B5705685BBD}"
+	ProjectSection(SolutionItems) = preProject
+		..\.gitignore = ..\.gitignore
+		..\benchmark.cmd = ..\benchmark.cmd
+		..\Directory.Build.props = ..\Directory.Build.props
+		..\readme.md = ..\readme.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{87D6758C-FE49-4B3F-8607-64DA61C40980}"
+	ProjectSection(SolutionItems) = preProject
+		..\docs\CsvDataBinderBenchmarks.md = ..\docs\CsvDataBinderBenchmarks.md
+		..\docs\CsvReaderBenchmarks.md = ..\docs\CsvReaderBenchmarks.md
+		..\docs\CsvWriterBenchmarks.md = ..\docs\CsvWriterBenchmarks.md
+		ExcelBenchmarks.md = ExcelBenchmarks.md
+		..\readme.md = ..\readme.md
+		..\docs\XBaseDataReaderBenchmarks.md = ..\docs\XBaseDataReaderBenchmarks.md
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{32ACC069-03E8-46B2-82A0-0FDB6F708B40}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{32ACC069-03E8-46B2-82A0-0FDB6F708B40}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{32ACC069-03E8-46B2-82A0-0FDB6F708B40}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{32ACC069-03E8-46B2-82A0-0FDB6F708B40}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D8F33199-8C59-44AC-BCC9-BFBF8DD5759A}
+	EndGlobalSection
+EndGlobal
