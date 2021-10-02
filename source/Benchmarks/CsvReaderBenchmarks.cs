@@ -5,22 +5,16 @@ using Sylvan.Data.Csv;
 using System.Data.OleDb;
 using System.Globalization;
 using System.IO;
+using System.Runtime.Versioning;
 using System.Text;
 
 namespace Benchmarks
 {
 	[MemoryDiagnoser]
-	[SimpleJob(1, 2, 4, 1)]
 	public class CsvReaderBenchmarks
 	{
 		// buffer size for libraries that allow configuration
 		const int BufferSize = 0x10000;
-
-		static Sylvan.StringPool pool;
-		static CsvReaderBenchmarks()
-		{
-			pool = new Sylvan.StringPool(64);
-		}
 
 		[Benchmark(Baseline = true)]
 		public void NaiveBroken()
@@ -129,6 +123,7 @@ namespace Benchmarks
 		}
 
 		[Benchmark] // most people won't be able to run this.
+		[SupportedOSPlatform("windows")]
 		public void OleDbCsv()
 		{
 			// NOTE: I don't know how to disable the column type detection here
@@ -263,7 +258,7 @@ namespace Benchmarks
 			var stream = TestData.GetUtf8Stream();
 			using (var reader = new SoftCircuits.CsvParser.CsvReader(stream, Encoding.UTF8))
 			{
-				string[]? columns = null;
+				string[] columns = null;
 				while (reader.ReadRow(ref columns))
 				{					
 				}
@@ -274,8 +269,7 @@ namespace Benchmarks
 		public void Sylvan()
 		{
 			using var tr = TestData.GetTextReader();
-			var opts = new CsvDataReaderOptions { BufferSize = BufferSize };
-			using var dr = CsvDataReader.Create(tr, opts);
+			using var dr = CsvDataReader.Create(tr);
 			dr.ProcessStrings();
 		}
 	}

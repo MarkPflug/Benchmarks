@@ -32,7 +32,7 @@ namespace Benchmarks
 			return this;
 		}
 
-		DbColumn? ICsvSchemaProvider.GetColumn(string? name, int ordinal)
+		DbColumn ICsvSchemaProvider.GetColumn(string name, int ordinal)
 		{
 			return ordinal < columns.Count ? columns[ordinal] : null;
 		}

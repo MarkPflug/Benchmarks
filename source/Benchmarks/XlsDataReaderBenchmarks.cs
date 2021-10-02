@@ -11,10 +11,10 @@ using System.Text;
 namespace Benchmarks
 {
 	[MemoryDiagnoser]
-	[SimpleJob(1, 2, 4, 1)]
 	public class XlsBenchmarks
 	{
-		const string file = @"\data\excel\Excel Pkdx V5.14.xls";
+		const string file = @"Data/65K_Records_Data.xls";
+
 		public XlsBenchmarks()
 		{
 			Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);

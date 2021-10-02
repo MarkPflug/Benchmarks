@@ -220,15 +220,14 @@ Total Profit:decimal
 			}
 		}
 
-		static ObjectDataReader.Factory<TestRecord> Factory =
+		static ObjectDataReader.Builder<TestRecord> Builder =
 			ObjectDataReader
-				.BuildFactory<TestRecord>()
+				.Build<TestRecord>()
 				.AddColumn("Id", i => i.Id)
 				.AddColumn("Name", i => i.Name)
 				.AddColumn("Date", i => i.Date)
 				.AddColumn("IsActive", i => i.IsActive)
-				.Repeat((b, i) => b.AddColumn("Data" + i, r => r.DataSet[i]), 10)
-				.Build();
+				.Repeat((b, i) => b.AddColumn("Data" + i, r => r.DataSet[i]), 10);				
 
 		public static T Repeat<T>(this T obj, Func<T, int, T> a, int count)
 		{
@@ -244,7 +243,7 @@ Total Profit:decimal
 
 		public static DbDataReader GetTestData(int count = 10)
 		{
-			return Factory.Create(GetTestObjects(count, 10));
+			return Builder.Build(GetTestObjects(count, 10));
 		}
 
 		public const int DefaultRecordCount = 100000;
@@ -279,16 +278,15 @@ Total Profit:decimal
 				);
 		}
 
-		static ObjectDataReader.Factory<BinaryData> BinaryFactory =
+		static ObjectDataReader.Builder<BinaryData> BinaryBuilder =
 			ObjectDataReader
-				.BuildFactory<BinaryData>()
+				.Build<BinaryData>()
 				.AddColumn("Id", d => d.Id)
-				.AddColumn("Data", d => d.Data)
-				.Build();
+				.AddColumn("Data", d => d.Data);
 
 		public static DbDataReader GetBinaryData()
 		{
-			return BinaryFactory.Create(GetTestBinary());
+			return BinaryBuilder.Build(GetTestBinary());
 		}
 
 		public class BinaryData
@@ -309,14 +307,13 @@ Total Profit:decimal
 			var items = GetTestObjects(recordCount, valueCount);
 			return
 				ObjectDataReader
-				.BuildFactory<TestRecord>()
+				.Build<TestRecord>()
 				.AddColumn("Id", i => i.Id)
 				.AddColumn("Name", i => i.Name)
 				.AddColumn("Date", i => i.Date)
 				.AddColumn("IsActive", i => i.IsActive)
 				.Repeat((b, i) => b.AddColumn("Data" + i, r => r.DataSet[i]), valueCount)
-				.Build()
-				.Create(items);
+				.Build(items);
 		}
 	}
 }

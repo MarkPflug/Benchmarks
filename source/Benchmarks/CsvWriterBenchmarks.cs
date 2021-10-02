@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 namespace Benchmarks
 {
 	[MemoryDiagnoser]
-	[SimpleJob(1, 2, 4, 1)]
 	public class CsvWriterBenchmarks
 	{
 		static readonly int ValueCount = TestData.DefaultDataValueCount;
@@ -109,7 +108,6 @@ namespace Benchmarks
 					csv.WriteField(item.DataSet[i]);
 				}
 				await csv.NextRecordAsync();
-				await csv.FlushAsync();
 			}
 			await csv.FlushAsync();
 		}
@@ -174,22 +172,22 @@ namespace Benchmarks
 			}
 		}
 
-		//[Benchmark]
-		//public async Task SylvanDataAsync()
-		//{
-		//	var tw = TextWriter.Null;
-		//	var dr = TestData.GetTestDataReader();
-		//	var csv = new CsvDataWriter(tw);
-		//	await csv.WriteAsync(dr);
-		//}
+		[Benchmark]
+		public async Task SylvanDataAsync()
+		{
+			var tw = TextWriter.Null;
+			var dr = TestData.GetTestDataReader();
+			var csv = CsvDataWriter.Create(tw);
+			await csv.WriteAsync(dr);
+		}
 
-		//[Benchmark]
-		//public void SylvanDataSync()
-		//{
-		//	var tw = TextWriter.Null;
-		//	var dr = TestData.GetTestDataReader();
-		//	var csv = new CsvDataWriter(tw);
-		//	csv.Write(dr);
-		//}
+		[Benchmark]
+		public void SylvanDataSync()
+		{
+			var tw = TextWriter.Null;
+			var dr = TestData.GetTestDataReader();
+			var csv = CsvDataWriter.Create(tw);
+			csv.Write(dr);
+		}
 	}
 }

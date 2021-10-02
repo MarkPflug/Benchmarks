@@ -51,11 +51,14 @@ namespace Benchmarks
 		int row = 0;
 
 		int id;
-		string name;
-		int value;
+		DateTime orderDate;
+		string type;
+		decimal profit;
 
 		public override void VisitEndOfField(ReadOnlySpan<byte> chunk)
 		{
+			Span<char> scratch = stackalloc char[32];
+
 			if (bytesUsed != 0)
 			{
 				chunk.CopyTo(bytes.AsSpan(bytesUsed, chunk.Length));
@@ -66,17 +69,26 @@ namespace Benchmarks
 			{
 				switch (ordinal)
 				{
-					case 0:
+					case 2:
+						type = Encoding.UTF8.GetString(chunk);
+						break;
+					case 5:
+						// Utf8Parser doesn't support all date formats
+						// apparently.
+						var len = Encoding.UTF8.GetChars(chunk, scratch);
+						if (!DateTime.TryParse(scratch.Slice(0, len), out orderDate))
+						{
+							throw new FormatException();
+						}
+						break;
+					case 6:
 						if (!Utf8Parser.TryParse(chunk, out id, out _))
 						{
 							throw new FormatException();
 						}
 						break;
-					case 10:
-						name = Encoding.UTF8.GetString(chunk);
-						break;
 					case 20:
-						if (!Utf8Parser.TryParse(chunk, out value, out _))
+						if (!Utf8Parser.TryParse(chunk, out profit, out _))
 						{
 							throw new FormatException();
 						}

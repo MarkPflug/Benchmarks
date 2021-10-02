@@ -82,13 +82,7 @@ namespace Benchmarks
 		{
 			var tr = TestData.GetTextReader();
 
-			var opts =
-				Options
-				.CreateBuilder(Options.Default)
-				.WithRowEnding(RowEnding.LineFeed)
-				.ToOptions();
-
-			var data = CesilUtils.Enumerate<SalesRecord>(tr, opts);
+			var data = CesilUtils.Enumerate<SalesRecord>(tr, Options.Default);
 			foreach (var record in data)
 			{
 

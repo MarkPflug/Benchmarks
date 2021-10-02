@@ -4,12 +4,12 @@ using Sylvan.Data.XBase;
 using System;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Net.Http;
 
 namespace Benchmarks
 {
 	[MemoryDiagnoser]
-	[SimpleJob(1, 2, 4, 1)]
 	public class DbfDataReaderBenchmarks
 	{
 		const string Url = "https://www2.census.gov/geo/tiger/GENZ2018/shp/cb_2018_us_county_20m.zip";
@@ -43,7 +43,7 @@ namespace Benchmarks
 			dr.Process();
 		}
 
-		[Benchmark(Baseline = true)]
+		[Benchmark]
 		public void NDbf()
 		{
 			var ms = new MemoryStream(dbfData);
@@ -102,10 +102,59 @@ namespace Benchmarks
 							reader.GetString(col);
 							break;
 						default:
-							// shouldn't get here if we do, our benchmarks are bogus anyway.
+							// shouldn't get here. If we do, our benchmarks are bogus anyway.
 							throw new NotSupportedException(type.ToString());
 					}
 				}
+			}
+		}
+
+		public static void Process(this DbfDataReader.DbfDataReader reader)
+		{
+			var cols = reader.GetColumnSchema();
+			bool[] allowDbNull = cols.Select(c => c.AllowDBNull != false).ToArray();
+			TypeCode[] types = cols.Select(c => Type.GetTypeCode(c.DataType)).ToArray();
+			while (reader.Read())
+			{
+				for (int i = 0; i < reader.FieldCount; i++)
+				{
+					if (allowDbNull[i] && reader.IsDBNull(i))
+						continue;
+					ProcessField(reader, i, types[i]);
+				}
+			}
+		}
+
+		static void ProcessField(this DbfDataReader.DbfDataReader reader, int i, TypeCode typeCode)
+		{
+			switch (typeCode)
+			{
+				case TypeCode.Boolean:
+					reader.GetBoolean(i);
+					break;
+				case TypeCode.Int32:
+					// ??? for some reason this fails if accessed
+					// via GetInt32, throws a cast exception.
+					reader.GetInt64(i);
+					break;
+				case TypeCode.DateTime:
+					reader.GetDateTime(i);
+					break;
+				case TypeCode.Single:
+					reader.GetFloat(i);
+					break;
+				case TypeCode.Double:
+					reader.GetDouble(i);
+					break;
+				case TypeCode.Decimal:
+					reader.GetDecimal(i);
+					break;
+				case TypeCode.String:
+					reader.GetString(i);
+					break;
+				default:
+					// no cheating
+					throw new NotSupportedException("" + typeCode);
 			}
 		}
 	}

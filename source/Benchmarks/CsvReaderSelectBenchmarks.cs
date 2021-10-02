@@ -1,7 +1,7 @@
 ﻿using BenchmarkDotNet.Attributes;
 using Cursively;
 using Sylvan.Data.Csv;
-using System.Globalization;
+using System;
 using static fastCSV;
 
 namespace Benchmarks
@@ -31,17 +31,19 @@ namespace Benchmarks
 		public void MgholamFastCsvSelect()
 		{
 			int id;
-			string name;
-			int val;
+			DateTime orderDate;
+			string type;
+			decimal profit;
 			var rows =
 				fastCSV.ReadStream<object>(
 					TestData.GetTextReader(),
 					',',
 					(object obj, COLUMNS cols) =>
 					{
-						id = int.Parse(cols[0]);
-						name = cols[10];
-						val = int.Parse(cols[20]);
+						type = cols[2];
+						orderDate = DateTime.Parse(cols[5]);
+						id = int.Parse(cols[6]);
+						profit = decimal.Parse(cols[13]);
 						return false;
 					}
 				);
@@ -56,9 +58,10 @@ namespace Benchmarks
 			dr.Read(); // read the headers
 			while (dr.Read())
 			{
-				var id = int.Parse(dr[0]);
-				var name = dr[10];
-				var val = int.Parse(dr[20]);
+				var type = dr[2];
+				var orderDate = DateTime.Parse(dr[5]);
+				var id = int.Parse(dr[6]);
+				var profit = decimal.Parse(dr[13]);
 			}
 		}
 
@@ -79,29 +82,11 @@ namespace Benchmarks
 			using var dr = CsvDataReader.Create(tr);
 			while (dr.Read())
 			{
-				var id = dr.GetInt32(0);
-				var name = dr.GetString(10);
-				var val = dr.GetInt32(20);
+				var type = dr.GetString(2);
+				var orderDate = dr.GetDateTime(5);
+				var id = dr.GetInt32(6);
+				var profit = dr.GetDecimal(13);
 			}
 		}
-
-		//[Benchmark]
-		//public void CsvHelperSelect()
-		//{
-		//	var tr = TestData.GetTextReader();
-		//	var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.CurrentCulture)
-		//	{
-		//		BufferSize = BufferSize
-		//	};
-
-		//	var r = new CsvHelper.CsvReader(tr, config);
-		//	var dr = new CsvHelper.CsvDataReader(r);
-		//	while (dr.Read())
-		//	{
-		//		var id = dr.GetInt32(0);
-		//		var name = dr.GetString(10);
-		//		var value = dr.GetInt32(20);
-		//	}
-		//}
 	}
 }

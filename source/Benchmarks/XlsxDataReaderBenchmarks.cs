@@ -1,50 +1,94 @@
 ﻿using Aspose.Cells;
 using BenchmarkDotNet.Attributes;
-using System.Text;
-using Sylvan.Data.Excel;
-using System.IO;
-using System.Linq;
-using NPOI.XSSF.UserModel;
 using NPOI.SS.UserModel;
-using System;
+using NPOI.XSSF.UserModel;
 using OfficeOpenXml;
+using System;
+using System.Data;
+using System.IO;
+using System.IO.Compression;
+using System.Linq;
+using System.Text;
+using System.Xml;
 
 namespace Benchmarks
 {
 	[MemoryDiagnoser]
-	[SimpleJob(1, 2, 4, 1)]
 	public class XlsxBenchmarks
 	{
-		const string file = @"\data\excel\Excel Pkdx V5.14.xlsx";
-		//const string file = @"\data\excel\itcont.xlsx";
+		const string file = @"Data/65K_Records_Data.xlsx";
+
 		public XlsxBenchmarks()
 		{
 			Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+		}
+
+
+		static void ProcessRecord(IDataReader reader)
+		{
+			var region = reader.GetString(0);
+			var country = reader.GetString(1);
+			var type = reader.GetString(2);
+			var channel = reader.GetString(3);
+			var priority = reader.GetString(4);
+			var orderDate = reader.GetDateTime(5);
+			var id = reader.GetInt32(6);
+			var shipDate = reader.GetDateTime(7);
+			var unitsSold = reader.GetInt32(8);
+			var unitPrice = reader.GetDouble(9);
+			var unitCost = reader.GetDouble(10);
+			var totalRevenue = reader.GetDouble(11);
+			var totalCost = reader.GetDouble(12);
+			var totalProfit = reader.GetDouble(13);
+		}
+
+		static void ProcessRecordEDR(IDataReader reader)
+		{
+			var region = reader.GetString(0);
+			var country = reader.GetString(1);
+			var type = reader.GetString(2);
+			var channel = reader.GetString(3);
+			var priority = reader.GetString(4);
+			var orderDate = reader.GetDateTime(5);
+			// Excel data reader doesn't allow reading as integers
+			var id = reader.GetDouble(6);
+			var shipDate = reader.GetDateTime(7);
+			var unitsSold = reader.GetDouble(8);
+			var unitPrice = reader.GetDouble(9);
+			var unitCost = reader.GetDouble(10);
+			var totalRevenue = reader.GetDouble(11);
+			var totalCost = reader.GetDouble(12);
+			var totalProfit = reader.GetDouble(13);
+		}
+
+		[Benchmark(Baseline = true)]
+		public void Raw()
+		{
+			// a baseline measurement of reading the xml in the compessed zip.
+			using var s = File.OpenRead(file);
+			var a = new ZipArchive(s);
+			var e = a.GetEntry("xl/worksheets/sheet1.xml");
+			var es = e.Open();
+			var r = XmlReader.Create(es);
+			while (r.Read()) ;
 		}
 
 		[Benchmark]
 		public void SylvanXlsx()
 		{
 			var reader = Sylvan.Data.Excel.ExcelDataReader.Create(file);
+
 			do
 			{
-				int c = 0;
 				while (reader.Read())
 				{
-					for (int i = 0; i < reader.FieldCount; i++)
-					{
-						var s = reader.GetString(i);
-					}
-					if (c++ == 10000)
-					{
-						;
-					}
-
+					ProcessRecord(reader);
 				}
+
 			} while (reader.NextResult());
 		}
 
-		[Benchmark(Baseline = true)]
+		[Benchmark]
 		public void ExcelDataReaderXlsx()
 		{
 			using var stream = File.OpenRead(file);
@@ -52,12 +96,10 @@ namespace Benchmarks
 			{
 				do
 				{
+					reader.Read();//skip header
 					while (reader.Read())
 					{
-						for (int i = 0; i < reader.FieldCount; i++)
-						{
-							reader.GetValue(i);
-						}
+						ProcessRecordEDR(reader);
 					}
 				} while (reader.NextResult());
 			}
@@ -110,7 +152,6 @@ namespace Benchmarks
 			}
 		}
 
-
 		[Benchmark]
 		public void EPPlusXlsx()
 		{
@@ -141,9 +182,8 @@ namespace Benchmarks
 			var pkg = new ClosedXML.Excel.XLWorkbook(file);
 			var ws = pkg.Worksheets.First();
 
-			// can't figure out how to get these values...
-			var rc = 664;// ws.RowCount();
-			var cc = 35;// ws.ColumnCount();
+			var rc = ushort.MaxValue;
+			var cc = 14;
 			for (int r = 1; r <= rc; r++)
 			{
 				var row = ws.Row(r);
@@ -155,6 +195,24 @@ namespace Benchmarks
 			}
 		}
 
+		static void ProcessAsposeRecord(Row row)
+		{
+			var region = row[0].StringValue;
+			var country = row[1].StringValue;
+			var type = row[2].StringValue;
+			var channel = row[3].StringValue;
+			var priority = row[4].StringValue;
+			var orderDate = row[5].DateTimeValue;
+			var id = row[6].IntValue;
+			var shipDate = row[7].DateTimeValue;
+			var unitsSold = row[8].IntValue;
+			var unitPrice = row[9].DoubleValue;
+			var unitCost = row[10].DoubleValue;
+			var totalRevenue = row[11].DoubleValue;
+			var totalCost = row[12].DoubleValue;
+			var totalProfit = row[13].DoubleValue;
+		}
+
 		[Benchmark]
 		public void AsposeXlsx()
 		{
@@ -163,25 +221,15 @@ namespace Benchmarks
 			{
 				var cells = ws.Cells;
 				var rowCount = cells.GetLastDataRow(0);
+				bool header = true;
 				foreach (Row row in cells.Rows)
 				{
-					foreach (Cell ce in row)
+					if (header)
 					{
-						var value = ce.Value;
-						//switch (ce.Type)
-						//{
-						//	case CellValueType.IsString:
-						//		var s = ce.StringValue;
-						//		break;
-						//	case CellValueType.IsNumeric:
-						//		var n = ce.DoubleValue;
-						//		break;
-						//	case CellValueType.IsNull:
-						//		break;
-						//	default:
-						//		throw new NotSupportedException();
-						//}
+						header = false;
+						continue;
 					}
+					ProcessAsposeRecord(row);
 				}
 			}
 		}
