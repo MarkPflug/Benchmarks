@@ -40,9 +40,14 @@ namespace Benchmarks
 				BufferSize = BufferSize
 			};
 
-			var r = new CsvHelper.CsvReader(tr, config);
-			var dr = new CsvHelper.CsvDataReader(r);
-			dr.ProcessStrings();
+			var r = new CsvHelper.CsvParser(tr, config);
+			while (r.Read())
+			{
+				for (int i = 0; i < r.Count; i++)
+				{
+					var s = r[i];
+				}
+			}
 		}
 
 		[Benchmark]

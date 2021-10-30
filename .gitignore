@@ -211,5 +211,3 @@ reports/
 
 #msbuild binary logs
 *.binlog
-
-*.csv
