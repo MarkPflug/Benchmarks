@@ -2,19 +2,18 @@
 These benchmarks measure reading a 65k (max .xls row count) file, and accessing each value as "strongly-typed" as the library allows.
 Data files contain sample sales records from [eforexcel.com](https://eforexcel.com/wp/downloads-18-sample-csv-files-data-sets-for-testing-sales/).
 
-Excel .xlsx benchmarks:
+## Excel .xlsx Benchmarks
+
+Note that these benchmarks were run on .NET 5 instead of 6, as .NET 6 has a significant performance regression in System.Xml,
+which I assume will be fixed at some point.
 
 ```
 BenchmarkDotNet=v0.13.1, OS=Windows 10.0.19044.1319 (21H2)
 Intel Core i7-7700K CPU 4.20GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical cores
 .NET SDK=6.0.100-rc.2.21505.57
   [Host] : .NET 5.0.10 (5.0.1021.41214), X64 RyuJIT
-
-Job=InProcess  Toolchain=InProcessEmitToolchain  MaxIterationCount=6
-MinIterationCount=1  WarmupCount=2
 ```
-Note that these benchmarks were run on .NET 5 instead of 6, as .NET 6 has a significant performance regression in System.Xml,
-which I assume will be fixed at some point.
+
 
 |              Method |       Mean |     Error |    StdDev |       Gen 0 |      Gen 1 |     Gen 2 |    Allocated |
 |-------------------- |-----------:|----------:|----------:|------------:|-----------:|----------:|-------------:|
@@ -28,17 +27,7 @@ which I assume will be fixed at some point.
 |            NpoiXlsx | 4,706.8 ms | 499.53 ms | 178.14 ms | 284000.0000 | 84000.0000 | 5000.0000 | 1,583,881 KB |
 |       ClosedXmlXlsx | 6,193.0 ms | 213.26 ms |  55.38 ms | 184000.0000 | 49000.0000 | 5000.0000 | 1,105,260 KB |
 
-Excel .xls benchmarks:
-
-```
-BenchmarkDotNet=v0.13.1, OS=Windows 10.0.19044.1319 (21H2)
-Intel Core i7-7700K CPU 4.20GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical cores
-.NET SDK=6.0.100-rc.2.21505.57
-  [Host] : .NET 6.0.0 (6.0.21.48005), X64 RyuJIT
-
-Job=InProcess  Toolchain=InProcessEmitToolchain  MaxIterationCount=6
-MinIterationCount=1  WarmupCount=2
-```
+## Excel .xls Benchmarks
 
 |             Method |       Mean |     Error |    StdDev |       Gen 0 |       Gen 1 |     Gen 2 | Allocated |
 |------------------- |-----------:|----------:|----------:|------------:|------------:|----------:|----------:|
