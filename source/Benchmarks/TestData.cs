@@ -5,9 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
-using System.Net.Http;
 using System.Runtime.Serialization;
 using System.Text;
 
@@ -88,9 +86,7 @@ namespace Benchmarks
 
 	public static class TestData
 	{
-		const string DataSetUrl = "http://eforexcel.com/wp/wp-content/uploads/2017/07/1000000%20Sales%20Records.zip";
-		const string ZipFileName = "SalesData.zip";
-		const string DataFileName = "SalesData.csv";
+		const string DataFileName = "Data/65K_Records_Data.csv";
 
 		const string DataSetSchema = @"
 Region,
@@ -115,20 +111,6 @@ Total Profit:decimal
 
 		static void CacheData()
 		{
-			if (!File.Exists(DataFileName))
-			{
-				using (var oStream = File.OpenWrite(ZipFileName))
-				using (var iStream = new HttpClient().GetStreamAsync(DataSetUrl).Result)
-				{
-					iStream.CopyTo(oStream);
-				}
-
-				var s = File.OpenRead(ZipFileName);
-				var a = new ZipArchive(s);
-				using var ds = a.Entries.First().Open();
-				using var os = File.Create(DataFileName);
-				ds.CopyTo(os);
-			}
 			CachedData = File.ReadAllText(DataFileName);
 			CachedUtfData = Encoding.UTF8.GetBytes(CachedData);
 		}
@@ -139,8 +121,6 @@ Total Profit:decimal
 			// probably, but this is only used in test/benchmarks.
 			CacheData();
 		}
-
-		
 
 		public static string DataFile
 		{
@@ -194,7 +174,6 @@ Total Profit:decimal
 		{
 			public static DataSchema Instance = new DataSchema();
 			Type[] types;
-			bool[] nullable;
 
 			private DataSchema()
 			{

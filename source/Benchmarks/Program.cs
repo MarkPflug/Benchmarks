@@ -11,6 +11,11 @@ namespace Benchmarks
 	{
 		public static void Main(string[] args)
 		{
+			//var b = new CsvDataBinderBenchmarks();
+			//b.RecordParserBind().Wait();
+			//b.SylvanCompiledReuse();
+			//b.SylvanCompiled();
+			//b.SpreadSheetTasksXlsx();
 			var config = new MyConfig();
 				
 			BenchmarkSwitcher

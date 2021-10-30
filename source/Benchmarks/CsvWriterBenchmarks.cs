@@ -12,7 +12,7 @@ namespace Benchmarks
 	{
 		static readonly int ValueCount = TestData.DefaultDataValueCount;
 
-		[Benchmark(Baseline = true)]
+		[Benchmark]
 		public void NaiveBroken()
 		{
 			TextWriter tw = TextWriter.Null;
