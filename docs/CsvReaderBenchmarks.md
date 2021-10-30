@@ -9,10 +9,10 @@ This data set does not include any quoted fields, and thus does not test correct
 |--------------------- |----------:|----------:|---------:|------------:|---------:|----------:|
 |               Sylvan |  23.66 ms |  0.358 ms | 0.093 ms |   8750.0000 |  31.2500 |     35 MB |
 |         CursivelyCsv |  29.71 ms |  0.567 ms | 0.088 ms |   8718.7500 |        - |     35 MB |
-|          NaiveBroken |  36.10 ms |  7.509 ms | 2.678 ms |  15875.0000 |        - |     63 MB |
 |              CtlData |  32.92 ms |  0.508 ms | 0.181 ms |  20250.0000 |        - |     81 MB |
 |       MgholamFastCSV |  34.32 ms |  0.276 ms | 0.043 ms |   9133.3333 |  66.6667 |     37 MB |
 |               Fluent |  35.30 ms |  2.085 ms | 0.541 ms |  15857.1429 |        - |     63 MB |
+|          NaiveBroken |  36.10 ms |  7.509 ms | 2.678 ms |  15875.0000 |        - |     63 MB |
 |         SoftCircuits |  37.55 ms |  0.646 ms | 0.100 ms |  14285.7143 |        - |     57 MB |
 |                NReco |  44.79 ms |  0.533 ms | 0.082 ms |   8727.2727 |        - |     35 MB |
 |        FastCsvParser |  47.75 ms |  0.730 ms | 0.190 ms |   8727.2727 |  90.9091 |     35 MB |
