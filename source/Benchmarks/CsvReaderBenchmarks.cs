@@ -16,7 +16,7 @@ namespace Benchmarks
 		// buffer size for libraries that allow configuration
 		const int BufferSize = 0x10000;
 
-		[Benchmark(Baseline = true)]
+		[Benchmark]
 		public void NaiveBroken()
 		{
 			var tr = TestData.GetTextReader();

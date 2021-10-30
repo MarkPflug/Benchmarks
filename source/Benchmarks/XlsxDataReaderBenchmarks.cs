@@ -1,15 +1,17 @@
 ﻿using Aspose.Cells;
 using BenchmarkDotNet.Attributes;
+using MiniExcelLibs;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using OfficeOpenXml;
 using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Dynamic;
 using System.IO;
-using System.IO.Compression;
+using System.IO.Packaging;
 using System.Linq;
 using System.Text;
-using System.Xml;
 
 namespace Benchmarks
 {
@@ -18,11 +20,16 @@ namespace Benchmarks
 	{
 		const string file = @"Data/65K_Records_Data.xlsx";
 
+		MemoryStream memStream;
+		string xml;
+
 		public XlsxBenchmarks()
 		{
 			Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-		}
 
+			memStream = new MemoryStream(File.ReadAllBytes("Data/sheet1.xml"));
+			xml = File.ReadAllText("Data/sheet1.xml");
+		}
 
 		static void ProcessRecord(IDataReader reader)
 		{
@@ -50,7 +57,7 @@ namespace Benchmarks
 			var channel = reader.GetString(3);
 			var priority = reader.GetString(4);
 			var orderDate = reader.GetDateTime(5);
-			// Excel data reader doesn't allow reading as integers
+			// ExcelDataReader doesn't allow reading as integers
 			var id = reader.GetDouble(6);
 			var shipDate = reader.GetDateTime(7);
 			var unitsSold = reader.GetDouble(8);
@@ -58,19 +65,7 @@ namespace Benchmarks
 			var unitCost = reader.GetDouble(10);
 			var totalRevenue = reader.GetDouble(11);
 			var totalCost = reader.GetDouble(12);
-			var totalProfit = reader.GetDouble(13);
-		}
-
-		[Benchmark(Baseline = true)]
-		public void Raw()
-		{
-			// a baseline measurement of reading the xml in the compessed zip.
-			using var s = File.OpenRead(file);
-			var a = new ZipArchive(s);
-			var e = a.GetEntry("xl/worksheets/sheet1.xml");
-			var es = e.Open();
-			var r = XmlReader.Create(es);
-			while (r.Read()) ;
+			var totalProfit = reader.GetDouble(13);		
 		}
 
 		[Benchmark]
@@ -177,7 +172,7 @@ namespace Benchmarks
 		}
 
 		[Benchmark]
-		public void ClosedXmlsXlsx()
+		public void ClosedXmlXlsx()
 		{
 			var pkg = new ClosedXML.Excel.XLWorkbook(file);
 			var ws = pkg.Worksheets.First();
@@ -231,6 +226,50 @@ namespace Benchmarks
 					}
 					ProcessAsposeRecord(row);
 				}
+			}
+		}
+
+		[Benchmark]
+		public void OpenXmlXlsx()
+		{
+			var s = File.OpenRead(file);
+			var pkg = Package.Open(s);
+			var doc = DocumentFormat.OpenXml.Packaging.SpreadsheetDocument.Open(pkg);
+			foreach (var wsp in doc.WorkbookPart.WorksheetParts)
+			{
+				var sd = wsp.Worksheet.GetFirstChild<DocumentFormat.OpenXml.Spreadsheet.SheetData>();
+				foreach (DocumentFormat.OpenXml.Spreadsheet.Row r in sd)
+				{
+					foreach (DocumentFormat.OpenXml.Spreadsheet.Cell c in r)
+					{
+						var v = c.CellValue;
+					}
+				}
+			}
+		}
+
+		[Benchmark]
+		public void MiniExcelXlsx()
+		{
+			using var s = File.OpenRead(file);
+			var rows = s.Query(true);
+			foreach (ExpandoObject row in rows)
+			{
+				var d = (IDictionary<string, object>)row;
+				var region = (string)d["Region"];
+				var country = (string)d["Country"];
+				var type = (string)d["Item Type"];
+				var channel = (string)d["Sales Channel"];
+				var priority = (string)d["Order Priority"];
+				var orderDate = (DateTime)d["Order Date"];
+				var orderId = (double)d["Order ID"];
+				var shipDate = (DateTime)d["Ship Date"];
+				var unitsSold = (double)d["Units Sold"];
+				var unitPrice = (double)d["Unit Price"];
+				var unitCost = (double)d["Unit Cost"];
+				var totalRevenue = (double)d["Total Revenue"];
+				var totalCost = (double)d["Total Cost"];
+				var totalProfit = (double)d["Total Profit"];
 			}
 		}
 	}

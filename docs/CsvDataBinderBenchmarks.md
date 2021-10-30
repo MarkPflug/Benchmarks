@@ -1,33 +1,19 @@
 # CSV Data Binder Benchmarks
 
-These benchmarks test binding CSV data to a strongly-typed .NET object.
+These benchmarks test binding CSV data to a strongly-typed .NET object. 
+This benchmark set includes libraries that provide some form of data binding capabilites.
+Libraries that only provide raw access are covered in the CsvReaderBenchmarks.
+These measurements combine both CSV processing with data binding time.
 
-|           Method |      Mean | Ratio | Allocated |
-|----------------- |----------:|------:|----------:|
-|     SylvanManual |  3.585 ms |  0.13 |   1.24 MB |
-|     SylvanDapper |  4.063 ms |  0.15 |   1.61 MB |
-|       SylvanData |  4.096 ms |  0.15 |   1.37 MB |
-| MgholamCsvManual |  4.765 ms |  0.18 |   2.36 MB |
-|    TinyCsvManual | 18.780 ms |  0.70 |   54.9 MB |
-|        CesilAuto | 24.704 ms |  0.93 |   1.29 MB |
-|  CsvHelperManual | 25.977 ms |  0.97 |  27.32 MB |
-|    CsvHelperAuto | 26.641 ms |  1.00 |  27.67 MB |
-
-### Auto
-
-Measures libraries that can automatically bind CSV data to an object. 
-
-### Manual
-
-Tests the performance of hand-written code that reads data fields and assigns them to object properties.
-
-TinyCsv and MgholamCsv only supports manual binding as far as I know. As they don't implement IDataReader a general purpose binder cannot be used..
-
-### Dapper
-
-This tests the performance of using Dapper's `GetRowParser<T>()` as a general purpose data binder. It requires that the data
-source has a strongly-typed schema, so not all CSV libraries can be used with it.
-
-### Sylvan.Data
-
-Pairs the Sylvan.Data.Csv parser with a general purpose data binder provided by Sylvan.Data (prerelease).
+|              Method |      Mean |     Error |    StdDev |      Gen 0 |     Gen 1 |     Gen 2 | Allocated |
+|-------------------- |----------:|----------:|----------:|-----------:|----------:|----------:|----------:|
+|        SylvanManual |  69.35 ms |  0.681 ms |  0.105 ms |  5625.0000 |         - |         - |     23 MB |
+|          SylvanData |  71.81 ms |  0.480 ms |  0.074 ms |  5714.2857 |  142.8571 |         - |     23 MB |
+|     SylvanDataAsync |  72.18 ms |  0.709 ms |  0.110 ms |  5714.2857 |         - |         - |     23 MB |
+|    SylvanDataPooled |  73.94 ms |  1.481 ms |  0.528 ms |  2428.5714 |  142.8571 |         - |     10 MB |
+|        SylvanDapper |  82.30 ms |  2.258 ms |  0.805 ms |  9714.2857 |         - |         - |     39 MB |
+|   RecordParserAsync |  95.41 ms |  2.017 ms |  0.719 ms |  5500.0000 |         - |         - |     22 MB |
+|       TinyCsvManual | 140.70 ms |  9.423 ms |  3.360 ms | 51500.0000 | 4000.0000 |  750.0000 |    229 MB |
+|       CsvHelperAuto | 154.99 ms |  2.652 ms |  0.689 ms | 26000.0000 |         - |         - |    106 MB |
+|           CesilAuto | 172.28 ms |  2.718 ms |  0.706 ms |  5000.0000 |         - |         - |     23 MB |
+| CsvHelperAutoPooled | 283.15 ms | 32.053 ms | 11.430 ms |  9000.0000 | 3500.0000 | 1500.0000 |     55 MB |

@@ -2,8 +2,11 @@
 using Dapper;
 using Sylvan.Data;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 
 namespace Benchmarks
@@ -11,54 +14,90 @@ namespace Benchmarks
 	[MemoryDiagnoser]
 	public class DataBinderBenchmarks
 	{
-		class TestRecord : IDataReader
+		// lightweight DbDataReader to try to isolate performance measurement of the binder logic only.
+		class TestReader : DbDataReader, IDbColumnSchemaGenerator
 		{
-			string[] columns;
-			Type[] types;
+			public void Reset()
+			{
+				this.row = 0;
+			}
+
 			Dictionary<string, int> ordinals;
+			ReadOnlyCollection<DbColumn> columns;
+			readonly int count;
+			int row;
 
-			public TestRecord()
+			class Col : DbColumn
 			{
-				this.columns = new[] { "B", "D", "V", "G", "I", "S"};
-				this.types = new[] { typeof(bool), typeof(DateTime), typeof(double), typeof(Guid), typeof(int), typeof(string) };
-				this.ordinals = columns.Select((n, i) => new { Name = n, Index = i }).ToDictionary(p => p.Name, p => p.Index);
-
+				public Col(int ordinal, string name, Type type)
+				{
+					this.ColumnOrdinal = ordinal;
+					this.ColumnName = name;
+					this.DataType = type;
+					this.AllowDBNull = false;
+				}
 			}
 
-			public object this[int i] => GetValue(i);
-
-			public object this[string name] => ordinals[name];
-
-			public int FieldCount => columns.Length;
-
-			public int Depth => 1;
-
-			public bool IsClosed => false;
-
-			public int RecordsAffected => throw new NotImplementedException();
-
-			public bool GetBoolean(int i)
+			public TestReader(int count)
 			{
-				if (i == 0) return true;
+				this.row = 0;
+				this.count = count;
+				this.columns = new ReadOnlyCollection<DbColumn>(
+					new[]
+					{
+
+						new Col(0, "B", typeof(bool)),
+						new Col(1, "D", typeof(DateTime)),
+						new Col(2, "V", typeof(double)),
+						new Col(3, "G", typeof(Guid)),
+						new Col(4, "I", typeof(int)),
+						new Col(5, "S", typeof(string)),
+
+					}
+				); ;
+
+				this.ordinals =
+					columns
+					.Select(c => new { Name = c.ColumnName, Index = c.ColumnOrdinal.Value })
+					.ToDictionary(p => p.Name, p => p.Index);
+				this.count = count;
+			} 
+
+			public override object this[int i] => GetValue(i);
+
+			public override object this[string name] => ordinals[name];
+
+			public override int FieldCount => columns.Count;
+
+			public override int Depth => 1;
+
+			public override bool IsClosed => false;
+
+			public override int RecordsAffected => 0;
+
+			public override bool HasRows => true;
+
+			public override bool GetBoolean(int i)
+			{
+				return true;
+			}
+
+			public override byte GetByte(int i)
+			{
 				throw new NotImplementedException();
 			}
 
-			public byte GetByte(int i)
+			public override long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
 			{
 				throw new NotImplementedException();
 			}
 
-			public long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
+			public override char GetChar(int i)
 			{
 				throw new NotImplementedException();
 			}
 
-			public char GetChar(int i)
-			{
-				throw new NotImplementedException();
-			}
-
-			public long GetChars(int i, long fieldoffset, char[] buffer, int bufferoffset, int length)
+			public override long GetChars(int i, long fieldoffset, char[] buffer, int bufferoffset, int length)
 			{
 				throw new NotImplementedException();
 			}
@@ -68,81 +107,77 @@ namespace Benchmarks
 				throw new NotImplementedException();
 			}
 
-			public string GetDataTypeName(int i)
+			public override string GetDataTypeName(int i)
 			{
-				return types[i].Name;
+				return columns[i].ColumnName;
 			}
 
-			DateTime date = DateTime.UtcNow;
-			public DateTime GetDateTime(int i)
+			DateTime date = new DateTime(2020, 11, 12, 13, 14, 15, DateTimeKind.Utc);
+
+			public override DateTime GetDateTime(int i)
 			{
-				if (i == 1) return date;
+				return date;
+			}
+
+			public override decimal GetDecimal(int i)
+			{
 				throw new NotSupportedException();
 			}
 
-			public decimal GetDecimal(int i)
+			public override double GetDouble(int i)
 			{
-				throw new NotSupportedException();
+				return 12345.5;
 			}
 
-			public double GetDouble(int i)
+			public override Type GetFieldType(int i)
 			{
-				if (i == 2) return 12345.5;
-				throw new NotSupportedException();
+				return columns[i].DataType;
 			}
 
-			public Type GetFieldType(int i)
-			{
-				return types[i];
-			}
-
-			public float GetFloat(int i)
+			public override float GetFloat(int i)
 			{
 				throw new NotImplementedException();
 			}
 
 			Guid g = Guid.NewGuid();
-			public Guid GetGuid(int i)
+			public override Guid GetGuid(int i)
 			{
-				if (i == 3) return g;
-				throw new NotSupportedException();
+				return g;
 			}
 
-			public short GetInt16(int i)
-			{
-				throw new NotImplementedException();
-			}
-
-			public int GetInt32(int i)
-			{
-				if (i == 4) return 64532;
-				throw new NotSupportedException();
-			}
-
-			public long GetInt64(int i)
+			public override short GetInt16(int i)
 			{
 				throw new NotImplementedException();
 			}
 
-			public string GetName(int i)
+			public override int GetInt32(int i)
 			{
-				return columns[i];
+				return 64532;
 			}
 
-			public int GetOrdinal(string name)
+			public override long GetInt64(int i)
+			{
+				throw new NotImplementedException();
+			}
+
+			public override string GetName(int i)
+			{
+				return columns[i].ColumnName;
+			}
+
+			public override int GetOrdinal(string name)
 			{
 				return ordinals[name];
 			}
 
-			public string GetString(int i)
+			public override string GetString(int i)
 			{
-				if (i == 5) return "This is a test string";
-				throw new NotSupportedException();
+				return "This is a test string";
 			}
 
-			public object GetValue(int i)
+			public override object GetValue(int i)
 			{
-				switch(i)
+				switch (i)
 				{
 					case 0: return GetBoolean(i);
 					case 1: return GetDateTime(i);
@@ -154,43 +189,55 @@ namespace Benchmarks
 				throw new NotSupportedException();
 			}
 
-			public int GetValues(object[] values)
+			public override int GetValues(object[] values)
 			{
 				throw new NotImplementedException();
 			}
 
-			public bool IsDBNull(int i)
+			public override bool IsDBNull(int i)
 			{
 				return false;
 			}
 
-			public void Close()
+			public override void Close()
 			{
 			}
 
-			public DataTable GetSchemaTable()
+			public override DataTable GetSchemaTable()
 			{
 				throw new NotImplementedException();
 			}
 
-			public bool NextResult()
+			public override bool NextResult()
 			{
 				return false;
 			}
 
-			public bool Read()
+			public override bool Read()
 			{
-				return true;
+				return row++ < count;
 			}
 
-			public void Dispose()
+			public override IEnumerator GetEnumerator()
 			{
+				throw new NotImplementedException();
+			}
+
+			public ReadOnlyCollection<DbColumn> GetColumnSchema()
+			{
+				return columns;
 			}
 		}
 
-		const int Count = 10000000;
+		const int Count = 1000000;
 
-		class Record
+		DbDataReader GetReader()
+		{
+			testReader.Reset();
+			return testReader;
+		}
+
+		public class Record
 		{
 			public bool B { get; set; }
 			public DateTime D { get; set; }
@@ -202,17 +249,17 @@ namespace Benchmarks
 
 		public DataBinderBenchmarks()
 		{
-			//var schema = Schema.Parse("B:Boolean,D:DateTime,V:Double,G:Guid,I:Int32,S:String");
-			//this.record = new TestRecord();
-			//this.item = new Record();
-			//this.compiled = DataBinder.Create<Record>(schema);
-
-			//dp = record.GetRowParser<Record>();
+			var schema = Schema.Parse("B:Boolean,D:DateTime,V:Double,G:Guid,I:Int32,S:String");
+			var record = new TestReader(1);
+			this.item = new Record();
+			this.compiled = DataBinder.Create<Record>(schema);
+			this.dapperBinder = record.GetRowParser<Record>();
+			this.testReader = new TestReader(Count);
 		}
 
 		class ManualBinder : IDataBinder<Record>
 		{
-			public void Bind(IDataRecord record, Record item)
+			public void Bind(DbDataReader record, Record item)
 			{
 				item.B = record.GetBoolean(0);
 				item.D = record.GetDateTime(1);
@@ -221,48 +268,72 @@ namespace Benchmarks
 				item.I = record.GetInt32(4);
 				item.S = record.GetString(5);
 			}
-		}
 
-		Record item;
-		IDataReader record;
-		IDataBinder<Record> compiled;
-		Func<IDataReader, Record> dp;
-				
-		[Benchmark]
-		public void Compiled()
-		{
-			Bench(compiled, record);
-		}
-
-		[Benchmark(Baseline = true)]
-		public void Manual()
-		{
-			Bench(compiled, record);
-		}
-
-		static void Bench(IDataBinder<Record> binder, IDataRecord record, Record item)
-		{
-			for (int i = 0; i < Count; i++)
+			public void Bind(DbDataReader record, object item)
 			{
-				binder.Bind(record, item);
+				Bind(record, (Record)item);
 			}
 		}
 
-		static void Bench(IDataBinder<Record> binder, IDataRecord record)
+		TestReader testReader;
+		Record item;
+		IDataBinder<Record> compiled, objBind;
+		Func<IDataReader, Record> dapperBinder;
+
+
+		[Benchmark]
+		public void SylvanCompiledReuse()
 		{
-			for (int i = 0; i < Count; i++)
+			var reader = GetReader();
+			while (reader.Read())
 			{
 				var item = new Record();
-				binder.Bind(record, item);
+				compiled.Bind(reader, item);
+			}
+		}
+
+		[Benchmark]
+		public void SylvanCompiled()
+		{
+			var reader = GetReader();
+			var binder = DataBinder.Create<Record>(reader);
+			while (reader.Read())
+			{
+				var item = new Record();
+				binder.Bind(reader, item);
+			}
+		}
+
+		//[Benchmark]
+		//public void SylvanObjectBinder()
+		//{
+		//	var reader = new TestReader(Count);
+		//	Bench(objBind, reader);
+		//}
+
+		[Benchmark]
+		public void Manual()
+		{
+			var reader = GetReader();
+			Bench(compiled, reader);
+		}
+
+		static void Bench(IDataBinder<Record> binder, DbDataReader reader)
+		{
+			while(reader.Read()) { 
+				var item = new Record();
+				binder.Bind(reader, item);
 			}
 		}
 
 		[Benchmark]
 		public void Dapper()
 		{
-			for (int i = 0; i < Count; i++)
+			var reader = GetReader();
+			var binder = reader.GetRowParser<Record>();
+			while (reader.Read())
 			{
-				dp(record);
+				var item = binder(reader);
 			}
 		}
 	}

@@ -17,7 +17,7 @@ a selection for which benchmark set to run.
 
 ## Benchmark Environment
 
-The benchmark results reported here were run with the following configuration:
+The benchmark results reported here were run with the following configuration, unless otherwise noted:
 ```
 BenchmarkDotNet=v0.12.1, OS=Windows 10.0.19041.685 (2004/?/20H1)
 Intel Core i7-7700K CPU 4.20GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical cores
@@ -45,37 +45,3 @@ Benchmarks for Excel data reader libraries processing .xls and xlsx files.
 ## [XBase Reader Benchmarks](docs/XBaseDataReaderBenchmarks.md)
 
 Benchmarks for .dbf data reader libraries.
-
-## Libraries Tested
-
-I've created benchmarks that cover many of the most common open-source .NET CSV libraries.
-These are primarily third-party open source libraries, but also tested are the Visual Basic TextFieldParser which included as
-part of the .NET framework libraries, and OleDb text file driver, which is a windows-only and maintained by Microsoft.
-I'd welcome any additions to this list as a pull request.
-
-All libraries are using the latest version as of 2021-10-02.
-
-- Naive, Broken
-
-	This measures the naive approach of using `TextReader.ReadLine` and `String.Split` to process CSV data. 
-	Likewise, writing is performed by writing commas and newlines, but ignoring escaping.
-	These approaches are fast, but don't handle the edge cases of quoted fields, embedded commas, etc; and thus are not [RFC 4180](https://tools.ietf.org/html/rfc4180) compliant.
-	This is used as the benchmark baseline, since its performance is unlikely to change much.
-
-- [Cesil](https://github.com/kevin-montrose/Cesil)
-- [CsvHelper](https://github.com/JoshClose/CsvHelper)
-- [CsvBySteve](https://github.com/stevehansen/csv/)
-- [Ctl.Data](https://github.com/ctl-global/ctl-data/)
-- [Cursively](https://github.com/airbreather/Cursively)
-- [FastCsvParser](https://github.com/bopohaa/CsvParser)
-- [FlatFilesCsv](https://github.com/jehugaleahsa/FlatFiles)
-- [FluentCSV](https://github.com/aboudoux/FluentCSV)
-- [FSharp.Data](https://github.com/fsharp/FSharp.Data)
-- [Lumenworks](https://www.codeproject.com/Articles/9258/A-Fast-CSV-Reader) now maintained as [LumenWorksCsvReader](https://github.com/phatcher/CsvReader).
-- [mhgolam.fastCSV](https://github.com/mgholam/fastCSV)
-- [NLight](https://github.com/slorion/nlight)
-- [NReco.Csv](https://github.com/nreco/csv)
-- [OleDbCsv](https://www.microsoft.com/en-us/download/details.aspx?id=54920)
-- [Sylvan](https://github.com/MarkPflug/Sylvan/blob/master/docs/Sylvan.Data.Csv.md)
-- [TinyCsvParser](https://github.com/bytefish/TinyCsvParser)
-- [VisualBasic](https://github.com/dotnet/runtime/blob/master/src/libraries/Microsoft.VisualBasic.Core/src/Microsoft/VisualBasic/FileIO/TextFieldParser.vb)

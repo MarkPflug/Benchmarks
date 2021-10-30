@@ -19,6 +19,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{87D6758C-F
 		..\docs\CsvReaderBenchmarks.md = ..\docs\CsvReaderBenchmarks.md
 		..\docs\CsvWriterBenchmarks.md = ..\docs\CsvWriterBenchmarks.md
 		..\docs\ExcelBenchmarks.md = ..\docs\ExcelBenchmarks.md
+		..\docs\Libraries.md = ..\docs\Libraries.md
 		..\readme.md = ..\readme.md
 		..\docs\XBaseDataReaderBenchmarks.md = ..\docs\XBaseDataReaderBenchmarks.md
 	EndProjectSection
