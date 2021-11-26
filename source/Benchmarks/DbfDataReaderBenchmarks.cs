@@ -12,9 +12,9 @@ namespace Benchmarks
 	[MemoryDiagnoser]
 	public class DbfDataReaderBenchmarks
 	{
-		const string Url = "https://www2.census.gov/geo/tiger/GENZ2018/shp/cb_2018_us_county_20m.zip";
-		const string ShapeFileName = "cb_2018_us_county_20m.zip";
-		const string DbfFileName = "cb_2018_us_county_20m.dbf";
+		const string Url = "https://prd-tnm.s3.amazonaws.com/StagedProducts/GovtUnit/Shape/GOVTUNIT_Oregon_State_Shape.zip";
+		const string ShapeFileName = "GOVTUNIT_Oregon_State_Shape.zip";
+		const string DbfFileName = "GU_PLSSFirstDivision.dbf";
 		readonly byte[] dbfData;
 
 		public DbfDataReaderBenchmarks()
@@ -29,7 +29,7 @@ namespace Benchmarks
 			if (!File.Exists(DbfFileName))
 			{
 				var za = ZipFile.OpenRead(ShapeFileName);
-				var entry = za.GetEntry(DbfFileName);
+				var entry = za.GetEntry("Shape/" + DbfFileName);
 				entry.ExtractToFile(DbfFileName);
 			}
 			dbfData = File.ReadAllBytes(DbfFileName);
@@ -54,10 +54,12 @@ namespace Benchmarks
 
 		[Benchmark]
 		public void DbfData()
-		{
-			
+		{			
 			var ms = new MemoryStream(dbfData);
-			var dr = new DbfDataReader.DbfDataReader(ms, new DbfDataReader.DbfDataReaderOptions() { SkipDeletedRecords = true });
+			var opts = new DbfDataReader.DbfDataReaderOptions() { 
+				SkipDeletedRecords = true 
+			};
+			var dr = new DbfDataReader.DbfDataReader(ms, opts);
 			dr.Process();
 		}
 	}
@@ -111,9 +113,17 @@ namespace Benchmarks
 
 		public static void Process(this DbfDataReader.DbfDataReader reader)
 		{
+			// NOTE: DbfDataReader column  schema doesn't seem to agree with GetFieldType
+
 			var cols = reader.GetColumnSchema();
 			bool[] allowDbNull = cols.Select(c => c.AllowDBNull != false).ToArray();
-			TypeCode[] types = cols.Select(c => Type.GetTypeCode(c.DataType)).ToArray();
+			TypeCode[] types = new TypeCode[cols.Count];
+			for(int i = 0; i < types.Length; i++)
+			{
+				var t = reader.GetFieldType(i);
+				t = Nullable.GetUnderlyingType(t) ?? t;
+				types[i] = Type.GetTypeCode(t);
+			}
 			while (reader.Read())
 			{
 				for (int i = 0; i < reader.FieldCount; i++)
@@ -133,8 +143,9 @@ namespace Benchmarks
 					reader.GetBoolean(i);
 					break;
 				case TypeCode.Int32:
-					// ??? for some reason this fails if accessed
-					// via GetInt32, throws a cast exception.
+					reader.GetInt32(i);
+					break;
+				case TypeCode.Int64:
 					reader.GetInt64(i);
 					break;
 				case TypeCode.DateTime:

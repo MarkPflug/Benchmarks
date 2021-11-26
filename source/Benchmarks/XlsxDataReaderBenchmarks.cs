@@ -20,15 +20,9 @@ namespace Benchmarks
 	{
 		const string file = @"Data/65K_Records_Data.xlsx";
 
-		MemoryStream memStream;
-		string xml;
-
 		public XlsxBenchmarks()
 		{
 			Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-
-			memStream = new MemoryStream(File.ReadAllBytes("Data/sheet1.xml"));
-			xml = File.ReadAllText("Data/sheet1.xml");
 		}
 
 		static void ProcessRecord(IDataReader reader)

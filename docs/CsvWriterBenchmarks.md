@@ -5,10 +5,10 @@ to a `TextWriter.Null`.
 
 |          Method |     Mean |    Error |   StdDev |      Gen 0 |  Allocated |
 |---------------- |---------:|---------:|---------:|-----------:|-----------:|
-|     NaiveBroken | 261.4 ms | 10.79 ms |  2.80 ms | 21500.0000 |  89,055 KB |
-|  SylvanDataSync | 276.4 ms | 24.30 ms |  6.31 ms |          - |      46 KB |
-| SylvanDataAsync | 285.4 ms | 21.69 ms |  5.63 ms |          - |     373 KB |
-|           NReco | 317.0 ms |  2.42 ms |  0.13 ms | 21000.0000 |  86,711 KB |
-|       NLightCsv | 395.1 ms | 17.80 ms |  6.35 ms | 34000.0000 | 140,779 KB |
-|   CsvHelperSync | 600.6 ms | 36.53 ms |  9.49 ms | 34000.0000 | 140,635 KB |
-|  CsvHelperAsync | 824.4 ms | 55.82 ms | 14.50 ms | 42000.0000 | 174,226 KB |
+|     NaiveBroken | 240.9 ms |  6.37 ms |  2.27 ms | 21666.6667 |  89,056 KB |
+|  SylvanDataSync | 242.5 ms |  8.50 ms |  0.47 ms |          - |      46 KB |
+| SylvanDataAsync | 256.5 ms |  4.14 ms |  1.08 ms |          - |     375 KB |
+|           NReco | 298.1 ms |  4.72 ms |  0.73 ms | 21000.0000 |  86,711 KB |
+|       NLightCsv | 378.4 ms | 79.55 ms | 28.37 ms | 34000.0000 | 140,779 KB |
+|   CsvHelperSync | 539.2 ms | 23.71 ms |  8.46 ms | 34000.0000 | 140,636 KB |
+|  CsvHelperAsync | 699.7 ms | 85.42 ms | 30.46 ms | 42000.0000 | 174,228 KB |
