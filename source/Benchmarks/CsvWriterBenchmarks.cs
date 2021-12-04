@@ -1,8 +1,11 @@
 ﻿using BenchmarkDotNet.Attributes;
 using CsvHelper.Configuration;
 using Sylvan.Data.Csv;
+using System;
+using System.Buffers;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Benchmarks
@@ -47,6 +50,57 @@ namespace Benchmarks
 					tw.Write(item.DataSet[i]);
 				}
 				tw.WriteLine();
+			}
+		}
+
+		[Benchmark]
+		public async Task RecordParserAsync()
+		{
+			TextWriter tw = TextWriter.Null;
+			var items = TestData.GetTestObjects();
+			var builder = new RecordParser.Builders.Writer.VariableLengthWriterSequentialBuilder<TestRecord>();
+			builder.Map(x => x.Id);
+			builder.Map(x => x.Name);
+			builder.Map(x => x.Date);
+			builder.Map(x => x.IsActive);
+
+			foreach (var i in Enumerable.Range(0, ValueCount))
+				builder.Map(x => x.DataSet[i]);
+
+			var csv = builder.Build(",");
+
+			tw.Write("Id");
+			tw.Write(',');
+			tw.Write("Name");
+			tw.Write(',');
+			tw.Write("Date");
+			tw.Write(',');
+			tw.Write("IsActive");
+			for (int i = 0; i < ValueCount; i++)
+			{
+				tw.Write(',');
+				tw.Write($"\"Value {i}\"");
+			}
+			await tw.WriteLineAsync();
+
+			var charsWritten = 0;
+			var pow = 8;
+			var buffer = ArrayPool<char>.Shared.Rent((int)Math.Pow(2, pow));
+			foreach (var item in items)
+			{
+				retry:
+
+				if (csv.TryFormat(item, buffer, out charsWritten))
+				{
+					await tw.WriteLineAsync(buffer, 0, charsWritten);
+				}
+				else
+				{
+					ArrayPool<char>.Shared.Return(buffer);
+					pow++;
+					buffer = ArrayPool<char>.Shared.Rent((int)Math.Pow(2, pow));
+					goto retry;
+				}
 			}
 		}
 
