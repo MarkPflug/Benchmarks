@@ -7,9 +7,7 @@ using System.Xml;
 namespace Benchmarks
 {
 	// These benchmarks explore the "performance floor" for xlsx processing
-	// using ZipArchive and System.Xml.XmlReader. .NET 6 has a significant
-	// performance regression in XmlTextReaderImpl.Read which these benchmarks
-	// uncovered.
+	// using ZipArchive and System.Xml.XmlReader.
 	class XmlBenchmarks
 	{
 		const string file = @"Data/65K_Records_Data.xlsx";
@@ -92,6 +90,5 @@ namespace Benchmarks
 			byte[] buffer = new byte[0x10000];
 			while (sheetStream.Read(buffer, 0, buffer.Length) != 0) ;
 		}
-
 	}
 }

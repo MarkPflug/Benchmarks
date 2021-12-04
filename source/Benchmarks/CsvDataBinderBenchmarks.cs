@@ -77,7 +77,7 @@ namespace Benchmarks
 		[Benchmark]
 		public async Task RecordParserAsync()
 		{
-			var reusableInstance = new SalesRecord();
+			var reusable = new SalesRecord();
 
 			var parser = new VariableLengthReaderSequentialBuilder<SalesRecord>()
 				.Map(x => x.Region)
@@ -94,7 +94,7 @@ namespace Benchmarks
 				.Map(x => x.TotalRevenue)
 				.Map(x => x.TotalCost)
 				.Map(x => x.TotalProfit)
-				.Build(",", CultureInfo.InvariantCulture, factory: () => reusableInstance);
+				.Build(",", CultureInfo.InvariantCulture, () => reusable);
 
 			using var stream = TestData.GetUtf8Stream();
 			var records = RecordParserSupport.ProcessFile(stream, parser.Parse);
@@ -107,7 +107,7 @@ namespace Benchmarks
 		public void SylvanData()
 		{
 			var dr = TestData.GetDataWithSchema();
-			foreach(var record in dr.GetRecords<SalesRecord>())
+			foreach (var record in dr.GetRecords<SalesRecord>())
 			{
 			}
 		}

@@ -57,7 +57,11 @@ namespace Benchmarks
 		{
 			var cols = reader.GetColumnSchema();
 			bool[] allowDbNull = cols.Select(c => c.AllowDBNull != false).ToArray();
-			TypeCode[] types = cols.Select(c => Type.GetTypeCode(c.DataType)).ToArray();
+			TypeCode[] types = cols.Select(c => {
+				var type = c.DataType;
+				type = Nullable.GetUnderlyingType(type) ?? type;
+				return Type.GetTypeCode(c.DataType);
+			}).ToArray();
 			while (reader.Read())
 			{
 				for (int i = 0; i < reader.FieldCount; i++)
@@ -95,6 +99,9 @@ namespace Benchmarks
 					break;
 				case TypeCode.Int32:
 					reader.GetInt32(i);
+					break;
+				case TypeCode.Int64:
+					reader.GetInt64(i);
 					break;
 				case TypeCode.DateTime:
 					reader.GetDateTime(i);
