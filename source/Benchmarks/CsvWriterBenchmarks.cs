@@ -87,7 +87,9 @@ namespace Benchmarks
 			var parallelism = 4;
 			var buffers = Enumerable
 				.Range(0, parallelism)
-				.Select(_ => (buffer: ArrayPool<char>.Shared.Rent((int)Math.Pow(2, 10)), lockObj: new object()))
+				.Select(_ => (pow: 10, 
+							  buffer: ArrayPool<char>.Shared.Rent((int)Math.Pow(2, 10)), 
+							  lockObj: new object()))
 				.ToArray();
 
 			var textWriterLock = new object();
@@ -98,16 +100,21 @@ namespace Benchmarks
 
 				lock (x.lockObj)
 				{
+					retry:
+
 					if (csv.TryFormat(item, x.buffer, out var charsWritten))
 					{
 						lock (textWriterLock)
 						{
-							tw.WriteLine(x.buffer, 0, charsWritten);
+							tw.WriteLine(x.buffer, 0, charsWritten); 
 						}
 					}
 					else
 					{
-						throw new Exception();
+						ArrayPool<char>.Shared.Return(x.buffer);
+						x.pow++;
+						x.buffer = ArrayPool<char>.Shared.Rent((int)Math.Pow(2, x.pow));
+						goto retry;
 					}
 				}
 			});
