@@ -118,6 +118,9 @@ namespace Benchmarks
 					}
 				}
 			});
+
+			foreach (var x in buffers)
+				ArrayPool<char>.Shared.Return(x.buffer);
 		}
 
 		[Benchmark]
