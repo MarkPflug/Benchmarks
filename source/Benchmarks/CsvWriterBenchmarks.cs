@@ -58,7 +58,7 @@ namespace Benchmarks
 		public async Task RecordParserParallel()
 		{
 			TextWriter tw = TextWriter.Null;
-			var items = TestData.GetTestObjects();
+			var items = TestData.GetTestObjects(reuse: false);
 			var builder = new RecordParser.Builders.Writer.VariableLengthWriterSequentialBuilder<TestRecord>();
 			builder.Map(x => x.Id);
 			builder.Map(x => x.Name);
@@ -87,8 +87,8 @@ namespace Benchmarks
 			var parallelism = 4;
 			var buffers = Enumerable
 				.Range(0, parallelism)
-				.Select(_ => (pow: 10, 
-							  buffer: ArrayPool<char>.Shared.Rent((int)Math.Pow(2, 10)), 
+				.Select(_ => (pow: 10,
+							  buffer: ArrayPool<char>.Shared.Rent((int)Math.Pow(2, 10)),
 							  lockObj: new object()))
 				.ToArray();
 
@@ -106,7 +106,7 @@ namespace Benchmarks
 					{
 						lock (textWriterLock)
 						{
-							tw.WriteLine(x.buffer, 0, charsWritten); 
+							tw.WriteLine(x.buffer, 0, charsWritten);
 						}
 					}
 					else

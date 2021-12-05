@@ -228,7 +228,7 @@ Total Profit:decimal
 		public const int DefaultRecordCount = 100000;
 		public const int DefaultDataValueCount = 20;
 
-		public static IEnumerable<TestRecord> GetTestObjects(int recordCount = DefaultRecordCount, int valueCount = DefaultDataValueCount)
+		public static IEnumerable<TestRecord> GetTestObjects(int recordCount = DefaultRecordCount, int valueCount = DefaultDataValueCount, bool reuse = true)
 		{
 			// We'll reuse the single instance of TestRecord. 
 			// We do this so memory usage in benchmarks is a better indicator
@@ -244,6 +244,12 @@ Total Profit:decimal
 				.Select(
 					i =>
 					{
+						if (reuse is false)
+						{
+							row = new TestRecord();
+							row.DataSet = new double[valueCount];
+						}
+
 						row.Id = i;
 						row.Name = "Model Number: 1337";
 						row.Date = startDate.AddDays(i);
