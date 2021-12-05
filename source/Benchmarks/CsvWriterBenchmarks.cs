@@ -100,6 +100,8 @@ namespace Benchmarks
 
 				lock (x.lockObj)
 				{
+					x = buffers[i % parallelism];
+
 					retry:
 
 					if (csv.TryFormat(item, x.buffer, out var charsWritten))
@@ -114,6 +116,8 @@ namespace Benchmarks
 						ArrayPool<char>.Shared.Return(x.buffer);
 						x.pow++;
 						x.buffer = ArrayPool<char>.Shared.Rent((int)Math.Pow(2, x.pow));
+
+						buffers[i % parallelism] = x;
 						goto retry;
 					}
 				}
