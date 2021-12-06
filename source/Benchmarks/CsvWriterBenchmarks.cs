@@ -53,6 +53,80 @@ namespace Benchmarks
 			}
 		}
 
+
+		[Benchmark]
+		public async Task RecordParserParallel()
+		{
+			TextWriter tw = TextWriter.Null;
+			var items = TestData.GetTestObjects(reuse: false);
+			var builder = new RecordParser.Builders.Writer.VariableLengthWriterSequentialBuilder<TestRecord>();
+			builder.Map(x => x.Id);
+			builder.Map(x => x.Name);
+			builder.Map(x => x.Date);
+			builder.Map(x => x.IsActive);
+
+			foreach (var i in Enumerable.Range(0, ValueCount))
+				builder.Map(x => x.DataSet[i]);
+
+			var csv = builder.Build(",");
+
+			tw.Write("Id");
+			tw.Write(',');
+			tw.Write("Name");
+			tw.Write(',');
+			tw.Write("Date");
+			tw.Write(',');
+			tw.Write("IsActive");
+			for (int i = 0; i < ValueCount; i++)
+			{
+				tw.Write(',');
+				tw.Write($"\"Value {i}\"");
+			}
+			await tw.WriteLineAsync();
+
+			var parallelism = 4;
+			var buffers = Enumerable
+				.Range(0, parallelism)
+				.Select(_ => (pow: 10,
+							  buffer: ArrayPool<char>.Shared.Rent((int)Math.Pow(2, 10)),
+							  lockObj: new object()))
+				.ToArray();
+
+			var textWriterLock = new object();
+
+			Parallel.ForEach(items, new ParallelOptions { MaxDegreeOfParallelism = parallelism }, (item, _, i) =>
+			{
+				var x = buffers[i % parallelism];
+
+				lock (x.lockObj)
+				{
+					x = buffers[i % parallelism];
+
+					retry:
+
+					if (csv.TryFormat(item, x.buffer, out var charsWritten))
+					{
+						lock (textWriterLock)
+						{
+							tw.WriteLine(x.buffer, 0, charsWritten);
+						}
+					}
+					else
+					{
+						ArrayPool<char>.Shared.Return(x.buffer);
+						x.pow++;
+						x.buffer = ArrayPool<char>.Shared.Rent((int)Math.Pow(2, x.pow));
+
+						buffers[i % parallelism] = x;
+						goto retry;
+					}
+				}
+			});
+
+			foreach (var x in buffers)
+				ArrayPool<char>.Shared.Return(x.buffer);
+		}
+
 		[Benchmark]
 		public async Task RecordParserAsync()
 		{
