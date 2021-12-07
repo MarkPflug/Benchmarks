@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace Benchmarks
 {
+	[CpuDiagnoser]
 	[MemoryDiagnoser]
 	public class CsvWriterBenchmarks
 	{
