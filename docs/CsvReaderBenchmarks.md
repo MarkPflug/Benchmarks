@@ -2,7 +2,7 @@
 
 This benchmark set measures CSV readers processing every field in the dataset
 as a string, which is the most basic functionality common to all CSV parsers. 
-The test dataset is 65k sample sales records from [eforexcel.com].
+The test dataset is 65k sample sales records from [eforexcel.com](https://eforexcel.com/wp/downloads-18-sample-csv-files-data-sets-for-testing-sales/).
 This data set does not include any quoted fields, and thus does not test correctness of any implementation.
 
 |               Method |      Mean |     Error |   StdDev |       Gen 0 |   Gen 1 | Allocated |
