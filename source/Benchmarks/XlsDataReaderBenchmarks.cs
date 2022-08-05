@@ -6,6 +6,7 @@ using NPOI.SS.UserModel;
 using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.Text;
 
 namespace Benchmarks
@@ -34,6 +35,13 @@ namespace Benchmarks
 					}
 				}
 			} while (reader.NextResult());
+		}
+		
+		[Benchmark]
+		[SupportedOSPlatform("windows")]
+		public void AceOleDbXls()
+		{
+			AceOleDb.ProcessFile(file);
 		}
 
 		[Benchmark]

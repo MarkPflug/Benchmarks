@@ -11,6 +11,7 @@ using System.Dynamic;
 using System.IO;
 using System.IO.Packaging;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.Text;
 
 namespace Benchmarks
@@ -78,6 +79,13 @@ namespace Benchmarks
 		}
 
 		[Benchmark]
+		[SupportedOSPlatform("windows")]
+		public void AceOleDbXls()
+		{
+			AceOleDb.ProcessFile(file);
+		}
+
+		//[Benchmark]
 		public void ExcelDataReaderXlsx()
 		{
 			using var stream = File.OpenRead(file);

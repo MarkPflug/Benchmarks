@@ -2,6 +2,7 @@
 using BenchmarkDotNet.Attributes;
 using System.Data;
 using System.IO;
+using System.Runtime.Versioning;
 using System.Text;
 
 namespace Benchmarks
@@ -65,6 +66,13 @@ namespace Benchmarks
 				}
 
 			} while (reader.NextResult());
+		}
+
+		[Benchmark]
+		[SupportedOSPlatform("windows")]
+		public void AceOleDbXls()
+		{
+			AceOleDb.ProcessFile(file);
 		}
 
 		[Benchmark]
