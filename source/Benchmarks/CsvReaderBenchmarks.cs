@@ -153,8 +153,8 @@ namespace Benchmarks
 		public void FlatFilesCsv()
 		{
 			var tr = TestData.GetTextReader();
-			var opts = new FlatFiles.SeparatedValueOptions() { IsFirstRecordSchema = true };
-			var dr = new FlatFiles.FlatFileDataReader(new FlatFiles.SeparatedValueReader(tr, opts));
+			var opts = new FlatFiles.DelimitedOptions() { IsFirstRecordSchema = true };
+			var dr = new FlatFiles.FlatFileDataReader(new FlatFiles.DelimitedReader(tr, opts));
 			dr.ProcessValues();
 		}
 

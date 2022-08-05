@@ -201,7 +201,7 @@ Total Profit:decimal
 
 		static ObjectDataReader.Builder<TestRecord> Builder =
 			ObjectDataReader
-				.Build<TestRecord>()
+				.CreateBuilder<TestRecord>()
 				.AddColumn("Id", i => i.Id)
 				.AddColumn("Name", i => i.Name)
 				.AddColumn("Date", i => i.Date)
@@ -265,7 +265,7 @@ Total Profit:decimal
 
 		static ObjectDataReader.Builder<BinaryData> BinaryBuilder =
 			ObjectDataReader
-				.Build<BinaryData>()
+				.CreateBuilder<BinaryData>()
 				.AddColumn("Id", d => d.Id)
 				.AddColumn("Data", d => d.Data);
 
@@ -292,7 +292,7 @@ Total Profit:decimal
 			var items = GetTestObjects(recordCount, valueCount);
 			return
 				ObjectDataReader
-				.Build<TestRecord>()
+				.CreateBuilder<TestRecord>()
 				.AddColumn("Id", i => i.Id)
 				.AddColumn("Name", i => i.Name)
 				.AddColumn("Date", i => i.Date)
