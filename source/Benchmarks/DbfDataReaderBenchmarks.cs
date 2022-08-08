@@ -1,5 +1,6 @@
 ﻿using BenchmarkDotNet.Attributes;
 using NDbfReader;
+using Sylvan;
 using Sylvan.Data.XBase;
 using System;
 using System.IO;
@@ -16,6 +17,7 @@ namespace Benchmarks
 		const string ShapeFileName = "GOVTUNIT_Oregon_State_Shape.zip";
 		const string DbfFileName = "GU_PLSSFirstDivision.dbf";
 		readonly byte[] dbfData;
+		StringPool pool;
 
 		public DbfDataReaderBenchmarks()
 		{
@@ -33,6 +35,7 @@ namespace Benchmarks
 				entry.ExtractToFile(DbfFileName);
 			}
 			dbfData = File.ReadAllBytes(DbfFileName);
+			this.pool = new StringPool(64);
 		}
 
 		[Benchmark]
@@ -40,6 +43,15 @@ namespace Benchmarks
 		{
 			var ms = new MemoryStream(dbfData);
 			var dr = XBaseDataReader.Create(ms);
+			dr.Process();
+		}
+
+		[Benchmark]
+		public void SylvanPooled()
+		{
+			var ms = new MemoryStream(dbfData);
+			var opts = new XBaseDataReaderOptions { StringFactory = pool.GetString };
+			var dr = XBaseDataReader.Create(ms, opts);
 			dr.Process();
 		}
 

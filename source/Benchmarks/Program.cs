@@ -2,6 +2,7 @@
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Loggers;
+using BenchmarkDotNet.Order;
 using BenchmarkDotNet.Running;
 using System;
 
@@ -24,10 +25,10 @@ namespace Benchmarks
 		public MyConfig(): base()
 		{
 			AddJob(Job.InProcess.WithMinIterationCount(1).WithWarmupCount(2).WithMaxIterationCount(6));
-			// NPOI is not optimized...
-			WithOption(ConfigOptions.DisableOptimizationsValidator, true);
-			AddLogger(ConsoleLogger.Default);
+			AddLogger(ConsoleLogger.Default)
+				.WithOrderer(new DefaultOrderer(SummaryOrderPolicy.FastestToSlowest));
 			AddColumnProvider(DefaultColumnProviders.Instance);
+			
 		}
 	}
 }

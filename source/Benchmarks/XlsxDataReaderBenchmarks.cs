@@ -78,7 +78,7 @@ namespace Benchmarks
 			} while (reader.NextResult());
 		}
 
-		[Benchmark]
+		//[Benchmark]
 		[SupportedOSPlatform("windows")]
 		public void AceOleDbXls()
 		{

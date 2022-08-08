@@ -5,7 +5,6 @@ namespace Benchmarks
 {
 	static class AceOleDb
 	{
-
 		const string fmt = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source='{0}';OLE DB Services = -4;Extended Properties=\"Excel 12.0 XML;HDR=Yes\"";
 
 		[SupportedOSPlatform("windows")]
@@ -14,9 +13,9 @@ namespace Benchmarks
 			var connStr = string.Format(fmt, file);
 			using var c = new OleDbConnection(connStr);
 			c.Open();
-			var cmd = c.CreateCommand();
+			using var cmd = c.CreateCommand();
 			cmd.CommandText = "select * from [500000 Sales Records$]";
-			var r = cmd.ExecuteReader();
+			using var r = cmd.ExecuteReader();
 			var count = r.FieldCount;
 			while (r.Read())
 			{
