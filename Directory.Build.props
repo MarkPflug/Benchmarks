@@ -3,7 +3,7 @@
     <OutputPath>$(MSBuildThisFileDirectory)bin\$(Configuration)</OutputPath>
     <Owner>Mark Pflug</Owner>
     <Authors>$(Owner)</Authors>
-    <LangVersion>8.0</LangVersion>
+    <LangVersion>10.0</LangVersion>
   </PropertyGroup>
 
 </Project>

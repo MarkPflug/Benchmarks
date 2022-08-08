@@ -12,96 +12,95 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace Benchmarks
-{
-	public class CpuDiagnoserAttribute : Attribute, IConfigSource
-	{
-		public IConfig Config { get; }
+namespace Benchmarks;
 
-		public CpuDiagnoserAttribute()
+public class CpuDiagnoserAttribute : Attribute, IConfigSource
+{
+	public IConfig Config { get; }
+
+	public CpuDiagnoserAttribute()
+	{
+		Config = ManualConfig.CreateEmpty().AddDiagnoser(new CpuDiagnoser());
+	}
+}
+
+public class CpuDiagnoser : IDiagnoser
+{
+	Process proc;
+	
+	public CpuDiagnoser()
+	{
+		this.proc = Process.GetCurrentProcess();
+	}
+
+	public IEnumerable<string> Ids => new[] { "CPU" };
+
+	public IEnumerable<IExporter> Exporters => Array.Empty<IExporter>();
+
+	public IEnumerable<IAnalyser> Analysers => Array.Empty<IAnalyser>();
+
+	public void DisplayResults(ILogger logger)
+	{
+	}
+
+	public RunMode GetRunMode(BenchmarkCase benchmarkCase)
+	{
+		return RunMode.NoOverhead;
+	}
+
+	long userStart, userEnd;
+	long privStart, privEnd;
+
+	public void Handle(HostSignal signal, DiagnoserActionParameters parameters)
+	{
+		if(signal == HostSignal.BeforeActualRun)
 		{
-			Config = ManualConfig.CreateEmpty().AddDiagnoser(new CpuDiagnoser());
+			userStart = proc.UserProcessorTime.Ticks;
+			privStart = proc.PrivilegedProcessorTime.Ticks;
+		}
+		if(signal == HostSignal.AfterActualRun)
+		{
+			userEnd = proc.UserProcessorTime.Ticks;
+			privEnd = proc.PrivilegedProcessorTime.Ticks;
 		}
 	}
 
-	public class CpuDiagnoser : IDiagnoser
+	public IEnumerable<Metric> ProcessResults(DiagnoserResults results)
 	{
-		Process proc;
-		
-		public CpuDiagnoser()
-		{
-			this.proc = Process.GetCurrentProcess();
-		}
+		yield return new Metric(CpuUserMetricDescriptor.Instance, (userEnd - userStart) * 100d / results.TotalOperations);
+		yield return new Metric(CpuKernelMetricDescriptor.Instance, (privEnd - privStart) * 100d / results.TotalOperations);
+	}
 
-		public IEnumerable<string> Ids => new[] { "CPU" };
+	public IEnumerable<ValidationError> Validate(ValidationParameters validationParameters)
+	{
+		yield break;
+	}
 
-		public IEnumerable<IExporter> Exporters => Array.Empty<IExporter>();
+	class CpuUserMetricDescriptor : IMetricDescriptor
+	{
+		internal static readonly IMetricDescriptor Instance = new CpuUserMetricDescriptor();
 
-		public IEnumerable<IAnalyser> Analysers => Array.Empty<IAnalyser>();
+		public string Id => "CPU User Time";
+		public string DisplayName => Id;
+		public string Legend => Id;
+		public string NumberFormat => "0.##";
+		public UnitType UnitType => UnitType.Time;
+		public string Unit => "ns";
+		public bool TheGreaterTheBetter => false;
+		public int PriorityInCategory => 1;
+	}
 
-		public void DisplayResults(ILogger logger)
-		{
-		}
+	class CpuKernelMetricDescriptor : IMetricDescriptor
+	{
+		internal static readonly IMetricDescriptor Instance = new CpuKernelMetricDescriptor();
 
-		public RunMode GetRunMode(BenchmarkCase benchmarkCase)
-		{
-			return RunMode.NoOverhead;
-		}
-
-		long userStart, userEnd;
-		long privStart, privEnd;
-
-		public void Handle(HostSignal signal, DiagnoserActionParameters parameters)
-		{
-			if(signal == HostSignal.BeforeActualRun)
-			{
-				userStart = proc.UserProcessorTime.Ticks;
-				privStart = proc.PrivilegedProcessorTime.Ticks;
-			}
-			if(signal == HostSignal.AfterActualRun)
-			{
-				userEnd = proc.UserProcessorTime.Ticks;
-				privEnd = proc.PrivilegedProcessorTime.Ticks;
-			}
-		}
-
-		public IEnumerable<Metric> ProcessResults(DiagnoserResults results)
-		{
-			yield return new Metric(CpuUserMetricDescriptor.Instance, (userEnd - userStart) * 100d / results.TotalOperations);
-			yield return new Metric(CpuKernelMetricDescriptor.Instance, (privEnd - privStart) * 100d / results.TotalOperations);
-		}
-
-		public IEnumerable<ValidationError> Validate(ValidationParameters validationParameters)
-		{
-			yield break;
-		}
-
-		class CpuUserMetricDescriptor : IMetricDescriptor
-		{
-			internal static readonly IMetricDescriptor Instance = new CpuUserMetricDescriptor();
-
-			public string Id => "CPU User Time";
-			public string DisplayName => Id;
-			public string Legend => Id;
-			public string NumberFormat => "0.##";
-			public UnitType UnitType => UnitType.Time;
-			public string Unit => "ns";
-			public bool TheGreaterTheBetter => false;
-			public int PriorityInCategory => 1;
-		}
-
-		class CpuKernelMetricDescriptor : IMetricDescriptor
-		{
-			internal static readonly IMetricDescriptor Instance = new CpuKernelMetricDescriptor();
-
-			public string Id => "CPU Kernel Time";
-			public string DisplayName => Id;
-			public string Legend => Id;
-			public string NumberFormat => "0.##";
-			public UnitType UnitType => UnitType.Time;
-			public string Unit => "ns";
-			public bool TheGreaterTheBetter => false;
-			public int PriorityInCategory => 1;
-		}
+		public string Id => "CPU Kernel Time";
+		public string DisplayName => Id;
+		public string Legend => Id;
+		public string NumberFormat => "0.##";
+		public UnitType UnitType => UnitType.Time;
+		public string Unit => "ns";
+		public bool TheGreaterTheBetter => false;
+		public int PriorityInCategory => 1;
 	}
 }
