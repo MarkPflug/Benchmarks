@@ -153,9 +153,9 @@ Total Profit:decimal
 
 	public static DbDataReader GetDataWithSchema(Action<CsvDataReaderOptions> opts = null)
 	{
-		
-		var options = new CsvDataReaderOptions { 
-			Schema = Schema 
+		var options = new CsvDataReaderOptions
+		{
+			Schema = Schema
 		};
 		opts?.Invoke(options);
 		return CsvDataReader.Create(GetTextReader(), options);
@@ -206,7 +206,7 @@ Total Profit:decimal
 			.AddColumn("Name", i => i.Name)
 			.AddColumn("Date", i => i.Date)
 			.AddColumn("IsActive", i => i.IsActive)
-			.Repeat((b, i) => b.AddColumn("Data" + i, r => r.DataSet[i]), 10);				
+			.Repeat((b, i) => b.AddColumn("Data" + i, r => r.DataSet[i]), 10);
 
 	public static T Repeat<T>(this T obj, Func<T, int, T> a, int count)
 	{

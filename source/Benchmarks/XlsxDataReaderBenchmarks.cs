@@ -85,7 +85,7 @@ public class XlsxBenchmarks
 		AceOleDb.ProcessFile(file);
 	}
 
-	//[Benchmark]
+	[Benchmark]
 	public void ExcelDataReaderXlsx()
 	{
 		using var stream = File.OpenRead(file);

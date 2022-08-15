@@ -68,14 +68,14 @@ public class XlsbBenchmarks
 		} while (reader.NextResult());
 	}
 
-	[Benchmark]
+	//[Benchmark]
 	[SupportedOSPlatform("windows")]
 	public void AceOleDbXls()
 	{
 		AceOleDb.ProcessFile(file);
 	}
 
-	[Benchmark]
+	//[Benchmark]
 	public void ExcelDataReaderXlsb()
 	{
 		using var stream = File.OpenRead(file);
