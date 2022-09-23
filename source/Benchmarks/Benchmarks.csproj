@@ -42,7 +42,7 @@
     <PackageReference Include="FastExcel" Version="3.0.13" />
     <PackageReference Include="NPOI" Version="2.5.6" />
     <PackageReference Include="Sylvan.Common" Version="0.3.0" />
-    <!--<PackageReference Include="Sylvan.Data" Version="0.2.5" />-->
+    <PackageReference Include="Sylvan.Data" Version="0.2.6" />
     <PackageReference Include="Sylvan.Data.Csv" Version="1.2.2" />
     <PackageReference Include="Sylvan.Data.Excel" Version="0.4.0-b0003" />
     <PackageReference Include="Sylvan.Data.XBase" Version="0.1.2" />
@@ -56,10 +56,6 @@
     <PackageReference Include="TinyCsvParser" Version="2.7.0" />
     <PackageReference Include="Cesil" Version="0.9.0" />
    
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\Sylvan\source\Sylvan.Data\Sylvan.Data.csproj" />
   </ItemGroup>
 
   <ItemGroup>
