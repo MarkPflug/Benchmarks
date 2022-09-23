@@ -37,9 +37,13 @@ Benchmarks for libraries that supporting writing CSV data.
 
 Libraries that provide object data binding capabilities are reported here.
 
-## [Excel Reader Benchmarks](docs/ExcelBenchmarks.md)
+## [Excel Reader Benchmarks](docs/ExcelReaderBenchmarks.md)
 
-Benchmarks for Excel data reader libraries processing .xls and xlsx files.
+Benchmarks for Excel data reader libraries processing .xlsx, .xlsb, and xls files.
+
+## [Excel Writer Benchmarks](docs/ExcelWriterBenchmarks.md)
+
+Benchmarks for Excel libraries writing .xlsx files.
 
 ## [XBase Reader Benchmarks](docs/XBaseDataReaderBenchmarks.md)
 
