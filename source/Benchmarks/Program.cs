@@ -12,6 +12,9 @@ static class Program
 {
 	public static void Main(string[] args)
 	{
+		var b = new XlsxWriterBenchmarks();
+		b.Init();
+		b.AsposeXlsx();
 		var config = new MyConfig();
 			
 		BenchmarkSwitcher

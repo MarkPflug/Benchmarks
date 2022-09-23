@@ -78,6 +78,8 @@ public class XlsxBenchmarks
 		} while (reader.NextResult());
 	}
 
+	// For some reason the ACE driver leaves some thread spinning in the process
+	// which alone is terrible, but also affects the results of subsequent benchmarks
 	//[Benchmark]
 	[SupportedOSPlatform("windows")]
 	public void AceOleDbXls()

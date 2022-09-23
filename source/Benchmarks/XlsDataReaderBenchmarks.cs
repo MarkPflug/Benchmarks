@@ -36,7 +36,7 @@ public class XlsBenchmarks
 			}
 		} while (reader.NextResult());
 	}
-	
+
 	//[Benchmark]
 	[SupportedOSPlatform("windows")]
 	public void AceOleDbXls()
