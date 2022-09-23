@@ -1,4 +1,4 @@
-# Excel Data Reader Benchmarks
+# Excel Data Writer Benchmarks
 
 These benchmarks measure writing a 65k row Excel file, with data read from in-memory objects.
 The data set is sales records data from: [eforexcel.com](https://eforexcel.com/wp/downloads-18-sample-csv-files-data-sets-for-testing-sales/).
