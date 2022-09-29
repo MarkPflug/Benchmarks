@@ -1,6 +1,5 @@
 ﻿using Aspose.Cells;
 using BenchmarkDotNet.Attributes;
-using System.Data;
 using System.IO;
 using System.Runtime.Versioning;
 using System.Text;
@@ -8,50 +7,13 @@ using System.Text;
 namespace Benchmarks;
 
 [MemoryDiagnoser]
-public class XlsbBenchmarks
+public class XlsbReaderBenchmarks
 {
 	const string file = @"Data/65K_Records_Data.xlsb";
 
-	public XlsbBenchmarks()
+	public XlsbReaderBenchmarks()
 	{
 		Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-	}
-
-	static void ProcessRecord(IDataReader reader)
-	{
-		var region = reader.GetString(0);
-		var country = reader.GetString(1);
-		var type = reader.GetString(2);
-		var channel = reader.GetString(3);
-		var priority = reader.GetString(4);
-		var orderDate = reader.GetDateTime(5);
-		var id = reader.GetInt32(6);
-		var shipDate = reader.GetDateTime(7);
-		var unitsSold = reader.GetInt32(8);
-		var unitPrice = reader.GetDouble(9);
-		var unitCost = reader.GetDouble(10);
-		var totalRevenue = reader.GetDouble(11);
-		var totalCost = reader.GetDouble(12);
-		var totalProfit = reader.GetDouble(13);
-	}
-
-	static void ProcessRecordEDR(IDataReader reader)
-	{
-		var region = reader.GetString(0);
-		var country = reader.GetString(1);
-		var type = reader.GetString(2);
-		var channel = reader.GetString(3);
-		var priority = reader.GetString(4);
-		var orderDate = reader.GetDateTime(5);
-		// ExcelDataReader doesn't allow reading as integers
-		var id = reader.GetDouble(6);
-		var shipDate = reader.GetDateTime(7);
-		var unitsSold = reader.GetDouble(8);
-		var unitPrice = reader.GetDouble(9);
-		var unitCost = reader.GetDouble(10);
-		var totalRevenue = reader.GetDouble(11);
-		var totalCost = reader.GetDouble(12);
-		var totalProfit = reader.GetDouble(13);
 	}
 
 	[Benchmark]
@@ -62,7 +24,7 @@ public class XlsbBenchmarks
 		{
 			while (reader.Read())
 			{
-				ProcessRecord(reader);
+				reader.ProcessSalesRecord();
 			}
 
 		} while (reader.NextResult());
@@ -75,7 +37,7 @@ public class XlsbBenchmarks
 		AceOleDb.ProcessFile(file);
 	}
 
-	//[Benchmark]
+	[Benchmark]
 	public void ExcelDataReaderXlsb()
 	{
 		using var stream = File.OpenRead(file);
@@ -86,7 +48,7 @@ public class XlsbBenchmarks
 				reader.Read();//skip header
 				while (reader.Read())
 				{
-					ProcessRecordEDR(reader);
+					reader.ProcessSalesRecordEDR();
 				}
 			} while (reader.NextResult());
 		}

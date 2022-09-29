@@ -57,7 +57,8 @@ static class DataExtensions
 	{
 		var cols = reader.GetColumnSchema();
 		bool[] allowDbNull = cols.Select(c => c.AllowDBNull != false).ToArray();
-		TypeCode[] types = cols.Select(c => {
+		TypeCode[] types = cols.Select(c =>
+		{
 			var type = c.DataType;
 			type = Nullable.GetUnderlyingType(type) ?? type;
 			return Type.GetTypeCode(c.DataType);
@@ -131,5 +132,43 @@ static class DataExtensions
 		{
 			yield return binder(dr);
 		}
+	}
+
+	public static void ProcessSalesRecord(this DbDataReader reader)
+	{
+		var region = reader.GetString(0);
+		var country = reader.GetString(1);
+		var type = reader.GetString(2);
+		var channel = reader.GetString(3);
+		var priority = reader.GetString(4);
+		var orderDate = reader.GetDateTime(5);
+		var id = reader.GetInt32(6);
+		var shipDate = reader.GetDateTime(7);
+		var unitsSold = reader.GetInt32(8);
+		var unitPrice = reader.GetDouble(9);
+		var unitCost = reader.GetDouble(10);
+		var totalRevenue = reader.GetDouble(11);
+		var totalCost = reader.GetDouble(12);
+		var totalProfit = reader.GetDouble(13);
+	}
+
+
+	public static void ProcessSalesRecordEDR(this IDataReader reader)
+	{
+		var region = reader.GetString(0);
+		var country = reader.GetString(1);
+		var type = reader.GetString(2);
+		var channel = reader.GetString(3);
+		var priority = reader.GetString(4);
+		var orderDate = reader.GetDateTime(5);
+		// ExcelDataReader doesn't allow reading as integers
+		var id = reader.GetDouble(6);
+		var shipDate = reader.GetDateTime(7);
+		var unitsSold = reader.GetDouble(8);
+		var unitPrice = reader.GetDouble(9);
+		var unitCost = reader.GetDouble(10);
+		var totalRevenue = reader.GetDouble(11);
+		var totalCost = reader.GetDouble(12);
+		var totalProfit = reader.GetDouble(13);
 	}
 }

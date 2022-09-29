@@ -127,7 +127,7 @@ public class CsvReaderBenchmarks
 		}
 	}
 
-	[Benchmark] // most people won't be able to run this.
+	//[Benchmark] // most people won't be able to run this.
 	[SupportedOSPlatform("windows")]
 	public void OleDbCsv()
 	{
@@ -142,9 +142,9 @@ public class CsvReaderBenchmarks
 		);
 		using var conn = new OleDbConnection(connString);
 		conn.Open();
-		var cmd = conn.CreateCommand();
+		using var cmd = conn.CreateCommand();
 		cmd.CommandText = "SELECT * FROM [" + Path.GetFileName(TestData.DataFile) + "]";
-		var dr = cmd.ExecuteReader();
+		using var dr = cmd.ExecuteReader();
 
 		dr.ProcessValues();
 	}

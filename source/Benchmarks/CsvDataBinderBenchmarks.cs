@@ -105,7 +105,7 @@ public class CsvDataBinderBenchmarks
 	[Benchmark]
 	public void SylvanData()
 	{
-		var dr = TestData.GetDataWithSchema();
+		var dr = TestData.GetData();
 		foreach (var record in dr.GetRecords<SalesRecord>())
 		{
 		}
@@ -114,7 +114,7 @@ public class CsvDataBinderBenchmarks
 	[Benchmark]
 	public async Task SylvanDataAsync()
 	{
-		var dr = TestData.GetDataWithSchema();
+		var dr = TestData.GetData();
 		var binder = DataBinder.Create<SalesRecord>(dr);
 		while (await dr.ReadAsync())
 		{
@@ -126,7 +126,7 @@ public class CsvDataBinderBenchmarks
 	[Benchmark]
 	public void SylvanDataPooled()
 	{
-		var dr = TestData.GetDataWithSchema(o => o.StringFactory = pool.GetString);
+		var dr = TestData.GetData();
 		foreach (var record in dr.GetRecords<SalesRecord>())
 		{
 		}
@@ -135,7 +135,7 @@ public class CsvDataBinderBenchmarks
 	[Benchmark]
 	public void SylvanManual()
 	{
-		var dr = TestData.GetDataWithSchema();
+		var dr = TestData.GetData();
 		var binder = new ManualBinder();
 		while (dr.Read())
 		{
@@ -147,7 +147,7 @@ public class CsvDataBinderBenchmarks
 	public void SylvanDapper()
 	{
 		SetTypeMap(typeof(SalesRecord), new SalesRecordMap());
-		var dr = TestData.GetDataWithSchema();
+		var dr = TestData.GetData();
 		var parser = dr.GetRowParser<SalesRecord>();
 		while (dr.Read())
 		{

@@ -1,11 +1,15 @@
 ﻿using BenchmarkDotNet.Attributes;
 using CsvHelper.Configuration;
+using Sylvan.Data;
 using Sylvan.Data.Csv;
 using System;
 using System.Buffers;
+using System.Data.Common;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Benchmarks;
@@ -14,76 +18,81 @@ namespace Benchmarks;
 [MemoryDiagnoser]
 public class CsvWriterBenchmarks
 {
-	static readonly int ValueCount = TestData.DefaultDataValueCount;
+	MemoryStream ms;
+
+	public CsvWriterBenchmarks()
+	{
+		this.ms = new MemoryStream(10 * 0x100000); // 10mb
+	}
+
+	Stream GetStream([CallerMemberName] string name = null)
+	{
+		//this.ms.Position = 0;
+		//this.ms.SetLength(0);
+		//return new NoCloseStream(this.ms);
+		return File.Create(name + ".csv");
+	}
+
+	TextWriter GetWriter([CallerMemberName] string name = null)
+	{
+		var s = GetStream(name);
+		return new StreamWriter(s, Encoding.UTF8, 0x10000);
+	}
+
+	DbDataReader GetData()
+	{
+		return TestData.GetData();
+	}
+
+	SalesRecord[] GetRecords()
+	{
+		return TestData.GetRecords();
+	}
 
 	[Benchmark]
 	public void NaiveBroken()
 	{
-		TextWriter tw = TextWriter.Null;
+		using var tw = GetWriter();
 
-		var items = TestData.GetTestObjects();
-		tw.Write("Id");
-		tw.Write(',');
-		tw.Write("Name");
-		tw.Write(',');
-		tw.Write("Date");
-		tw.Write(',');
-		tw.Write("IsActive");
-		for (int i = 0; i < ValueCount; i++)
-		{
-			tw.Write(',');
-			tw.Write("Value" + i);
-		}
-		tw.WriteLine();
+		var data = GetData();
 
-		foreach (var item in items)
+		var count = data.FieldCount;
+		while (data.Read())
 		{
-			tw.Write(item.Id);
-			tw.Write(',');
-			tw.Write(item.Name);
-			tw.Write(',');
-			tw.Write(item.Date);
-			tw.Write(',');
-			tw.Write(item.IsActive);
-			for (int i = 0; i < ValueCount; i++)
+			for (int i = 0; i < count; i++)
 			{
-				tw.Write(',');
-				tw.Write(item.DataSet[i]);
+				if (i > 0)
+					tw.Write(',');
+				tw.Write(data.GetValue(i)?.ToString());
 			}
 			tw.WriteLine();
 		}
 	}
 
-
 	[Benchmark]
-	public async Task RecordParserParallel()
+	public void RecordParserParallel()
 	{
-		TextWriter tw = TextWriter.Null;
-		var items = TestData.GetTestObjects(reuse: false);
-		var builder = new RecordParser.Builders.Writer.VariableLengthWriterSequentialBuilder<TestRecord>();
-		builder.Map(x => x.Id);
-		builder.Map(x => x.Name);
-		builder.Map(x => x.Date);
-		builder.Map(x => x.IsActive);
+		using var tw = GetWriter();
+		// I don't see a way to use this library without a `T`, so can't use DbDataReader directly.
+		var items = GetRecords();
 
-		foreach (var i in Enumerable.Range(0, ValueCount))
-			builder.Map(x => x.DataSet[i]);
+		var builder = new RecordParser.Builders.Writer.VariableLengthWriterSequentialBuilder<SalesRecord>();
+		builder.Map(x => x.Region);
+		builder.Map(x => x.Country);
+		builder.Map(x => x.ItemType);
+		builder.Map(x => x.SalesChannel);
+		builder.Map(x => x.OrderPriority);
+		builder.Map(x => x.OrderDate);
+		builder.Map(x => x.OrderId);
+		builder.Map(x => x.ShipDate);
+		builder.Map(x => x.UnitsSold);
+		builder.Map(x => x.UnitPrice);
+		builder.Map(x => x.UnitCost);
+		builder.Map(x => x.TotalRevenue);
+		builder.Map(x => x.TotalCost);
+		builder.Map(x => x.TotalProfit);
 
 		var csv = builder.Build(",");
-
-		tw.Write("Id");
-		tw.Write(',');
-		tw.Write("Name");
-		tw.Write(',');
-		tw.Write("Date");
-		tw.Write(',');
-		tw.Write("IsActive");
-		for (int i = 0; i < ValueCount; i++)
-		{
-			tw.Write(',');
-			tw.Write($"\"Value {i}\"");
-		}
-		await tw.WriteLineAsync();
 
 		var parallelism = 4;
 		var buffers = Enumerable
@@ -103,7 +112,7 @@ public class CsvWriterBenchmarks
 			{
 				x = buffers[i % parallelism];
 
-				retry:
+			retry:
 
 				if (csv.TryFormat(item, x.buffer, out var charsWritten))
 				{
@@ -131,39 +140,34 @@ public class CsvWriterBenchmarks
 	[Benchmark]
 	public async Task RecordParserAsync()
 	{
-		TextWriter tw = TextWriter.Null;
-		var items = TestData.GetTestObjects();
-		var builder = new RecordParser.Builders.Writer.VariableLengthWriterSequentialBuilder<TestRecord>();
-		builder.Map(x => x.Id);
-		builder.Map(x => x.Name);
-		builder.Map(x => x.Date);
-		builder.Map(x => x.IsActive);
+		using var tw = GetWriter();
+		// I don't see a way to use this library without a `T`, so can't use DbDataReader directly.
+		var items = GetRecords();
 
-		foreach (var i in Enumerable.Range(0, ValueCount))
-			builder.Map(x => x.DataSet[i]);
+		var builder = new RecordParser.Builders.Writer.VariableLengthWriterSequentialBuilder<SalesRecord>();
+		builder.Map(x => x.Region);
+		builder.Map(x => x.Country);
+		builder.Map(x => x.ItemType);
+		builder.Map(x => x.SalesChannel);
+		builder.Map(x => x.OrderPriority);
+		builder.Map(x => x.OrderDate);
+		builder.Map(x => x.OrderId);
+		builder.Map(x => x.ShipDate);
+		builder.Map(x => x.UnitsSold);
+		builder.Map(x => x.UnitPrice);
+		builder.Map(x => x.UnitCost);
+		builder.Map(x => x.TotalRevenue);
+		builder.Map(x => x.TotalCost);
+		builder.Map(x => x.TotalProfit);
 
-		var csv = builder.Build(",");
-
-		tw.Write("Id");
-		tw.Write(',');
-		tw.Write("Name");
-		tw.Write(',');
-		tw.Write("Date");
-		tw.Write(',');
-		tw.Write("IsActive");
-		for (int i = 0; i < ValueCount; i++)
-		{
-			tw.Write(',');
-			tw.Write($"\"Value {i}\"");
-		}
-		await tw.WriteLineAsync();
+		var csv = builder.Build(",");			
 
 		var charsWritten = 0;
 		var pow = 8;
 		var buffer = ArrayPool<char>.Shared.Rent((int)Math.Pow(2, pow));
 		foreach (var item in items)
 		{
-			retry:
+		retry:
 
 			if (csv.TryFormat(item, buffer, out charsWritten))
 			{
@@ -182,90 +186,88 @@ public class CsvWriterBenchmarks
 	[Benchmark]
 	public void CsvHelperSync()
 	{
-		TextWriter tw = TextWriter.Null;
-		var items = TestData.GetTestObjects();
+		using var tw = GetWriter();
+		var data = GetData();
 		var csv = new CsvHelper.CsvWriter(tw, new CsvConfiguration(CultureInfo.InvariantCulture));
-		csv.WriteField("Id");
-		csv.WriteField("Name");
-		csv.WriteField("Date");
-		csv.WriteField("IsActive");
-		for (int i = 0; i < ValueCount; i++)
-		{
-			csv.WriteField("Value" + i);
-		}
-		csv.NextRecord();
 
-		foreach (var item in items)
+		var count = data.FieldCount;
+		while (data.Read())
 		{
-			csv.WriteField(item.Id);
-			csv.WriteField(item.Name);
-			csv.WriteField(item.Date);
-			csv.WriteField(item.IsActive);
-			for (int i = 0; i < ValueCount; i++)
+			for (int i = 0; i < count; i++)
 			{
-				csv.WriteField(item.DataSet[i]);
+				var t = data.GetFieldType(i);
+				var c = Type.GetTypeCode(t);
+				switch (c)
+				{
+					case TypeCode.String:
+						csv.WriteField(data.GetString(i));
+						break;
+					case TypeCode.Decimal:
+						csv.WriteField(data.GetDecimal(i));
+						break;
+					case TypeCode.Int32:
+						csv.WriteField(data.GetInt32(i));
+						break;
+					case TypeCode.DateTime:
+						csv.WriteField(data.GetDateTime(i));
+						break;
+					default:
+						throw new NotImplementedException();
+				}
 			}
 			csv.NextRecord();
-		}
-		csv.Flush();
+		}		
 	}
 
 	[Benchmark]
 	public async Task CsvHelperAsync()
 	{
-		TextWriter tw = TextWriter.Null;
-		var items = TestData.GetTestObjects();
+		using var tw = GetWriter();
+		var data = GetData();
 		var csv = new CsvHelper.CsvWriter(tw, new CsvConfiguration(CultureInfo.InvariantCulture));
-		csv.WriteField("Id");
-		csv.WriteField("Name");
-		csv.WriteField("Date");
-		csv.WriteField("IsActive");
-		for (int i = 0; i < ValueCount; i++)
-		{
-			csv.WriteField("Value" + i);
-		}
-		await csv.NextRecordAsync();
 
-		foreach (var item in items)
+		var count = data.FieldCount;
+		while (await data.ReadAsync())
 		{
-			csv.WriteField(item.Id);
-			csv.WriteField(item.Name);
-			csv.WriteField(item.Date);
-			csv.WriteField(item.IsActive);
-			for (int i = 0; i < ValueCount; i++)
+			for (int i = 0; i < count; i++)
 			{
-				csv.WriteField(item.DataSet[i]);
+				var t = data.GetFieldType(i);
+				var c = Type.GetTypeCode(t);
+				switch (c)
+				{
+					case TypeCode.String:
+						csv.WriteField(data.GetString(i));
+						break;
+					case TypeCode.Decimal:
+						csv.WriteField(data.GetDecimal(i));
+						break;
+					case TypeCode.Int32:
+						csv.WriteField(data.GetInt32(i));
+						break;
+					case TypeCode.DateTime:
+						csv.WriteField(data.GetDateTime(i));
+						break;
+					default:
+						throw new NotImplementedException();
+				}
 			}
 			await csv.NextRecordAsync();
 		}
-		await csv.FlushAsync();
 	}
 
 	[Benchmark]
 	public void NLightCsv()
 	{
-		TextWriter tw = TextWriter.Null;
-		var items = TestData.GetTestObjects();
-		var csv = new NLight.IO.Text.DelimitedRecordWriter(tw);
-		csv.WriteField("Id");
-		csv.WriteField("Name");
-		csv.WriteField("Date");
-		csv.WriteField("IsActive");
-		for (int i = 0; i < ValueCount; i++)
-		{
-			csv.WriteField("Value" + i);
-		}
-		csv.WriteRecordEnd();
+		using var tw = GetWriter();
+		var data = GetData();
 
-		foreach (var item in items)
+		var csv = new NLight.IO.Text.DelimitedRecordWriter(tw);
+		var count = data.FieldCount;
+		while (data.Read())
 		{
-			csv.WriteField(item.Id);
-			csv.WriteField(item.Name);
-			csv.WriteField(item.Date);
-			csv.WriteField(item.IsActive);
-			for (int i = 0; i < ValueCount; i++)
+			for (int i = 0; i < count; i++)
 			{
-				csv.WriteField(item.DataSet[i]);
+				csv.WriteField(data.GetValue(i));
 			}
 			csv.WriteRecordEnd();
 		}
@@ -274,28 +276,18 @@ public class CsvWriterBenchmarks
 	[Benchmark]
 	public void NReco()
 	{
-		TextWriter tw = TextWriter.Null;
-		var items = TestData.GetTestObjects();
+		using var tw = GetWriter();
+		var data = GetData();
+
 		var csv = new NReco.Csv.CsvWriter(tw);
-		csv.WriteField("Id");
-		csv.WriteField("Name");
-		csv.WriteField("Date");
-		csv.WriteField("IsActive");
-		for (int i = 0; i < ValueCount; i++)
-		{
-			csv.WriteField("Value" + i);
-		}
-		csv.NextRecord();
+
 		var c = CultureInfo.InvariantCulture;
-		foreach (var item in items)
+		var count = data.FieldCount;
+		while(data.Read())
 		{
-			csv.WriteField(item.Id.ToString(c));
-			csv.WriteField(item.Name);
-			csv.WriteField(item.Date.ToString(c));
-			csv.WriteField(item.IsActive.ToString(c));
-			for (int i = 0; i < ValueCount; i++)
+			for (int i = 0; i < count; i++)
 			{
-				csv.WriteField(item.DataSet[i].ToString(c));
+				csv.WriteField(data.GetValue(i)?.ToString());
 			}
 			csv.NextRecord();
 		}
@@ -304,18 +296,20 @@ public class CsvWriterBenchmarks
 	[Benchmark]
 	public async Task SylvanDataAsync()
 	{
-		var tw = TextWriter.Null;
-		var dr = TestData.GetTestDataReader();
-		var csv = CsvDataWriter.Create(tw);
-		await csv.WriteAsync(dr);
+		using var tw = GetWriter();
+		var data = GetData();
+		var opts = new CsvDataWriterOptions { BufferSize = 0x10000, NewLine = "\n" };
+		var csv = CsvDataWriter.Create(tw, opts);
+		await csv.WriteAsync(data);
 	}
 
 	[Benchmark]
 	public void SylvanDataSync()
 	{
-		var tw = TextWriter.Null;
-		var dr = TestData.GetTestDataReader();
-		var csv = CsvDataWriter.Create(tw);
-		csv.Write(dr);
+		using var tw = GetWriter();
+		var data = GetData();
+		var opts = new CsvDataWriterOptions { BufferSize = 0x10000, NewLine = "\n" };
+		var csv = CsvDataWriter.Create(tw, opts);
+		csv.Write(data);
 	}
 }

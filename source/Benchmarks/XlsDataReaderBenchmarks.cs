@@ -3,6 +3,7 @@ using BenchmarkDotNet.Attributes;
 using ExcelDataReader;
 using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
+using Sylvan.Data.Excel;
 using System;
 using System.IO;
 using System.Linq;
@@ -12,28 +13,36 @@ using System.Text;
 namespace Benchmarks;
 
 [MemoryDiagnoser]
-public class XlsBenchmarks
+public class XlsReaderBenchmarks
 {
 	const string file = @"Data/65K_Records_Data.xls";
 
-	public XlsBenchmarks()
+	public XlsReaderBenchmarks()
 	{
 		Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 	}
 
 	[Benchmark]
-	public void SylvanXls()
+	public void SylvanStringXls()
 	{
 		var reader = Sylvan.Data.Excel.ExcelDataReader.Create(file);
 		do
 		{
 			while (reader.Read())
 			{
-				for (int i = 0; i < reader.FieldCount; i++)
-				{
-					reader.GetString(i);
-				}
+				reader.Process();
 			}
+		} while (reader.NextResult());
+	}
+
+	[Benchmark]
+	public void SylvanSchemaXls()
+	{
+		var opts = new ExcelDataReaderOptions { Schema = new ExcelSchema(true, TestData.GetSchema()) };
+		var reader = Sylvan.Data.Excel.ExcelDataReader.Create(file, opts);
+		do
+		{
+			reader.Process();
 		} while (reader.NextResult());
 	}
 
@@ -52,12 +61,10 @@ public class XlsBenchmarks
 		{
 			do
 			{
+				reader.Read();//skip headers
 				while (reader.Read())
 				{
-					for (int i = 0; i < reader.FieldCount; i++)
-					{
-						reader.GetValue(i);
-					}
+					reader.ProcessSalesRecordEDR();
 				}
 			} while (reader.NextResult());
 		}

@@ -6,7 +6,6 @@ using NPOI.XSSF.UserModel;
 using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Dynamic;
 using System.IO;
 using System.IO.Packaging;
@@ -17,50 +16,13 @@ using System.Text;
 namespace Benchmarks;
 
 [MemoryDiagnoser]
-public class XlsxBenchmarks
+public class XlsxReaderBenchmarks
 {
 	const string file = @"Data/65K_Records_Data.xlsx";
 
-	public XlsxBenchmarks()
+	public XlsxReaderBenchmarks()
 	{
 		Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-	}
-
-	static void ProcessRecord(IDataReader reader)
-	{
-		var region = reader.GetString(0);
-		var country = reader.GetString(1);
-		var type = reader.GetString(2);
-		var channel = reader.GetString(3);
-		var priority = reader.GetString(4);
-		var orderDate = reader.GetDateTime(5);
-		var id = reader.GetInt32(6);
-		var shipDate = reader.GetDateTime(7);
-		var unitsSold = reader.GetInt32(8);
-		var unitPrice = reader.GetDouble(9);
-		var unitCost = reader.GetDouble(10);
-		var totalRevenue = reader.GetDouble(11);
-		var totalCost = reader.GetDouble(12);
-		var totalProfit = reader.GetDouble(13);
-	}
-
-	static void ProcessRecordEDR(IDataReader reader)
-	{
-		var region = reader.GetString(0);
-		var country = reader.GetString(1);
-		var type = reader.GetString(2);
-		var channel = reader.GetString(3);
-		var priority = reader.GetString(4);
-		var orderDate = reader.GetDateTime(5);
-		// ExcelDataReader doesn't allow reading as integers
-		var id = reader.GetDouble(6);
-		var shipDate = reader.GetDateTime(7);
-		var unitsSold = reader.GetDouble(8);
-		var unitPrice = reader.GetDouble(9);
-		var unitCost = reader.GetDouble(10);
-		var totalRevenue = reader.GetDouble(11);
-		var totalCost = reader.GetDouble(12);
-		var totalProfit = reader.GetDouble(13);		
 	}
 
 	[Benchmark]
@@ -72,7 +34,7 @@ public class XlsxBenchmarks
 		{
 			while (reader.Read())
 			{
-				ProcessRecord(reader);
+				reader.ProcessSalesRecord();
 			}
 
 		} while (reader.NextResult());
@@ -98,7 +60,7 @@ public class XlsxBenchmarks
 				reader.Read();//skip header
 				while (reader.Read())
 				{
-					ProcessRecordEDR(reader);
+					reader.ProcessSalesRecordEDR();
 				}
 			} while (reader.NextResult());
 		}

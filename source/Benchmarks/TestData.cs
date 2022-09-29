@@ -1,8 +1,8 @@
 ﻿using CsvHelper.Configuration.Attributes;
+using Sylvan;
 using Sylvan.Data;
 using Sylvan.Data.Csv;
 using System;
-using System.Collections.Generic;
 using System.Data.Common;
 using System.IO;
 using System.Linq;
@@ -66,61 +66,51 @@ public class SalesRecord
 	public decimal TotalProfit { get; set; }
 }
 
-public class SalesRecordStrings
-{
-	public string Region { get; set; }
-	public string Country { get; set; }
-	public string ItemType { get; set; }
-	public string SalesChannel { get; set; }
-	public string OrderPriority { get; set; }
-	public string OrderDate { get; set; }
-	public string OrderId { get; set; }
-	public string ShipDate { get; set; }
-	public string UnitsSold { get; set; }
-	public string UnitPrice { get; set; }
-	public string UnitCost { get; set; }
-	public string TotalRevenue { get; set; }
-	public string TotalCost { get; set; }
-	public string TotalProfit { get; set; }
-}
-
 public static class TestData
 {
 	const string DataFileName = "Data/65K_Records_Data.csv";
 
-	const string DataSetSchema = @"
-Region,
-Country,
-Item Type,
-Sales Channel,
-Order Priority,
-Order Date:DateTime,
-Order ID:int,
-Ship Date:DateTime,
-Units Sold:int,
-Unit Price:decimal,
-Unit Cost:decimal,
-Total Revenue:decimal,
-Total Cost:decimal,
-Total Profit:decimal
-";
-	static CsvSchema Schema = new CsvSchema(Sylvan.Data.Schema.Parse(DataSetSchema).GetColumnSchema());
-
 	public static string CachedData;
 	static byte[] CachedUtfData;
-
-	static void CacheData()
-	{
-		CachedData = File.ReadAllText(DataFileName);
-		CachedUtfData = Encoding.UTF8.GetBytes(CachedData);
-	}
+	static SalesRecord[] salesRecords;
+	static Schema salesRecordsSchema;
 
 	static TestData()
 	{
-		// is it a bad idea to do this in a static constructor?
-		// probably, but this is only used in test/benchmarks.
-		CacheData();
+		CachedData = File.ReadAllText(DataFileName);
+		CachedUtfData = Encoding.UTF8.GetBytes(CachedData);
+
+		salesRecordsSchema =
+			new Schema.Builder()
+			.Add<string>()
+			.Add<string>()
+			.Add<string>()
+			.Add<string>()
+			.Add<string>()
+			.Add<DateTime>()
+			.Add<int>()
+			.Add<DateTime>()
+			.Add<int>()
+			.Add<decimal>()
+			.Add<decimal>()
+			.Add<decimal>()
+			.Add<decimal>()
+			.Add<decimal>()
+			.Build();
+
+		var sp = new StringPool();
+		var opts = new CsvDataReaderOptions { Schema = new CsvSchema(salesRecordsSchema), StringFactory = sp.GetString };
+		using var reader = CsvDataReader.Create(DataFileName, opts);
+
+		salesRecords =
+			reader
+			.GetRecords<SalesRecord>()
+			.ToArray();
 	}
+
+	public static Schema GetSchema() => salesRecordsSchema;
+
+	public static SalesRecord[] GetRecords() => salesRecords;
 
 	public static string DataFile
 	{
@@ -147,157 +137,6 @@ Total Profit:decimal
 
 	public static DbDataReader GetData()
 	{
-
-		return CsvDataReader.Create(GetTextReader());
-	}
-
-	public static DbDataReader GetDataWithSchema(Action<CsvDataReaderOptions> opts = null)
-	{
-		var options = new CsvDataReaderOptions
-		{
-			Schema = Schema
-		};
-		opts?.Invoke(options);
-		return CsvDataReader.Create(GetTextReader(), options);
-	}
-
-	public static DbDataReader GetTypedData()
-	{
-		var reader = File.OpenText("Data\\Schema.csv");
-		return CsvDataReader.Create(reader, new CsvDataReaderOptions() { Schema = DataSchema.Instance });
-	}
-
-	public static ICsvSchemaProvider TestDataSchema => DataSchema.Instance;
-
-
-	class DataSchema : ICsvSchemaProvider
-	{
-		public static DataSchema Instance = new DataSchema();
-		Type[] types;
-
-		private DataSchema()
-		{
-			Type i = typeof(int);
-			Type s = typeof(string);
-			Type d = typeof(DateTime);
-			Type m = typeof(decimal);
-			types = new Type[] { s, s, s, s, s, d, i, d, i, m, m, m, m, m };
-		}
-
-		public DbColumn GetColumn(string name, int ordinal)
-		{
-			return new TypedCsvColumn(types[ordinal], false);
-		}
-	}
-
-	class TypedCsvColumn : DbColumn
-	{
-		public TypedCsvColumn(Type type, bool allowNull)
-		{
-			this.DataType = type;
-			this.AllowDBNull = allowNull;
-		}
-	}
-
-	static ObjectDataReader.Builder<TestRecord> Builder =
-		ObjectDataReader
-			.CreateBuilder<TestRecord>()
-			.AddColumn("Id", i => i.Id)
-			.AddColumn("Name", i => i.Name)
-			.AddColumn("Date", i => i.Date)
-			.AddColumn("IsActive", i => i.IsActive)
-			.Repeat((b, i) => b.AddColumn("Data" + i, r => r.DataSet[i]), 10);
-
-	public static T Repeat<T>(this T obj, Func<T, int, T> a, int count)
-	{
-		var item = obj;
-
-		for (int i = 0; i < count; i++)
-		{
-			item = a(item, i);
-		}
-
-		return item;
-	}
-
-	public static DbDataReader GetTestData(int count = 10)
-	{
-		return Builder.Build(GetTestObjects(count, 10));
-	}
-
-	public const int DefaultRecordCount = 100000;
-	public const int DefaultDataValueCount = 20;
-
-	public static IEnumerable<TestRecord> GetTestObjects(int recordCount = DefaultRecordCount, int valueCount = DefaultDataValueCount, bool reuse = true)
-	{
-		// We'll reuse the single instance of TestRecord. 
-		// We do this so memory usage in benchmarks is a better indicator
-		// of the library, and not just overwhelmed by TestRecord allocations.
-		var row = new TestRecord();
-		DateTime startDate = new DateTime(2020, 3, 23, 0, 0, 0, DateTimeKind.Utc);
-		row.DataSet = new double[valueCount];
-		var counter = 1;
-
-		return
-			Enumerable
-			.Range(0, recordCount)
-			.Select(
-				i =>
-				{
-					if (reuse is false)
-					{
-						row = new TestRecord();
-						row.DataSet = new double[valueCount];
-					}
-
-					row.Id = i;
-					row.Name = "Model Number: 1337";
-					row.Date = startDate.AddDays(i);
-					row.IsActive = i % 2 == 1;
-					for (int idx = 0; idx < row.DataSet.Length; idx++)
-					{
-						row.DataSet[idx] = .25 * counter++;
-					}
-					return row;
-				}
-			);
-	}
-
-	static ObjectDataReader.Builder<BinaryData> BinaryBuilder =
-		ObjectDataReader
-			.CreateBuilder<BinaryData>()
-			.AddColumn("Id", d => d.Id)
-			.AddColumn("Data", d => d.Data);
-
-	public static DbDataReader GetBinaryData()
-	{
-		return BinaryBuilder.Build(GetTestBinary());
-	}
-
-	public class BinaryData
-	{
-		public int Id { get; set; }
-		public byte[] Data { get; set; }
-	}
-
-	public static IEnumerable<BinaryData> GetTestBinary()
-	{
-		yield return new BinaryData { Id = 1, Data = new byte[] { 1, 2, 3, 4, 5 } };
-		yield return new BinaryData { Id = 2, Data = new byte[] { 5, 4, 3, 2, 1 } };
-
-	}
-
-	public static DbDataReader GetTestDataReader(int recordCount = DefaultRecordCount, int valueCount = DefaultDataValueCount)
-	{
-		var items = GetTestObjects(recordCount, valueCount);
-		return
-			ObjectDataReader
-			.CreateBuilder<TestRecord>()
-			.AddColumn("Id", i => i.Id)
-			.AddColumn("Name", i => i.Name)
-			.AddColumn("Date", i => i.Date)
-			.AddColumn("IsActive", i => i.IsActive)
-			.Repeat((b, i) => b.AddColumn("Data" + i, r => r.DataSet[i]), valueCount)
-			.Build(items);
+		return salesRecords.AsDataReader();
 	}
 }

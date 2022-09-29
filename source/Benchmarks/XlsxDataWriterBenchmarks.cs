@@ -5,15 +5,11 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using OfficeOpenXml;
-using Sylvan;
-using Sylvan.Data;
-using Sylvan.Data.Csv;
 using Sylvan.Data.Excel;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace Benchmarks;
@@ -74,84 +70,69 @@ public class XlsxWriterBenchmarks
 
 	MemoryStream ms;
 
-	SalesRecord[] records;
-
-	[GlobalSetup]
-	public void Init()
+	public XlsxWriterBenchmarks()
 	{
-		var schema =
-			new Sylvan.Data.Schema.Builder()
-			.Add<string>()
-			.Add<string>()
-			.Add<string>()
-			.Add<string>()
-			.Add<string>()
-			.Add<DateTime>()
-			.Add<int>()
-			.Add<DateTime>()
-			.Add<int>()
-			.Add<decimal>()
-			.Add<decimal>()
-			.Add<decimal>()
-			.Add<decimal>()
-			.Add<decimal>()
-			.Build();
-
-		var sp = new StringPool();
-		var opts = new CsvDataReaderOptions { Schema = new CsvSchema(schema), StringFactory = sp.GetString };
-		var reader = CsvDataReader.Create(file, opts);
-
-		this.records =
-			reader
-			.GetRecords<SalesRecord>()
-			.ToArray();
-
-		ms = new MemoryStream(0x100000 * 10);
+		ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+		this.ms = new MemoryStream(10 * 0x100000); // 10mb
 	}
 
 	Stream GetStream([CallerMemberName] string name = null)
 	{
-		this.ms.Position = 0;
-		this.ms.SetLength(0);
-		return new NoCloseStream(this.ms);
-		//return File.Create(name + ".xlsx");
+		//this.ms.Position = 0;
+		//this.ms.SetLength(0);
+		//return new NoCloseStream(this.ms);
+		return File.Create(name + ".xlsx");
 	}
 
 	DbDataReader GetData()
 	{
-		return this.records.AsDataReader();
+		return TestData.GetData();
 	}
 
 	[Benchmark]
 	public void SylvanXlsx()
 	{
+		WriteSylvan(GetData());
+	}
+
+	void WriteSylvan(DbDataReader reader)
+	{
 		using var ns = GetStream();
 		using (var xw = ExcelDataWriter.Create(ns, ExcelWorkbookType.ExcelXml))
 		{
-			xw.Write("data", GetData());
+			xw.Write("data", reader);
 		}
 	}
 
 	[Benchmark]
 	public void NanoXlsxWrite()
 	{
+		WriteNano(GetData());
+	}
+
+	void WriteNano(DbDataReader reader)
+	{
 		using var ns = GetStream();
 		// TODO: I don't see a way to write to an in-memory stream. Shouldn't affect the perf much though.
-		var wb = new NanoXLSX.Workbook("nano.xlsx", "sheet1");
-		var data = GetData();
-		while (data.Read())
+		var wb = new NanoXLSX.Workbook(true);
+		while (reader.Read())
 		{
-			for (int i = 0; i < data.FieldCount; i++)
+			for (int i = 0; i < reader.FieldCount; i++)
 			{
-				wb.WS.Value(data.GetValue(i));
+				wb.WS.Value(reader.GetValue(i));
 			}
 			wb.WS.Down();
 		}
-		wb.Save();
+		wb.SaveAsStream(ns);
 	}
 
 	[Benchmark]
 	public void NpoiXlsx()
+	{
+		WriteNPOI(GetData());
+	}
+
+	void WriteNPOI(DbDataReader reader)
 	{
 		using var ns = GetStream();
 		IWorkbook workbook = new XSSFWorkbook();
@@ -161,41 +142,40 @@ public class XlsxWriterBenchmarks
 		IRow row = excelSheet.CreateRow(0);
 		int columnIndex = 0;
 
-		var data = GetData();
 
-		for (int i = 0; i < data.FieldCount; i++)
+		for (int i = 0; i < reader.FieldCount; i++)
 		{
-			var name = data.GetName(i);
+			var name = reader.GetName(i);
 			columns.Add(name);
 			row.CreateCell(columnIndex).SetCellValue(name);
 			columnIndex++;
 		}
 
 		int rowIndex = 1;
-		while (data.Read())
+		while (reader.Read())
 		{
 			row = excelSheet.CreateRow(rowIndex);
-			for (int i = 0; i < data.FieldCount; i++)
+			for (int i = 0; i < reader.FieldCount; i++)
 			{
 				var cell = row.CreateCell(i);
-				var t = data.GetFieldType(i);
+				var t = reader.GetFieldType(i);
 				var c = Type.GetTypeCode(t);
 				switch (c)
 				{
 					case TypeCode.DateTime:
-						cell.SetCellValue(data.GetDateTime(i));
+						cell.SetCellValue(reader.GetDateTime(i));
 						break;
 					case TypeCode.Int32:
-						cell.SetCellValue(data.GetInt32(i));
+						cell.SetCellValue(reader.GetInt32(i));
 						break;
 					case TypeCode.Double:
-						cell.SetCellValue(data.GetDouble(i));
+						cell.SetCellValue(reader.GetDouble(i));
 						break;
 					case TypeCode.String:
-						cell.SetCellValue(data.GetString(i));
+						cell.SetCellValue(reader.GetString(i));
 						break;
 					case TypeCode.Decimal:
-						cell.SetCellValue((double)data.GetDecimal(i));
+						cell.SetCellValue((double)reader.GetDecimal(i));
 						break;
 					default:
 						throw new Exception();
@@ -211,19 +191,22 @@ public class XlsxWriterBenchmarks
 	[Benchmark]
 	public void EPPlusXlsx()
 	{
+		WriteEPPlus(GetData());
+	}
+
+	void WriteEPPlus(DbDataReader reader)
+	{
 		using var ns = GetStream();
-		ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 		using (var pkg = new ExcelPackage(ns))
 		{
 			var ws = pkg.Workbook.Worksheets.Add("data");
-			var r = GetData();
 			var rowIdx = 1;
-			while (r.Read())
+			while (reader.Read())
 			{
-				for (int i = 0; i < r.FieldCount; i++)
+				for (int i = 0; i < reader.FieldCount; i++)
 				{
 					var cell = ws.Cells[rowIdx, i + 1];
-					cell.Value = r.GetValue(i);
+					cell.Value = reader.GetValue(i);
 				}
 
 				rowIdx++;
@@ -233,36 +216,57 @@ public class XlsxWriterBenchmarks
 	}
 
 	[Benchmark]
+	public void EPPlusViaDataReader()
+	{
+		WriteEPPlusViaDataReader(GetData());
+	}
+
+	void WriteEPPlusViaDataReader(DbDataReader reader)
+	{
+		using var ns = GetStream();
+		using (var package = new ExcelPackage(ns))
+		{
+			var sheet = package.Workbook.Worksheets.Add("TestSheet");
+			sheet.Cells["A1"].LoadFromDataReader(reader, true);
+			package.Save();
+		}
+	}
+
+	[Benchmark]
 	public void AsposeXlsx()
+	{
+		WriteAspose(GetData());
+	}
+
+	void WriteAspose(DbDataReader reader)
 	{
 		var w = new Aspose.Cells.Workbook();
 		var s = w.Worksheets[0];
 		var sc = s.Cells;
 
-		var r = GetData();
 		var rowIdx = 1;
-		while (r.Read())
+		while (reader.Read())
 		{
-			for (int i = 0; i < r.FieldCount; i++)
+			for (int i = 0; i < reader.FieldCount; i++)
 			{
-				var t = r.GetFieldType(i);
+				var t = reader.GetFieldType(i);
 				var c = Type.GetTypeCode(t);
 				switch (c)
 				{
 					case TypeCode.String:
-						sc[rowIdx, i].PutValue(r.GetString(i));
+						sc[rowIdx, i].PutValue(reader.GetString(i));
 						break;
 					case TypeCode.Double:
-						sc[rowIdx, i].PutValue(r.GetDouble(i));
+						sc[rowIdx, i].PutValue(reader.GetDouble(i));
 						break;
 					case TypeCode.Int32:
-						sc[rowIdx, i].PutValue(r.GetInt32(i));
+						sc[rowIdx, i].PutValue(reader.GetInt32(i));
 						break;
 					case TypeCode.DateTime:
-						sc[rowIdx, i].PutValue(r.GetDateTime(i));
+						sc[rowIdx, i].PutValue(reader.GetDateTime(i));
 						break;
 					case TypeCode.Decimal:
-						sc[rowIdx, i].PutValue((double)r.GetDecimal(i));
+						sc[rowIdx, i].PutValue((double)reader.GetDecimal(i));
 						break;
 					default:
 						throw new NotSupportedException();
@@ -279,6 +283,11 @@ public class XlsxWriterBenchmarks
 	[Benchmark]
 	public void OpenXmlXlsx()
 	{
+		WriteOpenXml(GetData());
+	}
+
+	void WriteOpenXml(DbDataReader reader)
+	{
 		using var ns = GetStream();
 
 		using (var spreadSheet = SpreadsheetDocument.Create(ns, DocumentFormat.OpenXml.SpreadsheetDocumentType.Workbook))
@@ -293,20 +302,19 @@ public class XlsxWriterBenchmarks
 			Sheets sheets = wbp.Workbook.AppendChild(new Sheets());
 			Sheet sheet = new Sheet() { Id = wbp.GetIdOfPart(worksheetPart), SheetId = 1, Name = "Test Sheet" };
 
-			var r = GetData();
 			var rowIndex = 1u;
-			while (r.Read())
+			while (reader.Read())
 			{
 				var row = new DocumentFormat.OpenXml.Spreadsheet.Row() { RowIndex = rowIndex };
 
-				for (int i = 0; i < r.FieldCount; i++)
+				for (int i = 0; i < reader.FieldCount; i++)
 				{
 					var cell = new DocumentFormat.OpenXml.Spreadsheet.Cell();
 
-					var t = r.GetFieldType(i);
+					var t = reader.GetFieldType(i);
 					var c = Type.GetTypeCode(t);
 
-					if (r.IsDBNull(i))
+					if (reader.IsDBNull(i))
 					{
 					}
 					else
@@ -314,23 +322,23 @@ public class XlsxWriterBenchmarks
 						switch (c)
 						{
 							case TypeCode.DateTime:
-								cell.CellValue = new DocumentFormat.OpenXml.Spreadsheet.CellValue(r.GetDateTime(i));
+								cell.CellValue = new DocumentFormat.OpenXml.Spreadsheet.CellValue(reader.GetDateTime(i));
 								cell.DataType = CellValues.Date;
 								break;
 							case TypeCode.Int32:
-								cell.CellValue = new DocumentFormat.OpenXml.Spreadsheet.CellValue(r.GetInt32(i));
+								cell.CellValue = new DocumentFormat.OpenXml.Spreadsheet.CellValue(reader.GetInt32(i));
 								cell.DataType = CellValues.Number;
 								break;
 							case TypeCode.String:
-								cell.CellValue = new DocumentFormat.OpenXml.Spreadsheet.CellValue(r.GetString(i));
+								cell.CellValue = new DocumentFormat.OpenXml.Spreadsheet.CellValue(reader.GetString(i));
 								cell.DataType = CellValues.SharedString;
 								break;
 							case TypeCode.Decimal:
-								cell.CellValue = new DocumentFormat.OpenXml.Spreadsheet.CellValue(r.GetDecimal(i));
+								cell.CellValue = new DocumentFormat.OpenXml.Spreadsheet.CellValue(reader.GetDecimal(i));
 								cell.DataType = CellValues.Number;
 								break;
 							case TypeCode.Double:
-								cell.CellValue = new DocumentFormat.OpenXml.Spreadsheet.CellValue(r.GetDouble(i));
+								cell.CellValue = new DocumentFormat.OpenXml.Spreadsheet.CellValue(reader.GetDouble(i));
 								cell.DataType = CellValues.Number;
 								break;
 							default:
