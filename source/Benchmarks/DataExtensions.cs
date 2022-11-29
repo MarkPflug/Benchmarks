@@ -21,6 +21,17 @@ static class DataExtensions
 		}
 	}
 
+	public static void ProcessStrings(this Sylvan.Data.Csv.CsvDataReader reader)
+	{
+		while (reader.Read())
+		{
+			for (int i = 0; i < reader.FieldCount; i++)
+			{
+				reader.GetString(i);
+			}
+		}
+	}
+
 	public static void ProcessValues(this IDataReader reader)
 	{
 		while (reader.Read())

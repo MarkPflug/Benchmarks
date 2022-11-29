@@ -2,17 +2,16 @@
 
 These benchmarks write 65k "SalesRecord" objects to a CSV file.
 
-|               Method |      Mean |     Error |    StdDev | CPU User Time | CPU Kernel Time |      Gen 0 | Gen 1 | Gen 2 |   Allocated |
-|--------------------- |----------:|----------:|----------:|--------------:|----------------:|-----------:|------:|------:|------------:|
-| RecordParserParallel |  46.06 ms |  0.637 ms |  0.165 ms |   163.9205 ms |      10.2273 ms |          - |     - |     - |   465.45 KB |
-|       SylvanDataSync |  50.87 ms |  3.616 ms |  1.290 ms |    48.4375 ms |       3.6458 ms |          - |     - |     - |   454.01 KB |
-|      SylvanDataAsync |  55.48 ms |  1.882 ms |  0.671 ms |    54.1088 ms |       7.8125 ms |          - |     - |     - |   526.96 KB |
-|          NaiveBroken |  78.16 ms |  1.259 ms |  0.195 ms |    93.7500 ms |       7.8125 ms | 10142.8571 |     - |     - | 42298.38 KB |
-|    RecordParserAsync |  82.26 ms |  1.307 ms |  0.202 ms |    81.4732 ms |      10.6027 ms |          - |     - |     - |   508.67 KB |
-|                NReco | 105.96 ms |  4.033 ms |  1.438 ms |   106.2500 ms |       4.1667 ms | 10200.0000 |     - |     - | 42430.22 KB |
-|            NLightCsv | 121.12 ms |  5.984 ms |  2.134 ms |   115.1042 ms |      10.4167 ms | 10200.0000 |     - |     - | 42299.42 KB |
-|        CsvHelperSync | 175.40 ms |  8.265 ms |  2.947 ms |   176.2153 ms |       5.2083 ms | 10000.0000 |     - |     - | 42397.77 KB |
-|       CsvHelperAsync | 238.31 ms | 54.349 ms | 14.114 ms |   292.7083 ms |      16.6667 ms | 10000.0000 |     - |     - | 42473.85 KB |
-
+|               Method |      Mean |     Error |    StdDev |       Gen0 | CPU User Time | CPU Kernel Time |   Allocated |
+|--------------------- |----------:|----------:|----------:|-----------:|--------------:|----------------:|------------:|
+| RecordParserParallel |  53.07 ms | 17.771 ms |  6.337 ms |          - |     159.33 ms |         8.52 ms |   469.71 KB |
+|       SylvanDataSync |  55.59 ms |  2.276 ms |  0.591 ms |          - |      64.93 ms |         4.51 ms |   453.87 KB |
+|      SylvanDataAsync |  67.64 ms |  2.631 ms |  0.938 ms |          - |      68.68 ms |         6.51 ms |   527.69 KB |
+|          NaiveBroken |  76.75 ms |  8.612 ms |  2.236 ms | 10142.8571 |      89.73 ms |        14.29 ms | 42298.38 KB |
+|    RecordParserAsync |  84.68 ms | 20.717 ms |  5.380 ms |          - |      105.8 ms |        10.27 ms |   512.86 KB |
+|                NReco |  97.42 ms | 11.012 ms |  2.860 ms | 10200.0000 |     118.75 ms |          7.5 ms | 42430.22 KB |
+|            NLightCsv | 109.36 ms | 11.860 ms |  3.080 ms | 10200.0000 |     126.88 ms |        11.25 ms | 42299.42 KB |
+|       CsvHelperAsync | 187.78 ms | 15.523 ms |  5.536 ms | 13666.6667 |     189.24 ms |         5.21 ms | 56301.13 KB |
+|        CsvHelperSync | 197.93 ms | 52.838 ms | 18.842 ms | 13666.6667 |     194.44 ms |         5.21 ms | 56221.08 KB |
 
 **NOTE**: This benchmark includes a custom BenchmarkDotNet diagnoser `CpuDiagnoser` which attempts to measure CPU usage in addition to execution time. This was intended to highlight that parallel implementations (RecordParserParallel), while being faster overall, also come at the cost of higher overall CPU utilization. Interestingly, async implementations also seem to me more costly from a CPU utilization.

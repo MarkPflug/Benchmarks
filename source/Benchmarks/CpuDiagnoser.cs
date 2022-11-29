@@ -14,7 +14,7 @@ using System.Diagnostics;
 
 namespace Benchmarks;
 
-public class CpuDiagnoserAttribute : Attribute, IConfigSource
+public sealed class CpuDiagnoserAttribute : Attribute, IConfigSource
 {
 	public IConfig Config { get; }
 
@@ -24,7 +24,7 @@ public class CpuDiagnoserAttribute : Attribute, IConfigSource
 	}
 }
 
-public class CpuDiagnoser : IDiagnoser
+public sealed class CpuDiagnoser : IDiagnoser
 {
 	Process proc;
 	
@@ -74,6 +74,11 @@ public class CpuDiagnoser : IDiagnoser
 	public IEnumerable<ValidationError> Validate(ValidationParameters validationParameters)
 	{
 		yield break;
+	}
+
+	public bool RequiresBlockingAcknowledgments(BenchmarkCase benchmarkCase)
+	{
+		return false;
 	}
 
 	class CpuUserMetricDescriptor : IMetricDescriptor

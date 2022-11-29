@@ -265,7 +265,7 @@ public class CsvReaderBenchmarks
 		{
 			string[] columns = null;
 			while (reader.ReadRow(ref columns))
-			{					
+			{
 			}
 		}
 	}

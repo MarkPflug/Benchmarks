@@ -100,7 +100,7 @@ public class XlsxWriterBenchmarks
 		using var ns = GetStream();
 		using (var xw = ExcelDataWriter.Create(ns, ExcelWorkbookType.ExcelXml))
 		{
-			xw.Write("data", reader);
+			xw.Write(reader);
 		}
 	}
 
@@ -184,7 +184,7 @@ public class XlsxWriterBenchmarks
 
 			rowIndex++;
 		}
-		workbook.Write(ns);
+		workbook.Write(ns, false);
 		workbook.Close();
 	}
 
