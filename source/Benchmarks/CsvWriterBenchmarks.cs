@@ -14,7 +14,6 @@ using System.Threading.Tasks;
 
 namespace Benchmarks;
 
-[CpuDiagnoser]
 [MemoryDiagnoser]
 public class CsvWriterBenchmarks
 {
@@ -70,7 +69,7 @@ public class CsvWriterBenchmarks
 	}
 
 	[Benchmark]
-	public void RecordParserParallel()
+	public void RecordParserParallelX()
 	{
 		using var tw = GetWriter();
 		// I don't see a way to use this library without a `T`, so can't use DbDataReader directly.
@@ -172,6 +171,52 @@ public class CsvWriterBenchmarks
 			if (csv.TryFormat(item, buffer, out charsWritten))
 			{
 				await tw.WriteLineAsync(buffer, 0, charsWritten);
+			}
+			else
+			{
+				ArrayPool<char>.Shared.Return(buffer);
+				pow++;
+				buffer = ArrayPool<char>.Shared.Rent((int)Math.Pow(2, pow));
+				goto retry;
+			}
+		}
+	}
+
+	[Benchmark]
+	public void RecordParser()
+	{
+		using var tw = GetWriter();
+		// I don't see a way to use this library without a `T`, so can't use DbDataReader directly.
+		var items = GetRecords();
+
+		var builder = new RecordParser.Builders.Writer.VariableLengthWriterSequentialBuilder<SalesRecord>();
+		builder.Map(x => x.Region);
+		builder.Map(x => x.Country);
+		builder.Map(x => x.ItemType);
+		builder.Map(x => x.SalesChannel);
+		builder.Map(x => x.OrderPriority);
+		builder.Map(x => x.OrderDate);
+		builder.Map(x => x.OrderId);
+		builder.Map(x => x.ShipDate);
+		builder.Map(x => x.UnitsSold);
+		builder.Map(x => x.UnitPrice);
+		builder.Map(x => x.UnitCost);
+		builder.Map(x => x.TotalRevenue);
+		builder.Map(x => x.TotalCost);
+		builder.Map(x => x.TotalProfit);
+
+		var csv = builder.Build(",");
+
+		var charsWritten = 0;
+		var pow = 8;
+		var buffer = ArrayPool<char>.Shared.Rent((int)Math.Pow(2, pow));
+		foreach (var item in items)
+		{
+		retry:
+
+			if (csv.TryFormat(item, buffer, out charsWritten))
+			{
+				tw.WriteLine(buffer, 0, charsWritten);
 			}
 			else
 			{

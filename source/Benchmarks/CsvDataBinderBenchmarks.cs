@@ -3,16 +3,16 @@ using Cesil;
 using CsvHelper.Configuration;
 using Dapper;
 using RecordParser.Builders.Reader;
-using Sylvan.Data;
 using System;
 using System.Data;
+using System.Data.Common;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using TinyCsvParser;
 using TinyCsvParser.Mapping;
-using static Dapper.SqlMapper;
 
 namespace Benchmarks;
 
@@ -76,7 +76,6 @@ public class CsvDataBinderBenchmarks
 	[Benchmark]
 	public async Task RecordParserAsync()
 	{
-		//var r = new SalesRecord();
 		var parser = new VariableLengthReaderSequentialBuilder<SalesRecord>()
 			.Map(x => x.Region)
 			.Map(x => x.Country)
@@ -106,27 +105,27 @@ public class CsvDataBinderBenchmarks
 	public void SylvanData()
 	{
 		var dr = TestData.ReadData();
-		foreach (var record in dr.GetRecords<SalesRecord>())
+		foreach(var record in dr.GetRecords<SalesRecord>())
 		{
+
 		}
-	}
+	}	
 
 	[Benchmark]
 	public async Task SylvanDataAsync()
 	{
 		var dr = TestData.ReadData();
-		var binder = DataBinder.Create<SalesRecord>(dr);
-		while (await dr.ReadAsync())
+		await foreach(var record in dr.GetRecordsAsync<SalesRecord>())
 		{
-			var record = new SalesRecord();
-			binder.Bind(dr, record);
 		}
 	}
 
 	[Benchmark]
 	public void SylvanDataPooled()
 	{
-		var dr = TestData.ReadData();
+		var tr = TestData.GetTextReader();
+		var opts = new Sylvan.Data.Csv.CsvDataReaderOptions { StringFactory = pool.GetString };
+		var dr = Sylvan.Data.Csv.CsvDataReader.Create(tr, opts);
 		foreach (var record in dr.GetRecords<SalesRecord>())
 		{
 		}
@@ -146,7 +145,7 @@ public class CsvDataBinderBenchmarks
 	[Benchmark]
 	public void SylvanDapper()
 	{
-		SetTypeMap(typeof(SalesRecord), new SalesRecordMap());
+		Dapper.SqlMapper.SetTypeMap(typeof(SalesRecord), new SalesRecordMap());
 		var dr = TestData.ReadData();
 		var parser = dr.GetRowParser<SalesRecord>();
 		while (dr.Read())
@@ -154,9 +153,26 @@ public class CsvDataBinderBenchmarks
 			var record = parser(dr);
 		}
 	}
+
+	[Benchmark]
+	public void SoftCircuits()
+	{
+		var stream = TestData.GetUtf8Stream();
+		using (var reader = new SoftCircuits.CsvParser.CsvReader<SalesRecord>(stream, Encoding.UTF8))
+		{
+			reader.ReadHeaders(true);
+			SalesRecord r;
+			while((r = reader.Read()) != null)
+			{
+
+			}
+		}
+	}
 }
 
-sealed class SalesRecordMap : ITypeMap
+#region Dapper support
+
+sealed class SalesRecordMap : Dapper.SqlMapper.ITypeMap
 {
 	public ConstructorInfo FindConstructor(string[] names, Type[] types)
 	{
@@ -168,12 +184,12 @@ sealed class SalesRecordMap : ITypeMap
 		return typeof(SalesRecord).GetConstructor(Array.Empty<Type>());
 	}
 
-	public IMemberMap GetConstructorParameter(ConstructorInfo constructor, string columnName)
+	public Dapper.SqlMapper.IMemberMap GetConstructorParameter(ConstructorInfo constructor, string columnName)
 	{
 		return null;
 	}
 
-	public IMemberMap GetMember(string columnName)
+	public Dapper.SqlMapper.IMemberMap GetMember(string columnName)
 	{
 		var propName = columnName.Replace(" ", "");
 		var sr = typeof(SalesRecord);
@@ -182,7 +198,7 @@ sealed class SalesRecordMap : ITypeMap
 		return new PropMap(columnName, prop);
 	}
 
-	class PropMap : IMemberMap
+	class PropMap : Dapper.SqlMapper.IMemberMap
 	{
 		public PropMap(string colName, PropertyInfo prop)
 		{
@@ -201,6 +217,10 @@ sealed class SalesRecordMap : ITypeMap
 		public ParameterInfo Parameter => null;
 	}
 }
+
+#endregion
+
+#region CSVHelper support
 
 class SalesRecordMapping : CsvMapping<SalesRecord>
 {
@@ -223,10 +243,12 @@ class SalesRecordMapping : CsvMapping<SalesRecord>
 	}
 }
 
+#endregion
+
 // manually binds a SalesRecord. Used as a baseline for comparison.
 class ManualBinder
 {
-	public SalesRecord Bind(IDataRecord dr)
+	public SalesRecord Bind(DbDataReader dr)
 	{
 		var record = new SalesRecord();
 		record.Region = dr.GetString(0);

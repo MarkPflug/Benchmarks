@@ -10,6 +10,30 @@ namespace Benchmarks;
 
 static class DataExtensions
 {
+	public static IEnumerable<T> GetRecords<T>(this DbDataReader dr)
+		where T: class, new()
+	{
+		var binder = Sylvan.Data.DataBinder.Create<T>(dr, new Sylvan.Data.DataBinderOptions { InferColumnTypeFromMember = true });
+		while (dr.Read())
+		{
+			var r = new T();
+			binder.Bind(dr, r);
+			yield return r;
+		}
+	}
+
+	public static async IAsyncEnumerable<T> GetRecordsAsync<T>(this DbDataReader dr)
+		where T : class, new()
+	{
+		var binder = Sylvan.Data.DataBinder.Create<T>(dr, new Sylvan.Data.DataBinderOptions { InferColumnTypeFromMember = true });
+		while (await dr.ReadAsync())
+		{
+			var r = new T();
+			binder.Bind(dr, r);
+			yield return r;
+		}
+	}
+
 	public static void ProcessStrings(this IDataReader reader)
 	{
 		while (reader.Read())
@@ -156,13 +180,12 @@ static class DataExtensions
 		var id = reader.GetInt32(6);
 		var shipDate = reader.GetDateTime(7);
 		var unitsSold = reader.GetInt32(8);
-		var unitPrice = reader.GetDouble(9);
-		var unitCost = reader.GetDouble(10);
-		var totalRevenue = reader.GetDouble(11);
-		var totalCost = reader.GetDouble(12);
-		var totalProfit = reader.GetDouble(13);
+		var unitPrice = reader.GetDecimal(9);
+		var unitCost = reader.GetDecimal(10);
+		var totalRevenue = reader.GetDecimal(11);
+		var totalCost = reader.GetDecimal(12);
+		var totalProfit = reader.GetDecimal(13);
 	}
-
 
 	public static void ProcessSalesRecordEDR(this IDataReader reader)
 	{
@@ -173,13 +196,13 @@ static class DataExtensions
 		var priority = reader.GetString(4);
 		var orderDate = reader.GetDateTime(5);
 		// ExcelDataReader doesn't allow reading as integers
-		var id = reader.GetDouble(6);
+		var id = (int)reader.GetDouble(6);
 		var shipDate = reader.GetDateTime(7);
-		var unitsSold = reader.GetDouble(8);
-		var unitPrice = reader.GetDouble(9);
-		var unitCost = reader.GetDouble(10);
-		var totalRevenue = reader.GetDouble(11);
-		var totalCost = reader.GetDouble(12);
-		var totalProfit = reader.GetDouble(13);
+		var unitsSold = (int)reader.GetDouble(8);
+		var unitPrice = (decimal)reader.GetDouble(9);
+		var unitCost = (decimal)reader.GetDouble(10);
+		var totalRevenue = (decimal)reader.GetDouble(11);
+		var totalCost = (decimal)reader.GetDouble(12);
+		var totalProfit = (decimal)reader.GetDouble(13);
 	}
 }

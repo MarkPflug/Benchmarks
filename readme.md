@@ -8,6 +8,9 @@ different construction, I believe they provide a fair comparison.
 If any of the benchmarks are found to be incorrectly setup, 
 I'd happily welcome a pull request with a fix.
 
+Many of the benchmarks in this collection use a example "Sales Record" data files from
+[excelbianalytics.com](https://excelbianalytics.com/wp/downloads-18-sample-csv-files-data-sets-for-testing-sales/).
+
 ## Running benchmarks
 
 `benchmark.cmd`
@@ -17,7 +20,7 @@ a selection for which benchmark set to run.
 
 ## Benchmark Environment
 
-Benchmark results were updated with latest package versions as of Nov 11, 2022, as well as updating to .NET 7.0.
+Benchmark results were updated with latest package versions as of Mar 23, 2023, as well as updating to .NET 7.0.
 
 The benchmark results reported here were run with the following configuration, unless otherwise noted:
 ```

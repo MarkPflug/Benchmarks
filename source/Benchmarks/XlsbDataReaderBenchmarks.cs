@@ -30,9 +30,9 @@ public class XlsbReaderBenchmarks
 		} while (reader.NextResult());
 	}
 
-	//[Benchmark]
+	[Benchmark]
 	[SupportedOSPlatform("windows")]
-	public void AceOleDbXls()
+	public void AceOleDbXlsb()
 	{
 		AceOleDb.ProcessFile(file);
 	}

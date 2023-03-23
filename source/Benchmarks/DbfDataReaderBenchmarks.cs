@@ -3,11 +3,10 @@ using NDbfReader;
 using Sylvan;
 using Sylvan.Data.XBase;
 using System;
-using System.Data.Common;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace Benchmarks;
 
@@ -36,7 +35,6 @@ public class DbfDataReaderBenchmarks
 			entry.ExtractToFile(DbfFileName);
 		}
 		dbfData = File.ReadAllBytes(DbfFileName);
-		this.pool = new StringPool(128);
 	}
 
 	[Benchmark]
@@ -44,16 +42,25 @@ public class DbfDataReaderBenchmarks
 	{
 		var ms = new MemoryStream(dbfData);
 		var dr = XBaseDataReader.Create(ms);
-		dr.ProcessGeo();
+		dr.Process();
+	}
+
+	[Benchmark]
+	public async Task SylvanAsync()
+	{
+		var ms = new MemoryStream(dbfData);
+		var dr = XBaseDataReader.Create(ms);
+		await dr.ProcessAsync();
 	}
 
 	[Benchmark]
 	public void SylvanPooled()
 	{
 		var ms = new MemoryStream(dbfData);
+		pool = new StringPool(128);
 		var opts = new XBaseDataReaderOptions { StringFactory = pool.GetString };
 		var dr = XBaseDataReader.Create(ms, opts);
-		dr.ProcessGeo();
+		dr.Process();
 	}
 
 	[Benchmark]
@@ -78,39 +85,8 @@ public class DbfDataReaderBenchmarks
 }
 
 static class Extensions
-{
-	public static void ProcessGeo(this DbDataReader reader)
-	{
-		while (reader.Read())
-		{
-			reader.GetInt32(0);
-			reader.GetGuid(1);
-			reader.GetString(2);
-			reader.GetGuid(3);
-			reader.GetString(4);
-			reader.GetString(5);
-			reader.GetInt32(6);
-			reader.GetString(7);
-			reader.GetDateTime(8);
-			reader.GetString(9);
-			if (reader.IsDBNull(10))
-			{
-				reader.GetInt32(10);
-			}
-			reader.GetInt32(11);
-			reader.GetString(12);
-			reader.GetString(13);
-			reader.GetString(14);
-			reader.GetString(15);
-			reader.GetString(16);
-			reader.GetString(17);
-			reader.GetGuid(18);
-			reader.GetDouble(19);
-			reader.GetDouble(20);
-		}
-	}
-
-
+{	
+	//ndbf
 	public static void Process(this Reader reader)
 	{
 		var cols = reader.Table.Columns;
@@ -153,64 +129,6 @@ static class Extensions
 						throw new NotSupportedException(type.ToString());
 				}
 			}
-		}
-	}
-
-	public static void Process(this DbfDataReader.DbfDataReader reader)
-	{
-		// NOTE: DbfDataReader column  schema doesn't seem to agree with GetFieldType
-
-		var cols = reader.GetColumnSchema();
-		bool[] allowDbNull = cols.Select(c => c.AllowDBNull != false).ToArray();
-		TypeCode[] types = new TypeCode[cols.Count];
-		for(int i = 0; i < types.Length; i++)
-		{
-			var t = reader.GetFieldType(i);
-			t = Nullable.GetUnderlyingType(t) ?? t;
-			types[i] = Type.GetTypeCode(t);
-		}
-		while (reader.Read())
-		{
-			for (int i = 0; i < reader.FieldCount; i++)
-			{
-				if (allowDbNull[i] && reader.IsDBNull(i))
-					continue;
-				ProcessField(reader, i, types[i]);
-			}
-		}
-	}
-
-	static void ProcessField(this DbfDataReader.DbfDataReader reader, int i, TypeCode typeCode)
-	{
-		switch (typeCode)
-		{
-			case TypeCode.Boolean:
-				reader.GetBoolean(i);
-				break;
-			case TypeCode.Int32:
-				reader.GetInt32(i);
-				break;
-			case TypeCode.Int64:
-				reader.GetInt64(i);
-				break;
-			case TypeCode.DateTime:
-				reader.GetDateTime(i);
-				break;
-			case TypeCode.Single:
-				reader.GetFloat(i);
-				break;
-			case TypeCode.Double:
-				reader.GetDouble(i);
-				break;
-			case TypeCode.Decimal:
-				reader.GetDecimal(i);
-				break;
-			case TypeCode.String:
-				reader.GetString(i);
-				break;
-			default:
-				// no cheating
-				throw new NotSupportedException("" + typeCode);
 		}
 	}
 }

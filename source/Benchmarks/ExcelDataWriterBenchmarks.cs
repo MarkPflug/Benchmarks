@@ -8,6 +8,7 @@ using OfficeOpenXml;
 using Sylvan.Data.Excel;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -64,23 +65,35 @@ sealed class NoCloseStream : Stream
 }
 
 [MemoryDiagnoser]
-public class XlsxWriterBenchmarks
+public class ExcelWriterBenchmarks
 {
 	const string file = @"Data/65K_Records_Data.csv";
 
 	MemoryStream ms;
 
-	public XlsxWriterBenchmarks()
+	System.Data.DataTable dt;
+
+	public ExcelWriterBenchmarks()
 	{
 		ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 		this.ms = new MemoryStream(10 * 0x100000); // 10mb
+		this.dt = new DataTable();
+		var r = GetData();
+		var s = r.GetColumnSchema();
+		try
+		{
+			dt.Load(GetData());
+		} 
+		catch
+		{
+			var errors = dt.GetErrors();
+			var rr = dt.Rows.Count;
+			Console.WriteLine(rr.ToString());
+		}
 	}
 
 	Stream GetStream([CallerMemberName] string name = null)
 	{
-		//this.ms.Position = 0;
-		//this.ms.SetLength(0);
-		//return new NoCloseStream(this.ms);
 		return File.Create(name + ".xlsx");
 	}
 
@@ -101,6 +114,75 @@ public class XlsxWriterBenchmarks
 		using (var xw = ExcelDataWriter.Create(ns, ExcelWorkbookType.ExcelXml))
 		{
 			xw.Write(reader);
+		}
+	}
+
+	[Benchmark]
+	public void SylvanXlsb()
+	{
+		WriteSylvanXlsb(GetData());
+	}
+
+	void WriteSylvanXlsb(DbDataReader reader)
+	{
+		using var ns = GetStream();
+		using (var xw = ExcelDataWriter.Create(ns, ExcelWorkbookType.ExcelBinary))
+		{
+			xw.Write(reader);
+		}
+	}
+
+
+	[Benchmark]
+	public void LargeXlsx()
+	{
+		using var ns = GetStream();
+		WriteLargeXlsx(GetData(), ns);
+	}
+
+	internal void WriteLargeXlsx(DbDataReader reader, Stream ns)
+	{
+		using var xw = new LargeXlsx.XlsxWriter(ns);
+		xw.BeginWorksheet("sheet1");
+
+		// write header
+		xw.BeginRow();
+		for (int i = 0; i < reader.FieldCount; i++)
+		{
+			xw.Write(reader.GetName(i));
+		}
+
+		while (reader.Read())
+		{
+			xw.BeginRow();
+			for (int i = 0; i < reader.FieldCount; i++)
+			{
+				var t = reader.GetFieldType(i);
+				var tc = Type.GetTypeCode(t);
+				switch (tc)
+				{
+					case TypeCode.Boolean:
+						xw.Write(reader.GetBoolean(i));
+						break;
+					case TypeCode.Int32:
+						xw.Write(reader.GetInt32(i));
+						break;
+					case TypeCode.Decimal:
+						xw.Write(reader.GetDecimal(i));
+						break;
+					case TypeCode.Double:
+						xw.Write(reader.GetDouble(i));
+						break;
+					case TypeCode.String:
+						xw.WriteSharedString(reader.GetString(i));
+						break;
+					case TypeCode.DateTime:
+						xw.Write(reader.GetDateTime(i));
+						break;
+					default:
+						throw new NotSupportedException();
+				}
+			}
 		}
 	}
 
@@ -278,6 +360,105 @@ public class XlsxWriterBenchmarks
 
 		using var ns = GetStream();
 		w.Save(ns, SaveFormat.Xlsx);
+	}
+
+	[Benchmark]
+	public void SwiftExcelXlsx()
+	{
+		var reader = GetData();
+
+		using (var ew = new SwiftExcel.ExcelWriter("swift.xlsx"))
+		{
+			var row = 1;
+			while (reader.Read())
+			{
+				for (int i = 0; i < reader.FieldCount; i++)
+				{
+					var t = reader.GetFieldType(i);
+					var tc = Type.GetTypeCode(t);
+					var c = i + 1;
+					SwiftExcel.DataType dt;
+					switch (tc)
+					{
+						case TypeCode.Int32:
+						case TypeCode.Decimal:
+						case TypeCode.Double:
+							dt = SwiftExcel.DataType.Number;
+							break;
+						case TypeCode.String:
+						case TypeCode.Boolean:
+						case TypeCode.DateTime:
+							dt = SwiftExcel.DataType.Text;
+							break;
+						default:
+							throw new NotSupportedException();
+					}
+					ew.Write(reader.GetString(i), c, row, dt);
+				}
+				row++;
+			}
+			ew.Save();
+		}
+	}
+
+	[Benchmark]
+	public void SpreadsheetLightXlsx()
+	{
+		var reader = GetData();
+
+		using (var sld = new SpreadsheetLight.SLDocument())
+		{
+			sld.ImportDataTable("A1", this.dt, true);
+			sld.SaveAs("SL.xlsx");
+		}
+	}
+
+	[Benchmark]
+	public void AsposeXlsb()
+	{
+		WriteAsposeXlsb(GetData());
+	}
+
+	void WriteAsposeXlsb(DbDataReader reader)
+	{
+		var w = new Aspose.Cells.Workbook();
+		var s = w.Worksheets[0];
+		var sc = s.Cells;
+
+		var rowIdx = 1;
+		while (reader.Read())
+		{
+			for (int i = 0; i < reader.FieldCount; i++)
+			{
+				var t = reader.GetFieldType(i);
+				var c = Type.GetTypeCode(t);
+				switch (c)
+				{
+					case TypeCode.String:
+						sc[rowIdx, i].PutValue(reader.GetString(i));
+						break;
+					case TypeCode.Double:
+						sc[rowIdx, i].PutValue(reader.GetDouble(i));
+						break;
+					case TypeCode.Int32:
+						sc[rowIdx, i].PutValue(reader.GetInt32(i));
+						break;
+					case TypeCode.DateTime:
+						sc[rowIdx, i].PutValue(reader.GetDateTime(i));
+						break;
+					case TypeCode.Decimal:
+						sc[rowIdx, i].PutValue((double)reader.GetDecimal(i));
+						break;
+					default:
+						throw new NotSupportedException();
+				}
+			}
+
+			rowIdx++;
+		}
+
+		using var ns = GetStream();
+		w.Save(ns, SaveFormat.Xlsb);
 	}
 
 	[Benchmark]

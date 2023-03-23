@@ -127,7 +127,7 @@ public class CsvReaderBenchmarks
 		}
 	}
 
-	//[Benchmark] // most people won't be able to run this.
+	[Benchmark] // most people won't be able to run this.
 	[SupportedOSPlatform("windows")]
 	public void OleDbCsv()
 	{
