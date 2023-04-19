@@ -339,6 +339,20 @@ public class CsvWriterBenchmarks
 	}
 
 	[Benchmark]
+	public void SoftCircuitsWriter()
+	{
+		using var s = GetStream();
+		var data = TestData.GetRecords();
+		SoftCircuits.CsvParser.CsvWriter<SalesRecord> cw = new (s);
+
+		cw.WriteHeaders();
+		for (int i = 0; i < data.Length; i++)
+		{
+			cw.Write(data[i]);
+		}
+	}
+
+	[Benchmark]
 	public async Task SylvanDataAsync()
 	{
 		using var tw = GetWriter();
