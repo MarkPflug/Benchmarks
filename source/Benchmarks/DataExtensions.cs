@@ -45,15 +45,18 @@ static class DataExtensions
 		}
 	}
 
-	public static void ProcessStrings(this Sylvan.Data.Csv.CsvDataReader reader)
+	public static long ProcessStrings(this Sylvan.Data.Csv.CsvDataReader reader)
 	{
+		long a = 0;
 		while (reader.Read())
 		{
 			for (int i = 0; i < reader.FieldCount; i++)
 			{
-				reader.GetString(i);
+				var s = reader.GetString(i);
+				a += s.Length;
 			}
 		}
+		return a;
 	}
 
 	public static void ProcessValues(this IDataReader reader)
@@ -169,7 +172,7 @@ static class DataExtensions
 		}
 	}
 
-	public static void ProcessSalesRecord(this DbDataReader reader)
+	public static void ProcessSalesRecord(this Sylvan.Data.Excel.ExcelDataReader reader)
 	{
 		var region = reader.GetString(0);
 		var country = reader.GetString(1);
