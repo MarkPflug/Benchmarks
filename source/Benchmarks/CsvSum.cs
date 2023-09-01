@@ -15,31 +15,27 @@ public class CsvSum
 	[Benchmark]
 	public decimal SylvanData()
 	{
-		var buf = ArrayPool<char>.Shared.Rent(BufferSize);
-		var tr = TestData.GetTextReader();
-		
-		var dr = Sylvan.Data.Csv.CsvDataReader.Create(tr, buf);
+		using var tr = TestData.GetTextReader();
+		using var dr = Sylvan.Data.Csv.CsvDataReader.Create(tr);
 		var idx = dr.GetOrdinal("Total Profit");
 		decimal a = 0m;
 		while (dr.Read())
 		{
 			a += dr.GetDecimal(idx);
 		}
-		ArrayPool<char>.Shared.Return(buf);
 		return a;
 	}
 
 	[Benchmark]
 	public decimal SepCsv()
 	{
-		var t = TestData.GetTextReader();
+		using var t = TestData.GetTextReader();
 		using var r = Sep.Reader().From(t);
 		var a = 0m;
-		
-		foreach(var record in r)
+		foreach (var record in r)
 		{
-			var dec = record["Total Profit"].Parse<decimal>();
-			a += dec;
+			var span = record["Total Profit"];
+			a += span.Parse<decimal>();
 		}
 		return a;
 	}
@@ -96,7 +92,7 @@ public class CsvSum
 		r.Read();//headers
 
 		var idx = -1;
-		for(int i = 0; i< r.Count; i++)
+		for (int i = 0; i < r.Count; i++)
 		{
 			if (r[i] == "Total Profit")
 			{

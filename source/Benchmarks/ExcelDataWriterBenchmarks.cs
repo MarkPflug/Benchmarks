@@ -2,9 +2,11 @@
 using BenchmarkDotNet.Attributes;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using MiniExcelLibs;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using OfficeOpenXml;
+using Sylvan.Data;
 using Sylvan.Data.Excel;
 using System;
 using System.Collections.Generic;
@@ -15,55 +17,6 @@ using System.Runtime.CompilerServices;
 
 namespace Benchmarks;
 
-sealed class NoCloseStream : Stream
-{
-	Stream inner;
-	public NoCloseStream(Stream inner)
-	{
-		this.inner = inner;
-	}
-
-	public override bool CanRead => this.inner.CanRead;
-
-	public override bool CanSeek => this.inner.CanSeek;
-
-	public override bool CanWrite => this.inner.CanWrite;
-
-	public override long Length => this.inner.Length;
-
-	public override long Position { get => this.inner.Position; set => this.inner.Position = value; }
-
-	public override void Flush()
-	{
-		this.inner.Flush();
-	}
-
-	public override void Close()
-	{
-		// NOPE
-	}
-
-	public override int Read(byte[] buffer, int offset, int count)
-	{
-		return this.inner.Read(buffer, offset, count);
-	}
-
-	public override long Seek(long offset, SeekOrigin origin)
-	{
-		return this.inner.Seek(offset, origin);
-	}
-
-	public override void SetLength(long value)
-	{
-		this.inner.SetLength(value);
-	}
-
-	public override void Write(byte[] buffer, int offset, int count)
-	{
-		this.inner.Write(buffer, offset, count);
-	}
-}
-
 [MemoryDiagnoser]
 public class ExcelWriterBenchmarks
 {
@@ -71,7 +24,7 @@ public class ExcelWriterBenchmarks
 
 	MemoryStream ms;
 
-	System.Data.DataTable dt;
+	DataTable dt;
 
 	public ExcelWriterBenchmarks()
 	{
@@ -83,7 +36,7 @@ public class ExcelWriterBenchmarks
 		try
 		{
 			dt.Load(GetData());
-		} 
+		}
 		catch
 		{
 			var errors = dt.GetErrors();
@@ -100,6 +53,22 @@ public class ExcelWriterBenchmarks
 	DbDataReader GetData()
 	{
 		return TestData.GetData();
+	}
+
+	[Benchmark]
+	public void SylvanXlsxObj()
+	{
+		WriteSylvan(TestData.GetRecords());
+	}
+
+	void WriteSylvan<T>(IEnumerable<T> data)
+		where T : class
+	{
+		using var ns = GetStream();
+		using (var xw = ExcelDataWriter.Create(ns, ExcelWorkbookType.ExcelXml))
+		{
+			xw.Write(data.AsDataReader());
+		}
 	}
 
 	[Benchmark]
@@ -401,7 +370,7 @@ public class ExcelWriterBenchmarks
 		}
 	}
 
-	[Benchmark]
+	//[Benchmark]
 	public void SpreadsheetLightXlsx()
 	{
 		var reader = GetData();
@@ -411,6 +380,13 @@ public class ExcelWriterBenchmarks
 			sld.ImportDataTable("A1", this.dt, true);
 			sld.SaveAs("SL.xlsx");
 		}
+	}
+
+	[Benchmark]
+	public void MiniXl()
+	{
+		using var stream = new MemoryStream();
+		stream.SaveAs(TestData.GetRecords());
 	}
 
 	[Benchmark]

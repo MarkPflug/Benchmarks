@@ -48,9 +48,10 @@ static class DataExtensions
 	public static long ProcessStrings(this Sylvan.Data.Csv.CsvDataReader reader)
 	{
 		long a = 0;
+		var c = reader.FieldCount;
 		while (reader.Read())
 		{
-			for (int i = 0; i < reader.FieldCount; i++)
+			for (int i = 0; i < c; i++)
 			{
 				var s = reader.GetString(i);
 				a += s.Length;

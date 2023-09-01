@@ -278,7 +278,7 @@ public class DataBinderBenchmarks
 	TestReader testReader;
 	Record item;
 	IDataBinder<Record> compiled, objBind;
-	Func<IDataReader, Record> dapperBinder;
+	Func<DbDataReader, Record> dapperBinder;
 
 
 	[Benchmark]
