@@ -59,6 +59,8 @@
     <PackageReference Include="Cesil" Version="0.9.0" />
 
 	  <PackageReference Include="Sep" Version="0.2.2" />
+
+	  <PackageReference Include="XlsxHelper" Version="2.0.0" />
    
   </ItemGroup>
 

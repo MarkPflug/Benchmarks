@@ -1,5 +1,7 @@
 ﻿using BenchmarkDotNet.Attributes;
+using CommandLine;
 using MiniExcelLibs;
+using NanoXLSX.LowLevel;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using OfficeOpenXml;
@@ -79,6 +81,45 @@ public class XlsxReaderBenchmarks
 				}
 			} while (reader.NextResult());
 		}
+	}
+
+	[Benchmark]
+	public void XlsxHelperXlsx ()
+	{
+		using var stream = File.OpenRead(file);
+		using (var book = XlsxHelper.XlsxReader.OpenWorkbook(stream))
+		{
+			foreach (var sheet in book.Worksheets) {
+				using var reader = sheet.WorksheetReader;
+				int i = 0;
+				foreach (var row in reader)
+				{
+					i++;
+					// skip header row
+					if (i == 1) continue;
+					ProcessXlsxHelperRecord(row);
+				}
+			}
+		}
+	}
+
+	static void ProcessXlsxHelperRecord(XlsxHelper.Row r)
+	{
+		var row = r.Cells;
+		var region = row[0].CellValue;
+		var country = row[1].CellValue;
+		var type = row[2].CellValue;
+		var channel = row[3].CellValue;
+		var priority = row[4].CellValue;
+		var orderDate = row[5].GetDateTime();
+		var id = row[6].GetInt32();
+		var shipDate = row[7].GetDateTime();
+		var unitsSold = row[8].GetInt32();
+		var unitPrice = row[9].GetDecimal();
+		var unitCost = row[10].GetDecimal();
+		var totalRevenue = row[11].GetDecimal();
+		var totalCost = row[12].GetDecimal();
+		var totalProfit = row[13].GetDecimal();
 	}
 
 	[Benchmark]
