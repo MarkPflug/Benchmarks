@@ -1,9 +1,9 @@
 ﻿using BenchmarkDotNet.Attributes;
 using nietras.SeparatedValues;
-using System.Buffers;
+using RecordParser.Builders.Reader;
+using RecordParser.Extensions;
 using System.Data;
 using System.Globalization;
-
 
 namespace Benchmarks;
 
@@ -23,6 +23,37 @@ public class CsvSum
 		{
 			a += dr.GetDecimal(idx);
 		}
+		return a;
+	}
+
+	[Benchmark]
+	[Arguments(true)]
+	[Arguments(false)]
+	public decimal RecordParser(bool parallel)
+	{
+		var parser = new VariableLengthReaderBuilder<decimal>()
+			.Map(x => x, indexColumn: 13)
+			.Build(",", CultureInfo.InvariantCulture);
+
+		var options = new VariableLengthReaderOptions
+		{
+			HasHeader = true,
+			ContainsQuotedFields = false,
+			ParallelismOptions = new ()
+			{
+				Enabled = parallel,
+				MaxDegreeOfParallelism = 4,
+				EnsureOriginalOrdering = false
+			}
+		};
+		
+		var a = 0m;
+		using var tr = TestData.GetTextReader();
+		foreach (var profit in tr.ReadRecords(parser, options))
+		{
+			a += profit;
+		}
+
 		return a;
 	}
 
