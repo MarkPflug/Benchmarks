@@ -1,5 +1,7 @@
 ﻿using BenchmarkDotNet.Attributes;
 using CsvHelper.Configuration;
+using RecordParser.Extensions;
+using RecordParser.Parsers;
 using Sylvan.Data;
 using Sylvan.Data.Csv;
 using System;
@@ -68,13 +70,8 @@ public class CsvWriterBenchmarks
 		}
 	}
 
-	[Benchmark]
-	public void RecordParserParallelX()
+	private static IVariableLengthWriter<SalesRecord> BuildWriter()
 	{
-		using var tw = GetWriter();
-		// I don't see a way to use this library without a `T`, so can't use DbDataReader directly.
-		var items = GetRecords();
-
 		var builder = new RecordParser.Builders.Writer.VariableLengthWriterSequentialBuilder<SalesRecord>();
 		builder.Map(x => x.Region);
 		builder.Map(x => x.Country);
@@ -91,7 +88,16 @@ public class CsvWriterBenchmarks
 		builder.Map(x => x.TotalCost);
 		builder.Map(x => x.TotalProfit);
 
-		var csv = builder.Build(",");
+		return builder.Build(",");
+	}
+
+	[Benchmark]
+	public void RecordParser_Parallel_Manual()
+	{
+		using var tw = GetWriter();
+		// I don't see a way to use this library without a `T`, so can't use DbDataReader directly.
+		var items = GetRecords();
+		var csv = BuildWriter();
 
 		var parallelism = 4;
 		var buffers = Enumerable
@@ -137,95 +143,24 @@ public class CsvWriterBenchmarks
 	}
 
 	[Benchmark]
-	public async Task RecordParserAsync()
+	[Arguments(false, null)]
+	[Arguments(true, true)]
+	[Arguments(true, false)]
+	public void RecordParser_Native(bool parallel, bool? asOrdered)
 	{
 		using var tw = GetWriter();
 		// I don't see a way to use this library without a `T`, so can't use DbDataReader directly.
 		var items = GetRecords();
+		var csv = BuildWriter();
 
-		var builder = new RecordParser.Builders.Writer.VariableLengthWriterSequentialBuilder<SalesRecord>();
-		builder.Map(x => x.Region);
-		builder.Map(x => x.Country);
-		builder.Map(x => x.ItemType);
-		builder.Map(x => x.SalesChannel);
-		builder.Map(x => x.OrderPriority);
-		builder.Map(x => x.OrderDate);
-		builder.Map(x => x.OrderId);
-		builder.Map(x => x.ShipDate);
-		builder.Map(x => x.UnitsSold);
-		builder.Map(x => x.UnitPrice);
-		builder.Map(x => x.UnitCost);
-		builder.Map(x => x.TotalRevenue);
-		builder.Map(x => x.TotalCost);
-		builder.Map(x => x.TotalProfit);
-
-		var csv = builder.Build(",");			
-
-		var charsWritten = 0;
-		var pow = 8;
-		var buffer = ArrayPool<char>.Shared.Rent((int)Math.Pow(2, pow));
-		foreach (var item in items)
+		var options = new ParallelismOptions
 		{
-		retry:
+			Enabled = parallel,
+			MaxDegreeOfParallelism = 4,
+			EnsureOriginalOrdering = asOrdered ?? true
+		};
 
-			if (csv.TryFormat(item, buffer, out charsWritten))
-			{
-				await tw.WriteLineAsync(buffer, 0, charsWritten);
-			}
-			else
-			{
-				ArrayPool<char>.Shared.Return(buffer);
-				pow++;
-				buffer = ArrayPool<char>.Shared.Rent((int)Math.Pow(2, pow));
-				goto retry;
-			}
-		}
-	}
-
-	[Benchmark]
-	public void RecordParser()
-	{
-		using var tw = GetWriter();
-		// I don't see a way to use this library without a `T`, so can't use DbDataReader directly.
-		var items = GetRecords();
-
-		var builder = new RecordParser.Builders.Writer.VariableLengthWriterSequentialBuilder<SalesRecord>();
-		builder.Map(x => x.Region);
-		builder.Map(x => x.Country);
-		builder.Map(x => x.ItemType);
-		builder.Map(x => x.SalesChannel);
-		builder.Map(x => x.OrderPriority);
-		builder.Map(x => x.OrderDate);
-		builder.Map(x => x.OrderId);
-		builder.Map(x => x.ShipDate);
-		builder.Map(x => x.UnitsSold);
-		builder.Map(x => x.UnitPrice);
-		builder.Map(x => x.UnitCost);
-		builder.Map(x => x.TotalRevenue);
-		builder.Map(x => x.TotalCost);
-		builder.Map(x => x.TotalProfit);
-
-		var csv = builder.Build(",");
-
-		var charsWritten = 0;
-		var pow = 8;
-		var buffer = ArrayPool<char>.Shared.Rent((int)Math.Pow(2, pow));
-		foreach (var item in items)
-		{
-		retry:
-
-			if (csv.TryFormat(item, buffer, out charsWritten))
-			{
-				tw.WriteLine(buffer, 0, charsWritten);
-			}
-			else
-			{
-				ArrayPool<char>.Shared.Return(buffer);
-				pow++;
-				buffer = ArrayPool<char>.Shared.Rent((int)Math.Pow(2, pow));
-				goto retry;
-			}
-		}
+		tw.WriteRecords(items, csv.TryFormat, options);
 	}
 
 	[Benchmark]

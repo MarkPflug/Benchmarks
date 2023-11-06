@@ -1,10 +1,12 @@
-﻿using BenchmarkDotNet.Attributes;
+﻿using Ben.Collections.Specialized;
+using BenchmarkDotNet.Attributes;
 using Cesil;
 using CsvHelper.Configuration;
 using Dapper;
 using RecordParser.Builders.Reader;
+using RecordParser.Extensions;
+using RecordParser.Parsers;
 using System;
-using System.Data;
 using System.Data.Common;
 using System.Globalization;
 using System.Linq;
@@ -73,10 +75,9 @@ public class CsvDataBinderBenchmarks
 		}
 	}
 
-	[Benchmark]
-	public async Task RecordParserAsync()
+	private static IVariableLengthReader<SalesRecord> BuildReader(bool pooled)
 	{
-		var parser = new VariableLengthReaderSequentialBuilder<SalesRecord>()
+		var builder = new VariableLengthReaderSequentialBuilder<SalesRecord>()
 			.Map(x => x.Region)
 			.Map(x => x.Country)
 			.Map(x => x.ItemType)
@@ -90,12 +91,71 @@ public class CsvDataBinderBenchmarks
 			.Map(x => x.UnitCost)
 			.Map(x => x.TotalRevenue)
 			.Map(x => x.TotalCost)
-			.Map(x => x.TotalProfit)
-			.Build(",", CultureInfo.InvariantCulture);//, () => r);
+			.Map(x => x.TotalProfit);
 
+		if (pooled)
+			builder.DefaultTypeConvert(new InternPool().Intern);
+
+		return builder.Build(",", CultureInfo.InvariantCulture);
+	}
+
+	[Benchmark]
+	public async Task RecordParserAsync_Manual()
+	{
+		var parser = BuildReader(pooled: true);
 		using var stream = TestData.GetUtf8Stream();
 		var records = RecordParserSupport.ProcessFile(stream, parser.Parse);
 		await foreach (var record in records)
+		{
+
+		}
+	}
+
+	[Benchmark]
+	[Arguments(true)]
+	[Arguments(false)]
+	public void RecordParser_Native_Sequential(bool pooled)
+	{
+		var tr = TestData.GetTextReader();
+		var parser = BuildReader(pooled);
+		var options = new VariableLengthReaderOptions
+		{
+			HasHeader = true,
+			ContainsQuotedFields = false,
+			ParallelismOptions = new ()
+			{
+				Enabled = false,
+			}
+		};
+
+		var records = tr.ReadRecords(parser, options);
+		foreach (var record in records)
+		{
+
+		}
+	}
+
+	[Benchmark]
+	[Arguments(true)]
+	[Arguments(false)]
+	public void RecordParser_Native_Parallel(bool ordered)
+	{
+		var tr = TestData.GetTextReader();
+		var parser = BuildReader(pooled: false);
+		var options = new VariableLengthReaderOptions
+		{
+			HasHeader = true,
+			ContainsQuotedFields = false,
+			ParallelismOptions = new ()
+			{
+				Enabled = true,
+				EnsureOriginalOrdering = ordered,
+				MaxDegreeOfParallelism = 4,
+			}
+		};
+
+		var records = tr.ReadRecords(parser, options);
+		foreach (var record in records)
 		{
 
 		}
