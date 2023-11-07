@@ -3,6 +3,7 @@ using BenchmarkDotNet.Attributes;
 using Cesil;
 using CsvHelper.Configuration;
 using Dapper;
+using nietras.SeparatedValues;
 using RecordParser.Builders.Reader;
 using RecordParser.Extensions;
 using RecordParser.Parsers;
@@ -19,15 +20,13 @@ using TinyCsvParser.Mapping;
 namespace Benchmarks;
 
 [MemoryDiagnoser]
+// hide some less interesting columns.
+[HideColumns("StdDev", "RatioSD", "Gen0", "Gen1", "Gen2")]
 public class CsvDataBinderBenchmarks
 {
-	Sylvan.StringPool pool;
-
 	public CsvDataBinderBenchmarks()
 	{
-
-		Dapper.SqlMapper.SetTypeMap(typeof(SalesRecord), new SalesRecordMap());
-		pool = new Sylvan.StringPool(64);
+		Dapper.SqlMapper.SetTypeMap(typeof(SalesRecord), new SalesRecordMap());		
 	}
 
 	[Benchmark]
@@ -134,7 +133,19 @@ public class CsvDataBinderBenchmarks
 	}
 
 	[Benchmark]
+	public void RecordParserParallelX2()
+	{
+		RecordParserParallel(2);
+	}
+
+	[Benchmark]
 	public void RecordParserParallelX4()
+	{
+		// at least on my machine, there doesn't seem to be any benefit beyond 4x.
+		RecordParserParallel(4);
+	}
+
+	void RecordParserParallel(int dop)
 	{
 		var tr = TestData.GetTextReader();
 		var parser = BuildReader(pooled: false);
@@ -144,7 +155,7 @@ public class CsvDataBinderBenchmarks
 			ParallelismOptions = new()
 			{
 				Enabled = true,
-				MaxDegreeOfParallelism = 4,
+				MaxDegreeOfParallelism = dop,
 			}
 		};
 
@@ -154,8 +165,51 @@ public class CsvDataBinderBenchmarks
 		}
 	}
 
+	SalesRecord SepBind(SepReader.Row row)
+	{
+		return new SalesRecord
+		{
+			Region = row[0].ToString(),
+			Country = row[1].ToString(),
+			ItemType = row[2].ToString(),
+			SalesChannel = row[3].ToString(),
+			OrderPriority = row[4].ToString(),
+			OrderDate = row[5].Parse<DateTime>(),
+			OrderId = row[6].Parse<int>(),
+			ShipDate = row[7].Parse<DateTime>(),
+			UnitsSold = row[8].Parse<int>(),
+			UnitPrice = row[9].Parse<decimal>(),
+			UnitCost = row[10].Parse<decimal>(),
+			TotalRevenue = row[11].Parse<decimal>(),
+			TotalCost = row[12].Parse<decimal>(),
+			TotalProfit = row[13].Parse<decimal>()
+		};
+	}
+
 	[Benchmark]
-	public void SylvanData()
+	public void Sep()
+	{
+		var tr = TestData.GetTextReader();
+		using var reader = nietras.SeparatedValues.Sep.Reader().From(tr);
+		foreach (var row in reader)
+		{
+			var rec = SepBind(row);
+		}
+	}
+
+	[Benchmark]
+	public void SepPooled()
+	{
+		var tr = TestData.GetTextReader();
+		using var reader = nietras.SeparatedValues.Sep.Reader(o => o with { CreateToString = SepToString.OnePool(maximumStringLength: 64) } ).From(tr);
+		foreach (var row in reader)
+		{
+			var rec = SepBind(row);
+		}
+	}
+
+	[Benchmark]
+	public void SylvanAuto()
 	{
 		var tr = TestData.GetTextReader();
 		var dr = Sylvan.Data.Csv.CsvDataReader.Create(tr);
@@ -165,7 +219,7 @@ public class CsvDataBinderBenchmarks
 	}
 
 	[Benchmark]
-	public async Task SylvanDataAsync()
+	public async Task SylvanAutoAsync()
 	{
 		var tr = TestData.GetTextReader();
 		var dr = Sylvan.Data.Csv.CsvDataReader.Create(tr);
@@ -175,17 +229,17 @@ public class CsvDataBinderBenchmarks
 	}
 
 	[Benchmark]
-	public void SylvanDataPooled()
+	public void SylvanAutoPooled()
 	{
 		var tr = TestData.GetTextReader();
-		var opts = new Sylvan.Data.Csv.CsvDataReaderOptions { StringFactory = pool.GetString };
+		var opts = new Sylvan.Data.Csv.CsvDataReaderOptions { ColumnStringFactory = new Sylvan.StringPool(64).GetString };
 		var dr = Sylvan.Data.Csv.CsvDataReader.Create(tr, opts);
 		foreach (var record in dr.GetRecords<SalesRecord>())
 		{
 		}
 	}
 
-	[Benchmark]
+	[Benchmark(Baseline = true)]
 	public void SylvanManual()
 	{
 		var tr = TestData.GetTextReader();

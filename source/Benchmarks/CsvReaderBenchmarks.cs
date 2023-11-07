@@ -292,11 +292,6 @@ public class CsvReaderBenchmarks
 			for (int i = 0; i < c; i++)
 			{
 				var s = reader.ToString(i);
-				if(s.Length >= 2 && s[0] == '\"' && s[s.Length - 1] == '\"')
-				{
-					s = s[1..-1];
-				}
-				a += s.Length;
 			}
 		}
 		return a;
