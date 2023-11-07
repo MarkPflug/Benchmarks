@@ -22,8 +22,11 @@ namespace Benchmarks;
 public class CsvDataBinderBenchmarks
 {
 	Sylvan.StringPool pool;
+
 	public CsvDataBinderBenchmarks()
 	{
+
+		Dapper.SqlMapper.SetTypeMap(typeof(SalesRecord), new SalesRecordMap());
 		pool = new Sylvan.StringPool(64);
 	}
 
@@ -75,7 +78,7 @@ public class CsvDataBinderBenchmarks
 		}
 	}
 
-	private static IVariableLengthReader<SalesRecord> BuildReader(bool pooled)
+	static IVariableLengthReader<SalesRecord> BuildReader(bool pooled)
 	{
 		var builder = new VariableLengthReaderSequentialBuilder<SalesRecord>()
 			.Map(x => x.Region)
@@ -100,29 +103,25 @@ public class CsvDataBinderBenchmarks
 	}
 
 	[Benchmark]
-	public async Task RecordParserAsync_Manual()
+	public void RecordParser()
 	{
-		var parser = BuildReader(pooled: true);
-		using var stream = TestData.GetUtf8Stream();
-		var records = RecordParserSupport.ProcessFile(stream, parser.Parse);
-		await foreach (var record in records)
-		{
-
-		}
+		RecordParserImpl(false);
 	}
 
 	[Benchmark]
-	[Arguments(true)]
-	[Arguments(false)]
-	public void RecordParser_Native_Sequential(bool pooled)
+	public void RecordParserPooled()
+	{
+		RecordParserImpl(true);
+	}
+
+	void RecordParserImpl(bool pooled)
 	{
 		var tr = TestData.GetTextReader();
 		var parser = BuildReader(pooled);
 		var options = new VariableLengthReaderOptions
 		{
 			HasHeader = true,
-			ContainsQuotedFields = false,
-			ParallelismOptions = new ()
+			ParallelismOptions = new()
 			{
 				Enabled = false,
 			}
@@ -131,25 +130,20 @@ public class CsvDataBinderBenchmarks
 		var records = tr.ReadRecords(parser, options);
 		foreach (var record in records)
 		{
-
 		}
 	}
 
 	[Benchmark]
-	[Arguments(true)]
-	[Arguments(false)]
-	public void RecordParser_Native_Parallel(bool ordered)
+	public void RecordParserParallelX4()
 	{
 		var tr = TestData.GetTextReader();
 		var parser = BuildReader(pooled: false);
 		var options = new VariableLengthReaderOptions
 		{
 			HasHeader = true,
-			ContainsQuotedFields = false,
-			ParallelismOptions = new ()
+			ParallelismOptions = new()
 			{
 				Enabled = true,
-				EnsureOriginalOrdering = ordered,
 				MaxDegreeOfParallelism = 4,
 			}
 		};
@@ -157,25 +151,25 @@ public class CsvDataBinderBenchmarks
 		var records = tr.ReadRecords(parser, options);
 		foreach (var record in records)
 		{
-
 		}
 	}
 
 	[Benchmark]
 	public void SylvanData()
 	{
-		var dr = TestData.ReadData();
-		foreach(var record in dr.GetRecords<SalesRecord>())
+		var tr = TestData.GetTextReader();
+		var dr = Sylvan.Data.Csv.CsvDataReader.Create(tr);
+		foreach (var record in dr.GetRecords<SalesRecord>())
 		{
-
 		}
-	}	
+	}
 
 	[Benchmark]
 	public async Task SylvanDataAsync()
 	{
-		var dr = TestData.ReadData();
-		await foreach(var record in dr.GetRecordsAsync<SalesRecord>())
+		var tr = TestData.GetTextReader();
+		var dr = Sylvan.Data.Csv.CsvDataReader.Create(tr);
+		await foreach (var record in dr.GetRecordsAsync<SalesRecord>())
 		{
 		}
 	}
@@ -194,7 +188,8 @@ public class CsvDataBinderBenchmarks
 	[Benchmark]
 	public void SylvanManual()
 	{
-		var dr = TestData.ReadData();
+		var tr = TestData.GetTextReader();
+		var dr = Sylvan.Data.Csv.CsvDataReader.Create(tr);
 		var binder = new ManualBinder();
 		while (dr.Read())
 		{
@@ -205,8 +200,8 @@ public class CsvDataBinderBenchmarks
 	[Benchmark]
 	public void SylvanDapper()
 	{
-		Dapper.SqlMapper.SetTypeMap(typeof(SalesRecord), new SalesRecordMap());
-		var dr = TestData.ReadData();
+		var tr = TestData.GetTextReader();
+		var dr = Sylvan.Data.Csv.CsvDataReader.Create(tr);
 		var parser = dr.GetRowParser<SalesRecord>();
 		while (dr.Read())
 		{
@@ -222,9 +217,8 @@ public class CsvDataBinderBenchmarks
 		{
 			reader.ReadHeaders(true);
 			SalesRecord r;
-			while((r = reader.Read()) != null)
+			while ((r = reader.Read()) != null)
 			{
-
 			}
 		}
 	}
@@ -258,7 +252,7 @@ sealed class SalesRecordMap : Dapper.SqlMapper.ITypeMap
 		return new PropMap(columnName, prop);
 	}
 
-	class PropMap : Dapper.SqlMapper.IMemberMap
+	sealed class PropMap : Dapper.SqlMapper.IMemberMap
 	{
 		public PropMap(string colName, PropertyInfo prop)
 		{
@@ -282,7 +276,7 @@ sealed class SalesRecordMap : Dapper.SqlMapper.ITypeMap
 
 #region CSVHelper support
 
-class SalesRecordMapping : CsvMapping<SalesRecord>
+sealed class SalesRecordMapping : CsvMapping<SalesRecord>
 {
 	public SalesRecordMapping()
 	{
@@ -306,25 +300,26 @@ class SalesRecordMapping : CsvMapping<SalesRecord>
 #endregion
 
 // manually binds a SalesRecord. Used as a baseline for comparison.
-class ManualBinder
+sealed class ManualBinder
 {
 	public SalesRecord Bind(DbDataReader dr)
 	{
-		var record = new SalesRecord();
-		record.Region = dr.GetString(0);
-		record.Country = dr.GetString(1);
-		record.ItemType = dr.GetString(2);
-		record.SalesChannel = dr.GetString(3);
-		record.OrderPriority = dr.GetString(4);
-		record.OrderDate = dr.GetDateTime(5);
-		record.OrderId = dr.GetInt32(6);
-		record.ShipDate = dr.GetDateTime(7);
-		record.UnitsSold = dr.GetInt32(8);
-		record.UnitPrice = dr.GetDecimal(9);
-		record.UnitCost = dr.GetDecimal(10);
-		record.TotalRevenue = dr.GetDecimal(11);
-		record.TotalCost = dr.GetDecimal(12);
-		record.TotalProfit = dr.GetDecimal(13);
-		return record;
+		return new SalesRecord
+		{
+			Region = dr.GetString(0),
+			Country = dr.GetString(1),
+			ItemType = dr.GetString(2),
+			SalesChannel = dr.GetString(3),
+			OrderPriority = dr.GetString(4),
+			OrderDate = dr.GetDateTime(5),
+			OrderId = dr.GetInt32(6),
+			ShipDate = dr.GetDateTime(7),
+			UnitsSold = dr.GetInt32(8),
+			UnitPrice = dr.GetDecimal(9),
+			UnitCost = dr.GetDecimal(10),
+			TotalRevenue = dr.GetDecimal(11),
+			TotalCost = dr.GetDecimal(12),
+			TotalProfit = dr.GetDecimal(13)
+		};
 	}
 }

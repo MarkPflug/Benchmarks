@@ -174,10 +174,4 @@ public static class TestData
 	{
 		return salesRecords.AsDataReader();
 	}
-
-	public static DbDataReader ReadData()
-	{
-		var tr = GetTextReader();
-		return CsvDataReader.Create(tr);
-	}
 }
