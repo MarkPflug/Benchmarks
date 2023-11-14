@@ -13,10 +13,6 @@ class CursivelyStringVisitor : CsvReaderVisitorBase
 	// in any realistic scenario we'd need to at least know the column oridnal to do anything with the record
 	int ordinal = 0;
 
-	public CursivelyStringVisitor()
-	{
-	}
-
 	public override void VisitEndOfField(System.ReadOnlySpan<byte> chunk)
 	{
 		if (bytesUsed != 0)

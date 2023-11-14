@@ -12,8 +12,8 @@ static class Program
 {
 	public static void Main(string[] args)
 	{
-		// needed for xbase and .xls formats.
-		Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+		// needed for Excel .xls readers and dbf
+		Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);		
 		BenchmarkSwitcher
 		.FromAssembly(typeof(Program).Assembly)
 		.Run(args, new MyConfig());

@@ -7,6 +7,7 @@ using System.Text;
 namespace Benchmarks;
 
 [MemoryDiagnoser]
+[HideColumns("StdDev", "RatioSD", "Gen0", "Gen1", "Gen2")]
 public class XlsbReaderBenchmarks
 {
 	const string file = @"Data/65K_Records_Data.xlsb";

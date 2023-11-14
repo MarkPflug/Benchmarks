@@ -5,6 +5,7 @@ using System.IO;
 namespace Benchmarks;
 
 [MemoryDiagnoser]
+[HideColumns("StdDev", "RatioSD", "Gen0", "Gen1", "Gen2")]
 public class ExcelBinderBenchmarks
 {
 	public const string file = @"Data/65K_Records_Data.xlsx";

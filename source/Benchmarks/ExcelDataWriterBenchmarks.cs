@@ -6,7 +6,6 @@ using MiniExcelLibs;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using OfficeOpenXml;
-using Sylvan.Data;
 using Sylvan.Data.Excel;
 using System;
 using System.Collections.Generic;
@@ -18,6 +17,7 @@ using System.Runtime.CompilerServices;
 namespace Benchmarks;
 
 [MemoryDiagnoser]
+[HideColumns("StdDev", "RatioSD", "Gen0", "Gen1", "Gen2")]
 public class ExcelWriterBenchmarks
 {
 	const string file = @"Data/65K_Records_Data.csv";
@@ -56,22 +56,6 @@ public class ExcelWriterBenchmarks
 	}
 
 	[Benchmark]
-	public void SylvanXlsxObj()
-	{
-		WriteSylvan(TestData.GetRecords());
-	}
-
-	void WriteSylvan<T>(IEnumerable<T> data)
-		where T : class
-	{
-		using var ns = GetStream();
-		using (var xw = ExcelDataWriter.Create(ns, ExcelWorkbookType.ExcelXml))
-		{
-			xw.Write(data.AsDataReader());
-		}
-	}
-
-	[Benchmark]
 	public void SylvanXlsx()
 	{
 		WriteSylvan(GetData());
@@ -100,7 +84,6 @@ public class ExcelWriterBenchmarks
 			xw.Write(reader);
 		}
 	}
-
 
 	[Benchmark]
 	public void LargeXlsx()

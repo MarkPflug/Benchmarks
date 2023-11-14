@@ -8,8 +8,9 @@ different construction, I believe they provide a fair comparison.
 If any of the benchmarks are found to be incorrectly setup, 
 I'd happily welcome a pull request with a fix.
 
-Many of the benchmarks in this collection use a example "Sales Record" data files from
+Many of the benchmarks in this collection use sample "Sales Record" data files from
 [excelbianalytics.com](https://excelbianalytics.com/wp/downloads-18-sample-csv-files-data-sets-for-testing-sales/).
+This files contains 14 columns of multiple data types including string, integer, date, and decimal.
 
 ## Running benchmarks
 
@@ -20,27 +21,23 @@ a selection for which benchmark set to run.
 
 ## Benchmark Environment
 
-Benchmark results were updated with latest package versions as of Mar 23, 2023, as well as updating to .NET 7.0.
+Benchmark results were updated with latest package versions as of Nov 14, 2023, as well as updating to .NET 8.0.
 
 The benchmark results reported here were run with the following configuration, unless otherwise noted:
 ```
-BenchmarkDotNet=v0.13.2, OS=Windows 10 (10.0.19044.2251/21H2/November2021Update)
+BenchmarkDotNet v0.13.10, Windows 10 (10.0.19045.3570/22H2/2022Update)
 Intel Core i7-7700K CPU 4.20GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical cores
-.NET SDK=7.0.100
-  [Host] : .NET 7.0.0 (7.0.22.51805), X64 RyuJIT AVX2
+.NET SDK 8.0.100
+  [Host] : .NET 8.0.0 (8.0.23.53103), X64 RyuJIT AVX2
 ```
 
 ## [CSV Reader Benchmarks](docs/CsvReaderBenchmarks.md)
 
-Benchmarks for libraries that support raw CSV reading capabilities.
+Benchmarks for libraries that implement CSV readers.
 
 ## [CSV Writer Benchmarks](docs/CsvWriterBenchmarks.md)
 
-Benchmarks for libraries that supporting writing CSV data.
-
-## [CSV Data Binder Benchmarks](docs/CsvDataBinderBenchmarks.md)
-
-Libraries that provide object data binding capabilities are reported here.
+Benchmarks for libraries that implement CSV writers.
 
 ## [Excel Reader Benchmarks](docs/ExcelReaderBenchmarks.md)
 

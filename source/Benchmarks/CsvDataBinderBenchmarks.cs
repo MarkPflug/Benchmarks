@@ -42,14 +42,10 @@ public class CsvDataBinderBenchmarks
 	}
 
 	[Benchmark]
-	public void CsvHelperAutoPooled()
+	public void CsvHelperManual()
 	{
 		var tr = TestData.GetTextReader();
-		var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-		{
-			CacheFields = true,
-		};
-		var csv = new CsvHelper.CsvReader(tr, config);
+		var csv = new CsvHelper.CsvReader(tr, new CsvConfiguration(CultureInfo.InvariantCulture));
 		var data = csv.GetRecords<SalesRecord>();
 
 		foreach (var record in data)
@@ -77,7 +73,7 @@ public class CsvDataBinderBenchmarks
 		}
 	}
 
-	static IVariableLengthReader<SalesRecord> BuildReader(bool pooled)
+	static IVariableLengthReader<SalesRecord> BuildReader()
 	{
 		var builder = new VariableLengthReaderSequentialBuilder<SalesRecord>()
 			.Map(x => x.Region)
@@ -95,28 +91,14 @@ public class CsvDataBinderBenchmarks
 			.Map(x => x.TotalCost)
 			.Map(x => x.TotalProfit);
 
-		if (pooled)
-			builder.DefaultTypeConvert(new InternPool().Intern);
-
 		return builder.Build(",", CultureInfo.InvariantCulture);
 	}
 
 	[Benchmark]
-	public void RecordParser()
-	{
-		RecordParserImpl(false);
-	}
-
-	[Benchmark]
-	public void RecordParserPooled()
-	{
-		RecordParserImpl(true);
-	}
-
-	void RecordParserImpl(bool pooled)
+	public void RecordParserManual()
 	{
 		var tr = TestData.GetTextReader();
-		var parser = BuildReader(pooled);
+		var parser = BuildReader();
 		var options = new VariableLengthReaderOptions
 		{
 			HasHeader = true,
@@ -133,13 +115,13 @@ public class CsvDataBinderBenchmarks
 	}
 
 	[Benchmark]
-	public void RecordParserParallelX2()
+	public void RecordParserManualX2()
 	{
 		RecordParserParallel(2);
 	}
 
 	[Benchmark]
-	public void RecordParserParallelX4()
+	public void RecordParserManualX4()
 	{
 		// at least on my machine, there doesn't seem to be any benefit beyond 4x.
 		RecordParserParallel(4);
@@ -148,7 +130,7 @@ public class CsvDataBinderBenchmarks
 	void RecordParserParallel(int dop)
 	{
 		var tr = TestData.GetTextReader();
-		var parser = BuildReader(pooled: false);
+		var parser = BuildReader();
 		var options = new VariableLengthReaderOptions
 		{
 			HasHeader = true,
@@ -187,21 +169,10 @@ public class CsvDataBinderBenchmarks
 	}
 
 	[Benchmark]
-	public void Sep()
+	public void SepManual()
 	{
 		var tr = TestData.GetTextReader();
 		using var reader = nietras.SeparatedValues.Sep.Reader().From(tr);
-		foreach (var row in reader)
-		{
-			var rec = SepBind(row);
-		}
-	}
-
-	[Benchmark]
-	public void SepPooled()
-	{
-		var tr = TestData.GetTextReader();
-		using var reader = nietras.SeparatedValues.Sep.Reader(o => o with { CreateToString = SepToString.OnePool(maximumStringLength: 64) } ).From(tr);
 		foreach (var row in reader)
 		{
 			var rec = SepBind(row);
@@ -228,17 +199,6 @@ public class CsvDataBinderBenchmarks
 		}
 	}
 
-	[Benchmark]
-	public void SylvanAutoPooled()
-	{
-		var tr = TestData.GetTextReader();
-		var opts = new Sylvan.Data.Csv.CsvDataReaderOptions { ColumnStringFactory = new Sylvan.StringPool(64).GetString };
-		var dr = Sylvan.Data.Csv.CsvDataReader.Create(tr, opts);
-		foreach (var record in dr.GetRecords<SalesRecord>())
-		{
-		}
-	}
-
 	[Benchmark(Baseline = true)]
 	public void SylvanManual()
 	{
@@ -251,20 +211,24 @@ public class CsvDataBinderBenchmarks
 		}
 	}
 
+	Func<DbDataReader, SalesRecord> dapperBinder = null;
+
 	[Benchmark]
-	public void SylvanDapper()
+	public void SylvanDapperAuto()
 	{
 		var tr = TestData.GetTextReader();
 		var dr = Sylvan.Data.Csv.CsvDataReader.Create(tr);
-		var parser = dr.GetRowParser<SalesRecord>();
+		if (dapperBinder == null)
+			dapperBinder = dr.GetRowParser<SalesRecord>();
+		var binder = dapperBinder;
 		while (dr.Read())
 		{
-			var record = parser(dr);
+			var record = binder(dr);
 		}
 	}
 
 	[Benchmark]
-	public void SoftCircuits()
+	public void SoftCircuitsAuto()
 	{
 		var stream = TestData.GetUtf8Stream();
 		using (var reader = new SoftCircuits.CsvParser.CsvReader<SalesRecord>(stream, Encoding.UTF8))
@@ -328,7 +292,7 @@ sealed class SalesRecordMap : Dapper.SqlMapper.ITypeMap
 
 #endregion
 
-#region CSVHelper support
+#region TinyCsv support
 
 sealed class SalesRecordMapping : CsvMapping<SalesRecord>
 {

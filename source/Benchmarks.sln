@@ -14,7 +14,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{3440120F
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{87D6758C-FE49-4B3F-8607-64DA61C40980}"
 	ProjectSection(SolutionItems) = preProject
-		..\docs\CsvDataBinderBenchmarks.md = ..\docs\CsvDataBinderBenchmarks.md
 		..\docs\CsvReaderBenchmarks.md = ..\docs\CsvReaderBenchmarks.md
 		..\docs\CsvWriterBenchmarks.md = ..\docs\CsvWriterBenchmarks.md
 		..\docs\ExcelReaderBenchmarks.md = ..\docs\ExcelReaderBenchmarks.md

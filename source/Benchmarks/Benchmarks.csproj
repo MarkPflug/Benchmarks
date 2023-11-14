@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <OutputType>exe</OutputType>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
@@ -15,7 +15,7 @@
     <PackageReference Include="Ctl.Data" Version="2.0.0.2" />
     <PackageReference Include="Cursively" Version="1.2.0" />
     
-    <PackageReference Include="Dapper" Version="2.1.15" />
+    <PackageReference Include="Dapper" Version="2.1.21" />
     
     <PackageReference Include="DbfDataReader" Version="0.9.0" />
     
@@ -29,16 +29,15 @@
     <PackageReference Include="mgholam.fastCSV" Version="2.0.9" />
     <PackageReference Include="MiniExcel" Version="1.31.2" />
     <PackageReference Include="NanoXLSX" Version="2.3.0" />
-    <PackageReference Include="NDbfReader" Version="2.4.0" />
     <PackageReference Include="NLight" Version="2.1.1" />
     <PackageReference Include="NReco.Csv" Version="1.0.2" />
     <PackageReference Include="FSharp.Data" Version="6.3.0" />
     <PackageReference Include="Microsoft.VisualBasic" Version="10.4.0-preview.18571.3" />
-    <PackageReference Include="RecordParser" Version="2.1.0" />
+    <PackageReference Include="RecordParser" Version="2.2.1" />
     <PackageReference Include="SoftCircuits.CsvParser" Version="4.1.0" />
-    <PackageReference Include="Aspose.Cells" Version="23.10.0" />
+    <PackageReference Include="Aspose.Cells" Version="23.11.0" />
     <PackageReference Include="ClosedXML" Version="0.102.1" />
-    <PackageReference Include="EPPlus" Version="7.0.0" />
+    <PackageReference Include="EPPlus" Version="7.0.1" />
     <PackageReference Include="ExcelDataReader" Version="3.7.0-develop00310" />
     <PackageReference Include="FastExcel" Version="3.0.13" />
     <PackageReference Include="NPOI" Version="2.6.2" />
@@ -52,10 +51,10 @@
 
     <PackageReference Include="Microsoft.Win32.Primitives" Version="4.3.0" />
 
-    <PackageReference Include="System.Data.OleDb" Version="7.0.0" />
-    <PackageReference Include="System.IO.Pipelines" Version="7.0.0" />
+    <PackageReference Include="System.Data.OleDb" Version="8.0.0" />
+    <PackageReference Include="System.IO.Pipelines" Version="8.0.0" />
     <PackageReference Include="System.Net.Primitives" Version="4.3.1" />
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="7.0.0" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
     <PackageReference Include="TinyCsvParser" Version="2.7.0" />
     <PackageReference Include="Cesil" Version="0.9.0" />
 
@@ -64,6 +63,7 @@
       <PackageReference Include="XlsxHelper" Version="2.1.0" />
    
   </ItemGroup>
+
 
   <ItemGroup>
     <None Update="Data/**/*">

@@ -4,19 +4,23 @@ using RecordParser.Builders.Reader;
 using RecordParser.Extensions;
 using System.Data;
 using System.Globalization;
+using System.Text;
 
 namespace Benchmarks;
 
 [MemoryDiagnoser]
+[HideColumns("StdDev", "RatioSD", "Gen0", "Gen1", "Gen2")]
 public class CsvSum
 {
 	const int BufferSize = 0x8000;
+
+	readonly char[] buffer = new char[BufferSize];
 
 	[Benchmark]
 	public decimal SylvanData()
 	{
 		using var tr = TestData.GetTextReader();
-		using var dr = Sylvan.Data.Csv.CsvDataReader.Create(tr);
+		using var dr = Sylvan.Data.Csv.CsvDataReader.Create(tr, buffer);
 		var idx = dr.GetOrdinal("Total Profit");
 		decimal a = 0m;
 		while (dr.Read())
@@ -27,9 +31,18 @@ public class CsvSum
 	}
 
 	[Benchmark]
-	[Arguments(true)]
-	[Arguments(false)]
-	public decimal RecordParser(bool parallel)
+	public decimal RecordParserX4()
+	{
+		return RecordParser(4);
+	}
+	
+	[Benchmark]
+	public decimal RecordParser()
+	{
+		return RecordParser(1);
+	}
+
+	decimal RecordParser(int dop)
 	{
 		var parser = new VariableLengthReaderBuilder<decimal>()
 			.Map(x => x, indexColumn: 13)
@@ -41,8 +54,8 @@ public class CsvSum
 			ContainsQuotedFields = false,
 			ParallelismOptions = new ()
 			{
-				Enabled = parallel,
-				MaxDegreeOfParallelism = 4,
+				Enabled = dop > 1,
+				MaxDegreeOfParallelism = dop,
 				EnsureOriginalOrdering = false
 			}
 		};
@@ -139,17 +152,4 @@ public class CsvSum
 		}
 		return a;
 	}
-
-	//[Benchmark]
-	//public decimal HyperCsvBench()
-	//{
-	//	using var r = HyperCsv.CsvDataReader.Create(TestData.GetUtf8Stream());
-	//	var a = 0m;
-	//	var idx = r.GetOrdinal("Total Profit");
-	//	while(r.Read())
-	//	{
-	//		a += r.GetDecimal(idx);
-	//	}
-	//	return a;
-	//}
 }

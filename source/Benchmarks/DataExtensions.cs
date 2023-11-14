@@ -147,16 +147,16 @@ static class DataExtensions
 				reader.GetDateTime(i);
 				break;
 			case TypeCode.Single:
-				reader.GetFloat(i);
+				var f32 = reader.GetFloat(i);
 				break;
 			case TypeCode.Double:
-				reader.GetDouble(i);
+				var f64 = reader.GetDouble(i);
 				break;
 			case TypeCode.Decimal:
-				reader.GetDecimal(i);
+				var d = reader.GetDecimal(i);
 				break;
 			case TypeCode.String:
-				reader.GetString(i);
+				var m = reader.GetString(i);
 				break;
 			default:
 				// no cheating
