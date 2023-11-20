@@ -2,6 +2,7 @@
 using Cursively;
 using Microsoft.VisualBasic.FileIO;
 using nietras.SeparatedValues;
+using RecordParser.Extensions;
 using Sylvan.Data.Csv;
 using System.Data.OleDb;
 using System.Globalization;
@@ -301,5 +302,52 @@ public class CsvReaderBenchmarks
 				var s = reader.GetString(i);
 			}
 		}
+	}
+
+	[Benchmark]
+	public void RecordParser()
+	{
+		RecordParserParallel(1);
+	}
+
+	[Benchmark]
+	public void RecordParserX4()
+	{
+		RecordParserParallel(4);
+	}
+
+	void RecordParserParallel(int dop)
+	{
+		const int fieldCount = 13;
+
+		var options = new VariableLengthReaderRawOptions
+		{
+			HasHeader = true,
+			ContainsQuotedFields = false,
+			ColumnCount = fieldCount,
+			Separator = ",",
+			ParallelismOptions = new()
+			{
+				Enabled = dop > 1,
+				MaxDegreeOfParallelism = dop,
+				EnsureOriginalOrdering = false,
+			},
+		};
+
+		using var tr = TestData.GetTextReader();
+
+		var records = tr.ReadRecordsRaw(options, getField =>
+		{
+			for (int i = 0; i < fieldCount; i++)
+			{
+				var s = getField(i);
+			}
+
+			// currently only supports Func callback
+			// so must return a dummy value
+			return (string)null;
+		});
+
+		foreach (var record in records) ;
 	}
 }
