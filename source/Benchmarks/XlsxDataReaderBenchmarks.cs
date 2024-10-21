@@ -44,6 +44,67 @@ public class XlsxReaderBenchmarks
 	}
 
 	[Benchmark]
+	public void Lightweight()
+	{
+		var reader = new LightWeightExcelReader.ExcelReader(file);
+		var sheet = reader[0];
+
+		// skip the header row
+		sheet.ReadNext();
+		while (sheet.ReadNextInRow()) ;
+
+		// read the data
+		while (sheet.ReadNext())
+		{
+			var region = (string)sheet.Value;
+			sheet.ReadNextInRow();
+			var country = (string)sheet.Value;
+			sheet.ReadNextInRow();
+			var type = (string)sheet.Value;
+			sheet.ReadNextInRow();
+			var channel = (string)sheet.Value;
+			sheet.ReadNextInRow();
+			var priority = (string)sheet.Value;
+			sheet.ReadNextInRow();
+			var orderDate = (DateTime) sheet.Value;
+			sheet.ReadNextInRow();
+			var id = (int)(double) sheet.Value;
+			sheet.ReadNextInRow();
+			var shipDate = (DateTime)sheet.Value;
+			sheet.ReadNextInRow();
+			var unitsSold = (int)(double)sheet.Value;
+			sheet.ReadNextInRow();
+			var unitPrice = (decimal)(double)sheet.Value;
+			sheet.ReadNextInRow();
+			var unitCost = (decimal)(double)sheet.Value;
+			sheet.ReadNextInRow();
+			var totalRevenue = (decimal)(double)sheet.Value;
+			sheet.ReadNextInRow();
+			var totalCost = (decimal)(double)sheet.Value;
+			sheet.ReadNextInRow();
+			var totalProfit = (decimal)(double)sheet.Value;
+
+			var sr = new SalesRecord
+			{
+				Region = region,
+				Country = country,
+				ItemType = type,
+				SalesChannel = channel,
+				OrderPriority = priority,
+				OrderDate = orderDate,
+				OrderId = id,
+				ShipDate = shipDate,
+				UnitsSold = unitsSold,
+				UnitPrice = unitPrice,
+				UnitCost = unitCost,
+				TotalRevenue = totalRevenue,
+				TotalCost = totalCost,
+				TotalProfit = totalProfit,
+			};
+		}
+	}
+
+	[Benchmark]
 	public void SylvanXlsx()
 	{
 		var reader = Sylvan.Data.Excel.ExcelDataReader.Create(file);
