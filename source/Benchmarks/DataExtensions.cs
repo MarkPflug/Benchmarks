@@ -191,6 +191,24 @@ static class DataExtensions
 		var totalProfit = reader.GetDecimal(13);
 	}
 
+	public static void ProcessSalesRecordByName(this Sylvan.Data.Excel.ExcelDataReader r)
+	{
+		var region = r.GetString(r.GetOrdinal("Region"));
+		var country = r.GetString(r.GetOrdinal("Country"));
+		var type = r.GetString(r.GetOrdinal("Item Type"));
+		var channel = r.GetString(r.GetOrdinal("Sales Channel"));
+		var priority = r.GetString(r.GetOrdinal("Order Priority"));
+		var orderDate = r.GetDateTime(r.GetOrdinal("Order Date"));
+		var id = r.GetInt32(r.GetOrdinal("Order ID"));
+		var shipDate = r.GetDateTime(r.GetOrdinal("Ship Date"));
+		var unitsSold = r.GetInt32(r.GetOrdinal("Units Sold"));
+		var unitPrice = r.GetDecimal(r.GetOrdinal("Unit Price"));
+		var unitCost = r.GetDecimal(r.GetOrdinal("Unit Cost"));
+		var totalRevenue = r.GetDecimal(r.GetOrdinal("Total Revenue"));
+		var totalCost = r.GetDecimal(r.GetOrdinal("Total Cost"));
+		var totalProfit = r.GetDecimal(r.GetOrdinal("Total Profit"));
+	}
+
 	public static void ProcessSalesRecordEDR(this IDataReader reader)
 	{
 		var region = reader.GetString(0);
@@ -208,5 +226,23 @@ static class DataExtensions
 		var totalRevenue = (decimal)reader.GetDouble(11);
 		var totalCost = (decimal)reader.GetDouble(12);
 		var totalProfit = (decimal)reader.GetDouble(13);
+	}
+
+	public static void ProcessSalesRecordEDRString(this IDataReader reader)
+	{
+		var region = reader.GetString(0);
+		var country = reader.GetString(1);
+		var type = reader.GetString(2);
+		var channel = reader.GetString(3);
+		var priority = reader.GetString(4);
+		var orderDate = reader.GetString(5);
+		var id = reader.GetString(6);
+		var shipDate = reader.GetString(7);
+		var unitsSold = reader.GetString(8);
+		var unitPrice = reader.GetString(9);
+		var unitCost = reader.GetString(10);
+		var totalRevenue = reader.GetString(11);
+		var totalCost = reader.GetString(12);
+		var totalProfit = reader.GetString(13);
 	}
 }
