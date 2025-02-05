@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using BenchmarkDotNet.Attributes;
 
@@ -8,7 +8,7 @@ public class PerformanceCounterBench
 {
 	PerformanceCounter c1;
 	PerformanceCounter c2;
-	Dictionary<string, PerformanceCounter> d;
+	ConcurrentDictionary<string, PerformanceCounter> d;
 
 	string prefix = "store_name";
 	string suffix = "myperformancecounter";
@@ -41,10 +41,10 @@ public class PerformanceCounterBench
 				"Test",
 				PerformanceCounterCategoryType.SingleInstance, counterDataCollection);
 		}
-		d = new Dictionary<string, PerformanceCounter>();
+		d = new ConcurrentDictionary<string, PerformanceCounter>();
 		c1 = new PerformanceCounter("Sylvan", "AverageCounter64Sample", false);
 		c2 = new PerformanceCounter("Sylvan", "AverageCounter64SampleBase", false);
-		d.Add("_store_name_myperformancecounter", c1);
+		d.TryAdd("_store_name_myperformancecounter", c1);
 	}
 
 	[Benchmark]
