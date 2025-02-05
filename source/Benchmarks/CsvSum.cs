@@ -16,7 +16,7 @@ public class CsvSum
 
 	readonly char[] buffer = new char[BufferSize];
 
-	[Benchmark]
+	[Benchmark(Baseline = true)]
 	public decimal SylvanData()
 	{
 		using var tr = TestData.GetTextReader();

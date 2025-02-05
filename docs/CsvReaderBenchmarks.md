@@ -13,19 +13,19 @@ potentially parse the value out of an internal buffer.
 
 | Method               | Mean      | Error      | Ratio | Allocated | Alloc Ratio |
 |--------------------- |----------:|-----------:|------:|----------:|------------:|
-| RecordParserManualX4 |  30.61 ms |   0.664 ms |  0.80 |     23 MB |        1.00 |
-| SylvanManual         |  38.43 ms |   0.705 ms |  1.00 |  22.92 MB |        1.00 |
-| SylvanAuto           |  39.29 ms |   0.426 ms |  1.02 |  22.92 MB |        1.00 |
-| SylvanAutoAsync      |  42.85 ms |   0.724 ms |  1.11 |  22.96 MB |        1.00 |
-| RecordParserManualX2 |  44.15 ms |   1.382 ms |  1.15 |  22.96 MB |        1.00 |
-| SepManual            |  50.59 ms |   0.961 ms |  1.31 |  21.39 MB |        0.93 |
-| SylvanDapperAuto     |  70.91 ms |   0.732 ms |  1.84 |  61.75 MB |        2.69 |
-| RecordParserManual   |  71.60 ms |   1.388 ms |  1.86 |  22.94 MB |        1.00 |
-| SoftCircuitsAuto     | 116.21 ms |   1.177 ms |  3.02 | 106.23 MB |        4.63 |
-| CsvHelperManual      | 117.08 ms |   2.115 ms |  3.05 |  63.32 MB |        2.76 |
-| CsvHelperAuto        | 119.05 ms |   5.555 ms |  3.11 |  63.32 MB |        2.76 |
-| CesilAuto            | 141.47 ms |   2.529 ms |  3.68 |  23.14 MB |        1.01 |
-| TinyCsvManual        | 215.01 ms | 138.455 ms |  5.44 | 229.51 MB |       10.01 |
+| RecordParserManualX4 |  28.02 ms |   1.012 ms |  0.77 |     23 MB |        1.00 |
+| SylvanManual         |  36.18 ms |   0.445 ms |  1.00 |  22.92 MB |        1.00 |
+| SylvanAuto           |  36.98 ms |   0.318 ms |  1.02 |  22.92 MB |        1.00 |
+| SylvanAutoAsync      |  40.33 ms |   0.261 ms |  1.11 |  22.96 MB |        1.00 |
+| RecordParserManualX2 |  41.53 ms |   0.923 ms |  1.15 |  22.97 MB |        1.00 |
+| SepManual            |  48.81 ms |   0.670 ms |  1.35 |  21.39 MB |        0.93 |
+| SylvanDapperAuto     |  65.19 ms |   0.700 ms |  1.80 |  61.75 MB |        2.69 |
+| RecordParserManual   |  67.04 ms |   1.033 ms |  1.85 |  22.94 MB |        1.00 |
+| CsvHelperManual      | 105.49 ms |   1.142 ms |  2.92 |  63.32 MB |        2.76 |
+| SoftCircuitsAuto     | 107.08 ms |   1.034 ms |  2.96 |  93.23 MB |        4.07 |
+| CsvHelperAuto        | 109.96 ms |   9.651 ms |  3.04 |  63.33 MB |        2.76 |
+| CesilAuto            | 130.87 ms |   1.263 ms |  3.62 |  23.14 MB |        1.01 |
+| TinyCsvManual        | 221.35 ms | 149.364 ms |  6.12 | 229.49 MB |       10.01 |
 
 The "X2" and "X4" suffix indicate the degree of paralleization used. 
 The RecordParser library employs parallelization in the processing of CSV records, so
@@ -44,26 +44,28 @@ Typically, string values would subsequently be parsed into a strongly-typed valu
 this benchmark might not be representative of a real-world use case, since in many cases
 using strongly-typed access would be more convenient and also faster.
 
-| Method               | Mean      | Error     | StdDev    | Gen0        | Gen1    | Allocated |
-|--------------------- |----------:|----------:|----------:|------------:|--------:|----------:|
-| Sep                  |  12.64 ms |  0.303 ms |  0.108 ms |   8562.5000 |       - |  34.21 MB |
-| Sylvan               |  15.47 ms |  0.238 ms |  0.062 ms |   8953.1250 |       - |  35.72 MB |
-| SoftCircuits         |  18.97 ms |  1.406 ms |  0.501 ms |   8937.5000 |       - |  35.72 MB |
-| NaiveBroken          |  19.88 ms |  1.873 ms |  0.668 ms |  15343.7500 |       - |  61.24 MB |
-| Fluent               |  21.66 ms |  0.444 ms |  0.158 ms |  15343.7500 |       - |  61.24 MB |
-| CursivelyCsv         |  26.34 ms |  0.372 ms |  0.097 ms |   8937.5000 |       - |  35.71 MB |
-| CtlData              |  29.11 ms |  0.844 ms |  0.301 ms |  20468.7500 |       - |  81.84 MB |
-| NReco                |  34.49 ms |  0.510 ms |  0.079 ms |   8933.3333 |       - |  35.86 MB |
-| FastCsvParser        |  36.66 ms |  1.466 ms |  0.523 ms |   8933.3333 | 66.6667 |  36.05 MB |
-| MgholamFastCSV       |  37.15 ms |  1.051 ms |  0.375 ms |   9285.7143 |       - |  37.41 MB |
-| NLightCsv            |  43.45 ms |  2.018 ms |  0.720 ms |   8916.6667 |       - |  35.84 MB |
-| Lumenworks           |  53.58 ms |  3.025 ms |  1.079 ms |  41700.0000 |       - | 166.79 MB |
-| CsvHelper            |  53.63 ms |  1.063 ms |  0.276 ms |   8900.0000 |       - |  35.85 MB |
-| NotVBTextFieldParser |  54.12 ms |  1.831 ms |  0.653 ms |  33300.0000 |       - |    133 MB |
-| FSharpData           |  70.75 ms |  6.882 ms |  2.454 ms |  60000.0000 |       - | 239.31 MB |
-| FlatFilesCsv         | 132.54 ms |  3.923 ms |  1.399 ms |  34750.0000 |       - | 139.52 MB |
-| CsvBySteve           | 179.72 ms | 14.072 ms |  5.018 ms |  83666.6667 |       - | 334.26 MB |
-| VisualBasic          | 448.76 ms | 37.005 ms | 13.196 ms | 289000.0000 |       - | 1153.4 MB |
+| Method               | Mean      | Error     | Ratio | Allocated | Alloc Ratio |
+|--------------------- |----------:|----------:|------:|----------:|------------:|
+| Sep                  |  12.36 ms |  0.198 ms |  0.89 |  34.21 MB |        0.96 |
+| Sylvan               |  13.89 ms |  0.252 ms |  1.00 |  35.72 MB |        1.00 |
+| RecordParserX4       |  18.16 ms |  0.142 ms |  1.31 |  33.25 MB |        0.93 |
+| NaiveBroken          |  18.36 ms |  0.805 ms |  1.32 |  61.24 MB |        1.71 |
+| SoftCircuits         |  18.53 ms |  1.151 ms |  1.33 |  35.72 MB |        1.00 |
+| Fluent               |  20.74 ms |  0.279 ms |  1.49 |  61.24 MB |        1.71 |
+| CursivelyCsv         |  25.92 ms |  0.256 ms |  1.87 |  35.71 MB |        1.00 |
+| CtlData              |  27.44 ms |  0.519 ms |  1.97 |  81.84 MB |        2.29 |
+| RecordParser         |  29.35 ms |  0.378 ms |  2.11 |  33.21 MB |        0.93 |
+| FastCsvParser        |  34.52 ms |  0.093 ms |  2.49 |  36.05 MB |        1.01 |
+| MgholamFastCSV       |  35.11 ms |  0.260 ms |  2.53 |  37.41 MB |        1.05 |
+| NReco                |  35.15 ms |  0.149 ms |  2.53 |  35.86 MB |        1.00 |
+| NLightCsv            |  43.54 ms |  0.596 ms |  3.13 |  35.84 MB |        1.00 |
+| CsvHelper            |  46.82 ms |  0.316 ms |  3.37 |  35.85 MB |        1.00 |
+| Lumenworks           |  48.37 ms |  0.054 ms |  3.48 | 166.79 MB |        4.67 |
+| NotVBTextFieldParser |  50.95 ms |  0.680 ms |  3.67 |    133 MB |        3.72 |
+| FSharpData           |  60.82 ms |  1.071 ms |  4.38 | 230.31 MB |        6.45 |
+| FlatFilesCsv         | 116.93 ms |  1.704 ms |  8.42 | 139.52 MB |        3.91 |
+| CsvBySteve           | 165.32 ms |  3.103 ms | 11.90 | 334.26 MB |        9.36 |
+| VisualBasic          | 435.72 ms | 72.219 ms | 31.37 | 1153.4 MB |       32.29 |
 
 ## CsvSum
 
@@ -71,12 +73,12 @@ This benchmark measures summing the values of a single column (`Total Profit`) f
 It is meant to highlight an optimization employed by some libraries where you only "pay" for the
 columns that you access.
 
-| Method         | Mean      | Error     | Allocated    |
-|--------------- |----------:|----------:|-------------:|
-| SylvanData     |  8.911 ms | 0.3933 ms |      8.79 KB |
-| SepCsv         |  9.020 ms | 0.9497 ms |      5.86 KB |
-| RecordParserX4 |  9.527 ms | 0.8254 ms |    114.37 KB |
-| RecordParser   | 21.709 ms | 0.2744 ms |     14.43 KB |
-| NReco          | 26.815 ms | 0.3454 ms |   2677.17 KB |
-| CsvHelper      | 37.195 ms | 0.4231 ms |   2671.88 KB |
-| Lumenworks     | 47.992 ms | 5.3740 ms | 136754.41 KB |
+| Method         | Mean      | Error     | Ratio | Allocated    | Alloc Ratio |
+|--------------- |----------:|----------:|------:|-------------:|------------:|
+| SepCsv         |  8.399 ms | 0.0010 ms |  1.00 |      5.86 KB |        0.64 |
+| SylvanData     |  8.401 ms | 0.0997 ms |  1.00 |       9.1 KB |        1.00 |
+| RecordParserX4 |  8.825 ms | 0.1030 ms |  1.05 |    114.44 KB |       12.58 |
+| RecordParser   | 20.045 ms | 0.1530 ms |  2.39 |     14.17 KB |        1.56 |
+| NReco          | 26.793 ms | 0.2217 ms |  3.19 |   2677.27 KB |      294.25 |
+| CsvHelper      | 36.786 ms | 0.4531 ms |  4.38 |   2671.52 KB |      293.62 |
+| Lumenworks     | 41.080 ms | 0.7549 ms |  4.89 | 136754.65 KB |   15,030.24 |
