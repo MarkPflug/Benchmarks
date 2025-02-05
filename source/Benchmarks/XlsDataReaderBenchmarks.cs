@@ -23,7 +23,7 @@ public class XlsReaderBenchmarks
 		Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 	}
 
-	[Benchmark]
+	[Benchmark(Baseline = true)]
 	public void SylvanStringXls()
 	{
 		var reader = Sylvan.Data.Excel.ExcelDataReader.Create(file);
@@ -55,7 +55,7 @@ public class XlsReaderBenchmarks
 	}
 
 	[Benchmark]
-	public void ExcelDataReaderXls()
+	public void ExcelDataReaderSchemaXls()
 	{
 		using var stream = File.OpenRead(file);
 		using (var reader = ExcelReaderFactory.CreateReader(stream))
@@ -66,6 +66,23 @@ public class XlsReaderBenchmarks
 				while (reader.Read())
 				{
 					reader.ProcessSalesRecordEDR();
+				}
+			} while (reader.NextResult());
+		}
+	}
+
+	[Benchmark]
+	public void ExcelDataReaderStringXls()
+	{
+		using var stream = File.OpenRead(file);
+		using (var reader = ExcelReaderFactory.CreateReader(stream))
+		{
+			do
+			{
+				reader.Read();//skip headers
+				while (reader.Read())
+				{
+					reader.ProcessSalesRecordEDRString();
 				}
 			} while (reader.NextResult());
 		}

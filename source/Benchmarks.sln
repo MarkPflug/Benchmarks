@@ -23,6 +23,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{87D6758C-F
 		..\docs\XBaseDataReaderBenchmarks.md = ..\docs\XBaseDataReaderBenchmarks.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetFxBench", "NetFxBench\NetFxBench.csproj", "{3ACC4CB9-E73E-476F-9B90-388EB41A0C8D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{32ACC069-03E8-46B2-82A0-0FDB6F708B40}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{32ACC069-03E8-46B2-82A0-0FDB6F708B40}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{32ACC069-03E8-46B2-82A0-0FDB6F708B40}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3ACC4CB9-E73E-476F-9B90-388EB41A0C8D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3ACC4CB9-E73E-476F-9B90-388EB41A0C8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3ACC4CB9-E73E-476F-9B90-388EB41A0C8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3ACC4CB9-E73E-476F-9B90-388EB41A0C8D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

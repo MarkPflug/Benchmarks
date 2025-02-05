@@ -1,11 +1,15 @@
-﻿using System.Collections.Concurrent;
+﻿using BenchmarkDotNet.Attributes;
+using System.Collections.Concurrent;
 using System.Diagnostics;
-using BenchmarkDotNet.Attributes;
+using System.Diagnostics.Metrics;
 
 namespace Benchmarks;
 
+[MemoryDiagnoser]
 public class PerformanceCounterBench
 {
+	Meter meter;
+	Counter<int> counter;
 	PerformanceCounter c1;
 	PerformanceCounter c2;
 	ConcurrentDictionary<string, PerformanceCounter> d;
@@ -13,8 +17,13 @@ public class PerformanceCounterBench
 	string prefix = "store_name";
 	string suffix = "myperformancecounter";
 
+	Process proc;
+
 	public PerformanceCounterBench()
 	{
+		this.meter = new Meter("Sylvan.Bench");
+		this.counter = this.meter.CreateCounter<int>("counter");
+
 		if (!PerformanceCounterCategory.Exists("Sylvan"))
 		{
 			var counterDataCollection = new CounterCreationDataCollection();
@@ -45,9 +54,19 @@ public class PerformanceCounterBench
 		c1 = new PerformanceCounter("Sylvan", "AverageCounter64Sample", false);
 		c2 = new PerformanceCounter("Sylvan", "AverageCounter64SampleBase", false);
 		d.TryAdd("_store_name_myperformancecounter", c1);
+
+		var id = Process.GetCurrentProcess().Id;
+
+		this.proc = Process.Start(
+			new ProcessStartInfo
+			{
+				FileName = "dotnet-counters",
+				Arguments = $"monitor -p {id} --counters Sylvan.Bench"
+			}
+		);
 	}
 
-	[Benchmark]
+	[Benchmark(Baseline =true)]
 	public void Test1()
 	{
 		c1.Increment();
@@ -64,5 +83,11 @@ public class PerformanceCounterBench
 		{
 			c1.Increment();
 		}
+	}
+
+	[Benchmark]
+	public void Meter()
+	{
+		counter.Add(1);
 	}
 }

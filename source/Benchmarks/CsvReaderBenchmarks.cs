@@ -35,7 +35,7 @@ public class CsvReaderBenchmarks
 		}
 	}
 
-	[Benchmark]
+	//[Benchmark]
 	public void CsvHelper()
 	{
 		var tr = TestData.GetTextReader();
@@ -54,7 +54,7 @@ public class CsvReaderBenchmarks
 		}
 	}
 
-	[Benchmark]
+	//[Benchmark]
 	public void NotVBTextFieldParser()
 	{
 		var tr = TestData.GetTextReader();
@@ -66,7 +66,7 @@ public class CsvReaderBenchmarks
 		}
 	}
 
-	[Benchmark]
+	//[Benchmark]
 	public void FastCsvParser()
 	{
 		var s = TestData.GetUtf8Stream();
@@ -82,7 +82,7 @@ public class CsvReaderBenchmarks
 		}
 	}
 
-	[Benchmark]
+	//[Benchmark]
 	public void CsvBySteve()
 	{
 		var s = TestData.GetUtf8Stream();
@@ -97,7 +97,7 @@ public class CsvReaderBenchmarks
 		}
 	}
 
-	[Benchmark]
+	//[Benchmark]
 	public void Lumenworks()
 	{
 		var tr = TestData.GetTextReader();
@@ -105,7 +105,7 @@ public class CsvReaderBenchmarks
 		dr.ProcessStrings();
 	}
 
-	[Benchmark]
+	//[Benchmark]
 	public void NLightCsv()
 	{
 		var tr = TestData.GetTextReader();
@@ -113,7 +113,7 @@ public class CsvReaderBenchmarks
 		dr.ProcessStrings();
 	}
 
-	[Benchmark]
+	//[Benchmark]
 	public void VisualBasic()
 	{
 		var tr = TestData.GetTextReader();
@@ -131,7 +131,7 @@ public class CsvReaderBenchmarks
 		}
 	}
 
-	//[Benchmark] // most people won't be able to run this.
+	////[Benchmark] // most people won't be able to run this.
 	[SupportedOSPlatform("windows")]
 	public void OleDbCsv()
 	{
@@ -153,7 +153,7 @@ public class CsvReaderBenchmarks
 		dr.ProcessValues();
 	}
 
-	[Benchmark]
+	//[Benchmark]
 	public void FlatFilesCsv()
 	{
 		var tr = TestData.GetTextReader();
@@ -162,7 +162,7 @@ public class CsvReaderBenchmarks
 		dr.ProcessValues();
 	}
 
-	[Benchmark]
+	//[Benchmark]
 	public void FSharpData()
 	{
 		var tr = TestData.GetTextReader();
@@ -177,7 +177,7 @@ public class CsvReaderBenchmarks
 		}
 	}
 
-	[Benchmark]
+	//[Benchmark]
 	public void Fluent()
 	{
 		var tr = TestData.GetTextReader();
@@ -190,7 +190,7 @@ public class CsvReaderBenchmarks
 		}
 	}
 
-	[Benchmark]
+	//[Benchmark]
 	public void MgholamFastCSV()
 	{
 		string[] values = null;
@@ -212,7 +212,7 @@ public class CsvReaderBenchmarks
 			);
 	}
 
-	[Benchmark]
+	//[Benchmark]
 	public void CursivelyCsv()
 	{
 		var d = TestData.GetUtf8Array();
@@ -222,7 +222,7 @@ public class CsvReaderBenchmarks
 			.Process(proc);
 	}
 
-	[Benchmark]
+	//[Benchmark]
 	public void CtlData()
 	{
 		var s = TestData.GetTextReader();
@@ -245,7 +245,7 @@ public class CsvReaderBenchmarks
 		}
 	}
 
-	[Benchmark]
+	//[Benchmark]
 	public void NReco()
 	{
 		var tr = TestData.GetTextReader();
@@ -261,7 +261,7 @@ public class CsvReaderBenchmarks
 		}
 	}
 
-	[Benchmark]
+	//[Benchmark]
 	public void SoftCircuits()
 	{
 		var stream = TestData.GetUtf8Stream();
@@ -292,7 +292,7 @@ public class CsvReaderBenchmarks
 	[Benchmark]
 	public void Sylvan()
 	{
-		using var tr = TestData.GetTextReader();
+		using var tr = TestData.GetTextReader();	
 		using var reader = CsvDataReader.Create(tr, buffer);
 		var c = reader.FieldCount;
 		while (reader.Read())
@@ -304,13 +304,13 @@ public class CsvReaderBenchmarks
 		}
 	}
 
-	[Benchmark]
+	//[Benchmark]
 	public void RecordParser()
 	{
 		RecordParserParallel(1);
 	}
 
-	[Benchmark]
+	//[Benchmark]
 	public void RecordParserX4()
 	{
 		RecordParserParallel(4);

@@ -5,6 +5,7 @@ using NanoXLSX.LowLevel;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using OfficeOpenXml;
+using Sylvan.Data.Excel;
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
@@ -118,6 +119,25 @@ public class XlsxReaderBenchmarks
 
 		} while (reader.NextResult());
 	}
+
+	[Benchmark]
+	public void SylvanXlsxObj()
+	{
+		var o = new ExcelDataReaderOptions { Schema = ExcelSchema.Dynamic };
+		using var reader = Sylvan.Data.Excel.ExcelDataReader.Create(file, o);
+
+		do
+		{
+			var values = new object[reader.FieldCount];
+			while (reader.Read())
+			{
+				reader.GetValues(values);
+			}
+
+		} while (reader.NextResult());
+	}
+
+
 
 	// For some reason the ACE driver leaves some thread spinning in the process
 	// which alone is terrible, but also affects the results of subsequent benchmarks
