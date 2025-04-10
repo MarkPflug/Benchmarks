@@ -1,7 +1,5 @@
 ﻿using BenchmarkDotNet.Attributes;
-using CommandLine;
 using MiniExcelLibs;
-using NanoXLSX.LowLevel;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using OfficeOpenXml;
@@ -67,9 +65,9 @@ public class XlsxReaderBenchmarks
 			sheet.ReadNextInRow();
 			var priority = (string)sheet.Value;
 			sheet.ReadNextInRow();
-			var orderDate = (DateTime) sheet.Value;
+			var orderDate = (DateTime)sheet.Value;
 			sheet.ReadNextInRow();
-			var id = (int)(double) sheet.Value;
+			var id = (int)(double)sheet.Value;
 			sheet.ReadNextInRow();
 			var shipDate = (DateTime)sheet.Value;
 			sheet.ReadNextInRow();
@@ -166,12 +164,13 @@ public class XlsxReaderBenchmarks
 	}
 
 	[Benchmark]
-	public void XlsxHelperXlsx ()
+	public void XlsxHelperXlsx()
 	{
 		using var stream = File.OpenRead(file);
 		using (var book = XlsxHelper.XlsxReader.OpenWorkbook(stream))
 		{
-			foreach (var sheet in book.Worksheets) {
+			foreach (var sheet in book.Worksheets)
+			{
 				using var reader = sheet.WorksheetReader;
 				int i = 0;
 				foreach (var row in reader)
