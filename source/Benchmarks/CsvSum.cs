@@ -4,7 +4,6 @@ using RecordParser.Builders.Reader;
 using RecordParser.Extensions;
 using System.Data;
 using System.Globalization;
-using System.Text;
 
 namespace Benchmarks;
 
@@ -13,6 +12,9 @@ namespace Benchmarks;
 public class CsvSum
 {
 	const int BufferSize = 0x8000;
+
+	// Any test using this is cheating...
+	const int TotalProfitColumnIdx = 13;
 
 	readonly char[] buffer = new char[BufferSize];
 
@@ -45,7 +47,7 @@ public class CsvSum
 	decimal RecordParser(int dop)
 	{
 		var parser = new VariableLengthReaderBuilder<decimal>()
-			.Map(x => x, indexColumn: 13)
+			.Map(x => x, indexColumn: TotalProfitColumnIdx)
 			.Build(",", CultureInfo.InvariantCulture);
 
 		var options = new VariableLengthReaderOptions
@@ -71,15 +73,46 @@ public class CsvSum
 	}
 
 	[Benchmark]
+	public decimal FlameCsvSumByIndex()
+	{
+		using var t = TestData.GetTextReader();
+		var data = FlameCsv.CsvReader.Enumerate(t);
+		var a = 0m;
+		// I can't figure out how to get the index from the column name
+		// so this benchmark currently "cheats" with the hard-coded index
+		foreach (var record in data)
+		{
+			a += record.ParseField<decimal>(TotalProfitColumnIdx);
+		}
+		return a;
+	}
+
+	[Benchmark]
+	public decimal FlameCsvSumByName()
+	{
+		using var t = TestData.GetTextReader();
+		var data = FlameCsv.CsvReader.Enumerate(t);
+		var a = 0m;
+		
+		foreach (var record in data)
+		{
+			// using the name here appears to slow things down quite a bit
+			// but this benchmark doesn't "cheat".
+			a += record.ParseField<decimal>("Total Profit");
+		}
+		return a;
+	}
+
+	[Benchmark]
 	public decimal SepCsv()
 	{
 		using var t = TestData.GetTextReader();
-		using var r = Sep.Reader().From(t);
+		using var data = Sep.Reader().From(t);
 		var a = 0m;
-		foreach (var record in r)
+		foreach (var record in data)
 		{
-			var span = record["Total Profit"];
-			a += span.Parse<decimal>();
+			var col = record["Total Profit"];
+			a += col.Parse<decimal>();
 		}
 		return a;
 	}

@@ -83,6 +83,34 @@ public class CsvReaderBenchmarks
 	}
 
 	[Benchmark]
+	public void FlameCsvStream()
+	{
+		var s = TestData.GetUtf8Stream();
+		var csv = FlameCsv.CsvReader.Enumerate(s);
+		foreach(var record in csv)
+		{
+			for (int i = 0; i < record.FieldCount; i++)
+			{
+				var str = record.ParseField<string>(i);
+			}
+		}
+	}
+
+	[Benchmark]
+	public void FlameCsvText()
+	{
+		var s = TestData.GetTextReader();
+		var csv = FlameCsv.CsvReader.Enumerate(s);
+		foreach (var record in csv)
+		{
+			for (int i = 0; i < record.FieldCount; i++)
+			{
+				var str = record.ParseField<string>(i);
+			}
+		}
+	}
+
+	[Benchmark]
 	public void CsvBySteve()
 	{
 		var s = TestData.GetUtf8Stream();

@@ -25,7 +25,7 @@ public class CsvDataBinderBenchmarks
 {
 	public CsvDataBinderBenchmarks()
 	{
-		Dapper.SqlMapper.SetTypeMap(typeof(SalesRecord), new SalesRecordMap());		
+		Dapper.SqlMapper.SetTypeMap(typeof(SalesRecord), new SalesRecordMap());
 	}
 
 	[Benchmark]
@@ -47,6 +47,16 @@ public class CsvDataBinderBenchmarks
 		var csv = new CsvHelper.CsvReader(tr, new CsvConfiguration(CultureInfo.InvariantCulture));
 		var data = csv.GetRecords<SalesRecord>();
 
+		foreach (var record in data)
+		{
+		}
+	}
+
+	[Benchmark]
+	public void FlameCsvBinder()
+	{
+		var tr = TestData.GetTextReader();
+		var data = FlameCsv.CsvReader.Read<SalesRecord>(tr);
 		foreach (var record in data)
 		{
 		}
