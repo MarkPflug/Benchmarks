@@ -26,6 +26,7 @@
     <PackageReference Include="FlameCsv" Version="0.2.0" />
     <PackageReference Include="FlatFiles" Version="5.0.4" />
     <PackageReference Include="FluentCSV" Version="3.0.0" />
+    <PackageReference Include="HypeLab.IO.Excel" Version="1.0.5" />
     <PackageReference Include="Knapcode.FastCsvParser" Version="1.1.0" />
     <PackageReference Include="LargeXlsx" Version="1.12.0" />
     <PackageReference Include="LightweightExcelReader" Version="0.1.12" />

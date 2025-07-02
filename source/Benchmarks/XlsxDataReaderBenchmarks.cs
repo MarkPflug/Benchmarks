@@ -104,18 +104,33 @@ public class XlsxReaderBenchmarks
 	}
 
 	[Benchmark]
+	public void HypeLabXlsx_SheetData()
+	{
+		var data = HypeLab.IO.Excel.ExcelReader.ExtractSheetData(file);
+	}
+
+	[Benchmark]
+	public void HypeLabXlsx_BindT()
+	{
+		var data = HypeLab.IO.Excel.ExcelReader.ExtractSheetData(file);
+		var records = HypeLab.IO.Excel.ExcelParser.ParseTo<SalesRecord>(data);
+	}
+
+	[Benchmark]
 	public void SylvanXlsx()
 	{
 		var reader = Sylvan.Data.Excel.ExcelDataReader.Create(file);
-
-		do
+		while (reader.Read())
 		{
-			while (reader.Read())
-			{
-				reader.ProcessSalesRecord();
-			}
+			reader.ProcessSalesRecord();
+		}
+	}
 
-		} while (reader.NextResult());
+	[Benchmark]
+	public void SylvanXlsx_BindT()
+	{
+		var reader = Sylvan.Data.Excel.ExcelDataReader.Create(file);
+		var recs = reader.GetRecords<SalesRecord>().ToList();
 	}
 
 	[Benchmark]
