@@ -42,7 +42,8 @@
     <PackageReference Include="SoftCircuits.CsvParser" Version="4.6.0" />
     <PackageReference Include="Aspose.Cells" Version="25.11.0" />
     <PackageReference Include="ClosedXML" Version="0.105.0" />
-    <PackageReference Include="EPPlus" Version="8.2.1" />
+	<!-- don't upgrade EPPlus. Newer versions require licensing that I don't care to figure out -->
+    <PackageReference Include="EPPlus" Version="7.7.0" />
     <PackageReference Include="ExcelDataReader" Version="3.8.0" />
     <PackageReference Include="FastExcel" Version="3.0.13" />
     <PackageReference Include="NPOI" Version="2.7.5" />

@@ -142,26 +142,26 @@ public class CsvWriterBenchmarks
 			ArrayPool<char>.Shared.Return(x.buffer);
 	}
 
-	[Benchmark]
-	[Arguments(false, null)]
-	[Arguments(true, true)]
-	[Arguments(true, false)]
-	public void RecordParser_Native(bool parallel, bool? asOrdered)
-	{
-		using var tw = GetWriter();
-		// I don't see a way to use this library without a `T`, so can't use DbDataReader directly.
-		var items = GetRecords();
-		var csv = BuildWriter();
+	//[Benchmark]
+	//[Arguments(false, null)]
+	//[Arguments(true, true)]
+	//[Arguments(true, false)]
+	//public void RecordParser_Native(bool parallel, bool? asOrdered)
+	//{
+	//	using var tw = GetWriter();
+	//	// I don't see a way to use this library without a `T`, so can't use DbDataReader directly.
+	//	var items = GetRecords();
+	//	var csv = BuildWriter();
 
-		var options = new ParallelismOptions
-		{
-			Enabled = parallel,
-			MaxDegreeOfParallelism = 4,
-			EnsureOriginalOrdering = asOrdered ?? true
-		};
+	//	var options = new ParallelismOptions
+	//	{
+	//		Enabled = parallel,
+	//		MaxDegreeOfParallelism = 4,
+	//		EnsureOriginalOrdering = asOrdered ?? true
+	//	};
 
-		tw.WriteRecords(items, csv.TryFormat, options);
-	}
+	//	tw.WriteRecords(items, csv.TryFormat, options);
+	//}
 
 	[Benchmark]
 	public void CsvHelperSync()

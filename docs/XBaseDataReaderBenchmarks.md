@@ -6,7 +6,7 @@ This benchmark measures reading the contents of a [large shape file](https://prd
 
 | Method       | Mean     | Error     | Ratio | Allocated  | Alloc Ratio |
 |------------- |---------:|----------:|------:|-----------:|------------:|
-| Sylvan       | 2.105 ms | 0.0622 ms |  1.00 |  753.03 KB |        1.00 |
-| SylvanAsync  | 2.541 ms | 0.0460 ms |  1.21 | 1291.51 KB |        1.72 |
-| SylvanPooled | 2.886 ms | 0.0403 ms |  1.37 |  696.82 KB |        0.93 |
-| DbfData      | 7.850 ms | 0.1084 ms |  3.73 | 5955.18 KB |        7.91 |
+| Sylvan       | 2.032 ms | 0.3235 ms |  1.00 |  753.07 KB |        1.00 |
+| SylvanAsync  | 2.306 ms | 0.0691 ms |  1.14 | 1291.57 KB |        1.72 |
+| SylvanPooled | 2.649 ms | 0.0454 ms |  1.31 |  696.88 KB |        0.93 |
+| DbfData      | 5.956 ms | 0.1823 ms |  2.94 | 5955.13 KB |        7.91 |

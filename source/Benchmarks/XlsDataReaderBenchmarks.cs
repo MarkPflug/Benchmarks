@@ -55,7 +55,7 @@ public class XlsReaderBenchmarks
 	}
 
 	[Benchmark]
-	public void ExcelDataReaderSchemaXls()
+	public void ExcelDataReaderXls()
 	{
 		using var stream = File.OpenRead(file);
 		using (var reader = ExcelReaderFactory.CreateReader(stream))
@@ -71,22 +71,22 @@ public class XlsReaderBenchmarks
 		}
 	}
 
-	[Benchmark]
-	public void ExcelDataReaderStringXls()
-	{
-		using var stream = File.OpenRead(file);
-		using (var reader = ExcelReaderFactory.CreateReader(stream))
-		{
-			do
-			{
-				reader.Read();//skip headers
-				while (reader.Read())
-				{
-					reader.ProcessSalesRecordEDRString();
-				}
-			} while (reader.NextResult());
-		}
-	}
+	//[Benchmark]
+	//public void ExcelDataReaderStringXls()
+	//{
+	//	using var stream = File.OpenRead(file);
+	//	using (var reader = ExcelReaderFactory.CreateReader(stream))
+	//	{
+	//		do
+	//		{
+	//			reader.Read();//skip headers
+	//			while (reader.Read())
+	//			{
+	//				reader.ProcessSalesRecordEDRString();
+	//			}
+	//		} while (reader.NextResult());
+	//	}
+	//}
 
 	[Benchmark]
 	public void NpoiXls()

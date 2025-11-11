@@ -21,14 +21,14 @@ a selection for which benchmark set to run.
 
 ## Benchmark Environment
 
-Benchmark results were updated with latest package versions as of Nov 14, 2023, as well as updating to .NET 8.0.
+Benchmark results were updated with latest package versions as of Nov 11, 2025, as well as updating to .NET 10.0.
 
 The benchmark results reported here were run with the following configuration, unless otherwise noted:
 ```
-BenchmarkDotNet v0.13.10, Windows 10 (10.0.19045.3570/22H2/2022Update)
+BenchmarkDotNet v0.15.6, Windows 10 (10.0.19045.6456/22H2/2022Update)
 Intel Core i7-7700K CPU 4.20GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical cores
-.NET SDK 8.0.100
-  [Host] : .NET 8.0.0 (8.0.23.53103), X64 RyuJIT AVX2
+.NET SDK 10.0.100
+  [Host] : .NET 10.0.0 (10.0.0, 10.0.25.52411), X64 RyuJIT x86-64-v3
 ```
 
 ## [CSV Reader Benchmarks](docs/CsvReaderBenchmarks.md)

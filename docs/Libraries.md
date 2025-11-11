@@ -4,7 +4,7 @@ I've created benchmarks that cover many of the most common or highest performanc
 These are primarily third-party open source libraries, 
 but also includes some implementations from the BCL such as the Visual Basic TextFieldParser.
 
-All libraries are using the latest version as of 2021-10-30.
+All libraries are using the latest version as of 2025-11-11.
 
 - Naive, Broken
 
