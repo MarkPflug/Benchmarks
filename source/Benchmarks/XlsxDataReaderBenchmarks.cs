@@ -1,7 +1,6 @@
 ﻿using BenchmarkDotNet.Attributes;
+using ExcelPRIME;
 using MiniExcelLibs;
-using NPOI.SS.UserModel;
-using NPOI.XSSF.UserModel;
 using OfficeOpenXml;
 using Sylvan.Data.Excel;
 using System;
@@ -11,6 +10,7 @@ using System.IO;
 using System.IO.Compression;
 using System.IO.Packaging;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
 using System.Text;
 using System.Xml;
@@ -237,18 +237,18 @@ public class XlsxReaderBenchmarks
 	[Benchmark]
 	public void NpoiXlsx()
 	{
-		var wb = new XSSFWorkbook(file);
+		var wb = new NPOI.XSSF.UserModel.XSSFWorkbook(file);
 		var sheet = wb.GetSheetAt(0);
-		IRow headerRow = sheet.GetRow(0);
+		NPOI.SS.UserModel.IRow headerRow = sheet.GetRow(0);
 		int cellCount = headerRow.LastCellNum;
 		for (int j = 0; j < cellCount; j++)
 		{
-			ICell cell = headerRow.GetCell(j);
+			NPOI.SS.UserModel.ICell cell = headerRow.GetCell(j);
 			var str = cell.ToString();
 		}
 		for (int i = (sheet.FirstRowNum + 1); i <= sheet.LastRowNum; i++)
 		{
-			IRow row = sheet.GetRow(i);
+			NPOI.SS.UserModel.IRow row = sheet.GetRow(i);
 			if (row == null) continue;
 			if (row.Cells.All(d => d.CellType == NPOI.SS.UserModel.CellType.Blank)) continue;
 
@@ -390,6 +390,45 @@ public class XlsxReaderBenchmarks
 			var totalRevenue = (decimal)(double)d["Total Revenue"];
 			var totalCost = (decimal)(double)d["Total Cost"];
 			var totalProfit = (decimal)(double)d["Total Profit"];
+		}
+	}
+
+
+	[Benchmark]
+	public void PrimeXlsx()
+	{
+		using Excel_PRIME workbook = new();
+		workbook.Open(file);
+		foreach (string sheetName in workbook.SheetNames())
+		{
+			using var worksheet = workbook.GetSheet(sheetName);
+			int c = 0;
+			foreach (var row in worksheet!.GetRowData())
+			{
+				if (c++ == 0) // skip header row
+					continue;
+
+				if (row == null)
+				{   // Because this returns upto the dimension of the sheet Height
+					break;
+				}
+
+				var region = (string)row.GetCell(1).RawValue;
+				var country = (string)row.GetCell(2).RawValue;
+				var type = (string)row.GetCell(3).RawValue;
+				var channel = (string)row.GetCell(4).RawValue;
+				var priority = (string)row.GetCell(5).RawValue;
+				var orderDate = DateTime.FromOADate(int.Parse((string)row.GetCell(6).RawValue));
+				var id = int.Parse((string)row.GetCell(7).RawValue);
+				var shipDate = DateTime.FromOADate(int.Parse((string)row.GetCell(8).RawValue));
+				var unitsSold = int.Parse((string)row.GetCell(9).RawValue);
+				var unitPrice = decimal.Parse((string)row.GetCell(10).RawValue);
+				var unitCost = decimal.Parse((string)row.GetCell(11).RawValue);
+				var totalRevenue = decimal.Parse((string)row.GetCell(12).RawValue);
+				var totalCost = decimal.Parse((string)row.GetCell(13).RawValue);
+				var totalProfit = decimal.Parse((string)row.GetCell(14).RawValue);
+				row.Dispose();
+			}
 		}
 	}
 }

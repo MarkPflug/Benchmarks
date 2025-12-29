@@ -45,7 +45,7 @@ static class DataExtensions
 		}
 	}
 
-	public static long ProcessStrings(this Sylvan.Data.Csv.CsvDataReader reader)
+	public static long ProcessStrings(this DbDataReader reader)
 	{
 		long a = 0;
 		var c = reader.FieldCount;
@@ -173,7 +173,7 @@ static class DataExtensions
 		}
 	}
 
-	public static void ProcessSalesRecord(this Sylvan.Data.Excel.ExcelDataReader reader)
+	public static void ProcessSalesRecord(this DbDataReader reader)
 	{
 		var region = reader.GetString(0);
 		var country = reader.GetString(1);
@@ -191,7 +191,7 @@ static class DataExtensions
 		var totalProfit = reader.GetDecimal(13);
 	}
 
-	public static void ProcessSalesRecordByName(this Sylvan.Data.Excel.ExcelDataReader r)
+	public static void ProcessSalesRecordByName(this DbDataReader r)
 	{
 		var region = r.GetString(r.GetOrdinal("Region"));
 		var country = r.GetString(r.GetOrdinal("Country"));

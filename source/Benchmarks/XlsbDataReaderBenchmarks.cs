@@ -17,7 +17,7 @@ public class XlsbReaderBenchmarks
 		Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 	}
 
-	[Benchmark]
+	[Benchmark(Baseline = true)]
 	public void SylvanXlsb()
 	{
 		var reader = Sylvan.Data.Excel.ExcelDataReader.Create(file);

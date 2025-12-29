@@ -2,16 +2,16 @@
 
 These benchmarks write 65k "SalesRecord" objects to a CSV file.
 
-| Method                       | Mean      | Error    | StdDev   | Gen0       | Allocated   |
-|----------------------------- |----------:|---------:|---------:|-----------:|------------:|
-| RecordParser_Parallel_Manual |  36.23 ms | 0.619 ms | 0.161 ms |          - |   481.99 KB |
-| SylvanDataSync               |  37.77 ms | 0.517 ms | 0.134 ms |          - |   454.18 KB |
-| SylvanDataAsync              |  43.68 ms | 0.962 ms | 0.343 ms |          - |   519.74 KB |
-| NaiveBroken                  |  55.57 ms | 1.988 ms | 0.516 ms | 10222.2222 | 42239.54 KB |
-| NReco                        |  72.02 ms | 4.435 ms | 1.582 ms | 10142.8571 | 42240.15 KB |
-| NLightCsv                    |  76.46 ms | 1.299 ms | 0.337 ms | 10142.8571 | 42241.16 KB |
-| CsvHelperSync                |  93.53 ms | 1.507 ms | 0.233 ms | 13500.0000 | 55913.34 KB |
-| CsvHelperAsync               | 100.25 ms | 1.802 ms | 0.468 ms | 13600.0000 | 55984.28 KB |
-| SoftCircuitsWriter           | 115.19 ms | 1.937 ms | 0.691 ms | 20400.0000 | 83405.29 KB |
+| Method                       | Mean     | Error    | StdDev   | Gen0      | Allocated   |
+|----------------------------- |---------:|---------:|---------:|----------:|------------:|
+| RecordParser_Parallel_Manual | 19.80 ms | 0.602 ms | 0.215 ms |         - |    482.9 KB |
+| SylvanDataSync               | 24.18 ms | 0.384 ms | 0.059 ms |         - |   453.99 KB |
+| SylvanDataAsync              | 27.44 ms | 0.414 ms | 0.148 ms |         - |   519.49 KB |
+| NaiveBroken                  | 32.50 ms | 0.533 ms | 0.190 ms |  812.5000 |  42239.5 KB |
+| NReco                        | 41.21 ms | 0.650 ms | 0.101 ms |  846.1538 | 42239.89 KB |
+| NLightCsv                    | 44.58 ms | 0.551 ms | 0.143 ms |  833.3333 | 42241.59 KB |
+| CsvHelperSync                | 57.02 ms | 1.165 ms | 0.303 ms | 1111.1111 | 55911.09 KB |
+| CsvHelperAsync               | 59.16 ms | 0.809 ms | 0.210 ms | 1111.1111 |  55982.1 KB |
+| SoftCircuitsWriter           | 68.32 ms | 0.600 ms | 0.093 ms | 1625.0000 | 83404.51 KB |
 
 * Uses 4x parallelization.
