@@ -81,25 +81,7 @@ public class XlsxReaderBenchmarks
 			sheet.ReadNextInRow();
 			var totalCost = (decimal)(double)sheet.Value;
 			sheet.ReadNextInRow();
-			var totalProfit = (decimal)(double)sheet.Value;
-
-			var sr = new SalesRecord
-			{
-				Region = region,
-				Country = country,
-				ItemType = type,
-				SalesChannel = channel,
-				OrderPriority = priority,
-				OrderDate = orderDate,
-				OrderId = id,
-				ShipDate = shipDate,
-				UnitsSold = unitsSold,
-				UnitPrice = unitPrice,
-				UnitCost = unitCost,
-				TotalRevenue = totalRevenue,
-				TotalCost = totalCost,
-				TotalProfit = totalProfit,
-			};
+			var totalProfit = (decimal)(double)sheet.Value;			
 		}
 	}
 
