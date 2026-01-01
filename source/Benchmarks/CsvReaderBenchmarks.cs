@@ -378,4 +378,21 @@ public class CsvReaderBenchmarks
 
 		foreach (var record in records) ;
 	}
+
+	[Benchmark]
+	public void FourLambda()
+	{
+		var stream = TestData.GetUtf8Stream();
+		using (var r = new FourLambda.Csv.CsvReaderUtf8(stream))
+		{
+			r.ReadNext(); // skip headers
+			while (r.ReadNext())
+			{
+				for (int i = 0; i < r.FieldCount; i++)
+				{
+					var str = r.GetString(i);
+				}
+			}
+		}
+	}
 }

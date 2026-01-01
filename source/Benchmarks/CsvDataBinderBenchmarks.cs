@@ -249,6 +249,36 @@ public class CsvDataBinderBenchmarks
 			}
 		}
 	}
+
+	[Benchmark]
+	public void FourLambdaManual()
+	{
+		var stream = TestData.GetUtf8Stream();
+		using (var r = new FourLambda.Csv.CsvReaderUtf8(stream))
+		{
+			r.ReadNext();// skip headers
+			while (r.ReadNext())
+			{
+				var rec = new SalesRecord
+				{
+					Region = r.GetString(0),
+					Country = r.GetString(1),
+					ItemType = r.GetString(2),
+					SalesChannel = r.GetString(3),
+					OrderPriority = r.GetString(4),
+					OrderDate = r.GetDateTime(5),
+					OrderId = r.GetInt32(6),
+					ShipDate = r.GetDateTime(7),
+					UnitsSold = r.GetInt32(8),
+					UnitPrice = r.GetDecimal(9),
+					UnitCost = r.GetDecimal(10),
+					TotalRevenue = r.GetDecimal(11),
+					TotalCost = r.GetDecimal(12),
+					TotalProfit = r.GetDecimal(13)
+				};
+			}
+		}
+	}
 }
 
 #region Dapper support

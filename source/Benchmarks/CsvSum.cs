@@ -37,7 +37,7 @@ public class CsvSum
 	{
 		return RecordParser(4);
 	}
-	
+
 	[Benchmark]
 	public decimal RecordParser()
 	{
@@ -54,14 +54,14 @@ public class CsvSum
 		{
 			HasHeader = true,
 			ContainsQuotedFields = false,
-			ParallelismOptions = new ()
+			ParallelismOptions = new()
 			{
 				Enabled = dop > 1,
 				MaxDegreeOfParallelism = dop,
 				EnsureOriginalOrdering = false
 			}
 		};
-		
+
 		var a = 0m;
 		using var tr = TestData.GetTextReader();
 		foreach (var profit in tr.ReadRecords(parser, options))
@@ -93,7 +93,7 @@ public class CsvSum
 		using var t = TestData.GetTextReader();
 		var data = FlameCsv.CsvReader.Enumerate(t);
 		var a = 0m;
-		
+
 		foreach (var record in data)
 		{
 			// using the name here appears to slow things down quite a bit
@@ -182,6 +182,20 @@ public class CsvSum
 		{
 			var dec = decimal.Parse(r[idx]);
 			a += dec;
+		}
+		return a;
+	}
+
+	[Benchmark]
+	public decimal FourLambdaCsv()
+	{
+		using var t = TestData.GetUtf8Stream();
+		using var data = new FourLambda.Csv.CsvReaderUtf8(t);
+		var a = 0m;
+		data.ReadNext();// skip headers
+		while (data.ReadNext())
+		{
+			a += data.GetDecimal(TotalProfitColumnIdx);
 		}
 		return a;
 	}
