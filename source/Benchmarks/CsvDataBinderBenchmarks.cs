@@ -251,32 +251,58 @@ public class CsvDataBinderBenchmarks
 	}
 
 	[Benchmark]
-	public void FourLambdaManual()
+	public void FourLambdaUtf8Manual()
 	{
 		var stream = TestData.GetUtf8Stream();
-		using (var r = new FourLambda.Csv.CsvReaderUtf8(stream))
+		using var r = new FourLambda.Csv.CsvReaderUtf8(stream, true);
+
+		while (r.ReadNext())
 		{
-			r.ReadNext();// skip headers
-			while (r.ReadNext())
+			var rec = new SalesRecord
 			{
-				var rec = new SalesRecord
-				{
-					Region = r.GetString(0),
-					Country = r.GetString(1),
-					ItemType = r.GetString(2),
-					SalesChannel = r.GetString(3),
-					OrderPriority = r.GetString(4),
-					OrderDate = r.GetDateTime(5),
-					OrderId = r.GetInt32(6),
-					ShipDate = r.GetDateTime(7),
-					UnitsSold = r.GetInt32(8),
-					UnitPrice = r.GetDecimal(9),
-					UnitCost = r.GetDecimal(10),
-					TotalRevenue = r.GetDecimal(11),
-					TotalCost = r.GetDecimal(12),
-					TotalProfit = r.GetDecimal(13)
-				};
-			}
+				Region = r.GetString(0),
+				Country = r.GetString(1),
+				ItemType = r.GetString(2),
+				SalesChannel = r.GetString(3),
+				OrderPriority = r.GetString(4),
+				OrderDate = r.GetDateTime(5),
+				OrderId = r.GetInt32(6),
+				ShipDate = r.GetDateTime(7),
+				UnitsSold = r.GetInt32(8),
+				UnitPrice = r.GetDecimal(9),
+				UnitCost = r.GetDecimal(10),
+				TotalRevenue = r.GetDecimal(11),
+				TotalCost = r.GetDecimal(12),
+				TotalProfit = r.GetDecimal(13)
+			};
+		}
+	}
+
+	[Benchmark]
+	public void FourLambdaUtf16Manual()
+	{
+		var stream = TestData.GetTextReader();
+		using var r = new FourLambda.Csv.CsvReaderUtf16(stream, true);
+
+		while (r.ReadNext())
+		{
+			var rec = new SalesRecord
+			{
+				Region = r.GetString(0),
+				Country = r.GetString(1),
+				ItemType = r.GetString(2),
+				SalesChannel = r.GetString(3),
+				OrderPriority = r.GetString(4),
+				OrderDate = r.GetDateTime(5),
+				OrderId = r.GetInt32(6),
+				ShipDate = r.GetDateTime(7),
+				UnitsSold = r.GetInt32(8),
+				UnitPrice = r.GetDecimal(9),
+				UnitCost = r.GetDecimal(10),
+				TotalRevenue = r.GetDecimal(11),
+				TotalCost = r.GetDecimal(12),
+				TotalProfit = r.GetDecimal(13)
+			};
 		}
 	}
 }

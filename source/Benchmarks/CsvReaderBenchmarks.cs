@@ -380,18 +380,35 @@ public class CsvReaderBenchmarks
 	}
 
 	[Benchmark]
-	public void FourLambda()
+	public void FourLambdaUtf8()
 	{
-		var stream = TestData.GetUtf8Stream();
-		using (var r = new FourLambda.Csv.CsvReaderUtf8(stream))
+		using var stream = TestData.GetUtf8Stream();
+		using var r = new FourLambda.Csv.CsvReaderUtf8(stream);
+
+		r.ReadNext(); // skip headers
+
+		while (r.ReadNext())
 		{
-			r.ReadNext(); // skip headers
-			while (r.ReadNext())
+			for (int i = 0; i < r.FieldCount; i++)
 			{
-				for (int i = 0; i < r.FieldCount; i++)
-				{
-					var str = r.GetString(i);
-				}
+				var str = r.GetString(i);
+			}
+		}
+	}
+
+	[Benchmark]
+	public void FourLambdaUtf16()
+	{
+		using var reader = TestData.GetTextReader();
+		using var r = new FourLambda.Csv.CsvReaderUtf16(reader);
+
+		r.ReadNext(); // skip headers
+
+		while (r.ReadNext())
+		{
+			for (int i = 0; i < r.FieldCount; i++)
+			{
+				var str = r.GetString(i);
 			}
 		}
 	}
