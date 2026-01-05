@@ -187,15 +187,35 @@ public class CsvSum
 	}
 
 	[Benchmark]
-	public decimal FourLambdaCsv()
+	public decimal FourLambdaUtf8()
 	{
 		using var t = TestData.GetUtf8Stream();
-		using var data = new FourLambda.Csv.CsvReaderUtf8(t);
+		using var data = new FourLambda.Csv.CsvReaderUtf8(t, true);
+
+		var index = data.Headers["Total Profit"];
+
 		var a = 0m;
-		data.ReadNext();// skip headers
+
 		while (data.ReadNext())
 		{
-			a += data.GetDecimal(TotalProfitColumnIdx);
+			a += data.GetDecimal(index);
+		}
+		return a;
+	}
+
+	[Benchmark]
+	public decimal FourLambdaUtf16()
+	{
+		using var t = TestData.GetTextReader();
+		using var data = new FourLambda.Csv.CsvReaderUtf16(t, true);
+
+		var index = data.Headers["Total Profit"];
+
+		var a = 0m;
+
+		while (data.ReadNext())
+		{
+			a += data.GetDecimal(index);
 		}
 		return a;
 	}
