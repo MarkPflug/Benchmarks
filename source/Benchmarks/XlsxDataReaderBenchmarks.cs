@@ -383,31 +383,51 @@ public class XlsxReaderBenchmarks
 		foreach (string sheetName in workbook.SheetNames())
 		{
 			using var worksheet = workbook.GetSheet(sheetName);
-			int c = 0;
-			foreach (var row in worksheet!.GetRowData())
+			foreach (var row in worksheet!.GetRowData(1, RowCellGet.PreGet))// skip header row
 			{
-				if (c++ == 0) // skip header row
-					continue;
-
 				if (row == null)
 				{   // Because this returns upto the dimension of the sheet Height
 					break;
 				}
 
-				var region = (string)row.GetCell(1).RawValue;
-				var country = (string)row.GetCell(2).RawValue;
-				var type = (string)row.GetCell(3).RawValue;
-				var channel = (string)row.GetCell(4).RawValue;
-				var priority = (string)row.GetCell(5).RawValue;
-				var orderDate = DateTime.FromOADate(int.Parse((string)row.GetCell(6).RawValue));
-				var id = int.Parse((string)row.GetCell(7).RawValue);
-				var shipDate = DateTime.FromOADate(int.Parse((string)row.GetCell(8).RawValue));
-				var unitsSold = int.Parse((string)row.GetCell(9).RawValue);
-				var unitPrice = decimal.Parse((string)row.GetCell(10).RawValue);
-				var unitCost = decimal.Parse((string)row.GetCell(11).RawValue);
-				var totalRevenue = decimal.Parse((string)row.GetCell(12).RawValue);
-				var totalCost = decimal.Parse((string)row.GetCell(13).RawValue);
-				var totalProfit = decimal.Parse((string)row.GetCell(14).RawValue);
+				var cells = row.GetAllCells();
+				var region = cells[0].CellValue.ToString();
+				var country = cells[1].CellValue.ToString();
+				var type = cells[2].CellValue.ToString();
+				var channel = cells[3].CellValue.ToString();
+				var priority = cells[4].CellValue.ToString();
+				var orderDate = cells[5].CellValue.AsDateTime;
+				var id = cells[6].CellValue.AsInt32;
+				var shipDate = cells[7].CellValue.AsDateTime;
+				var unitsSold = cells[8].CellValue.AsInt32;
+				var unitPrice = cells[9].CellValue.AsDecimal;
+				var unitCost = cells[10].CellValue.AsDecimal;
+				var totalRevenue = cells[11].CellValue.AsDecimal;
+				var totalCost = cells[12].CellValue.AsDecimal;
+				var totalProfit = cells[13].CellValue.AsDecimal;
+				row.Dispose();
+			}
+		}
+	}
+
+	[Benchmark]
+	public void PrimeXlsxObj()
+	{
+		using Excel_PRIME workbook = new();
+		workbook.Open(file);
+		foreach (string sheetName in workbook.SheetNames())
+		{
+			using var worksheet = workbook.GetSheet(sheetName);
+			var values = new object?[worksheet.SheetDimensions.Width];
+			foreach (var row in worksheet!.GetRowData(1, RowCellGet.PreGet)) // skip header row
+			{
+				if (row == null)
+				{
+					// Because this returns upto the dimension of the sheet Height
+					break;
+				}
+
+				row.CopyBoxedToArray(values);
 				row.Dispose();
 			}
 		}

@@ -9,31 +9,34 @@ It represents the minimal work that must be done assuming those classes are used
 
 | Method                | Mean       | Error    | Ratio | Allocated     | Alloc Ratio |
 |---------------------- |-----------:|---------:|------:|--------------:|------------:|
-| Baseline              |   118.2 ms |  1.43 ms |  1.00 |     246.69 KB |        1.00 |
-| SylvanXlsx            |   165.0 ms |  1.09 ms |  1.40 |     665.85 KB |        2.70 |
-| SylvanXlsx_BindT      |   168.7 ms |  3.35 ms |  1.43 |    11931.1 KB |       48.37 |
-| SylvanXlsxObj         |   173.2 ms |  3.36 ms |  1.47 |   14474.45 KB |       58.68 |
-| PrimeXlsx             |   184.8 ms |  2.26 ms |  1.56 |   98710.93 KB |      400.15 |
-| XlsxHelperXlsx        |   205.6 ms |  3.94 ms |  1.74 |   93306.37 KB |      378.24 |
-| HypeLabXlsx_SheetData |   223.6 ms |  8.34 ms |  1.89 |   85184.28 KB |      345.31 |
-| HypeLabXlsx_BindT     |   228.3 ms |  5.74 ms |  1.93 |   95985.43 KB |      389.10 |
-| AsposeXlsx            |   308.7 ms | 13.54 ms |  2.61 |  209869.41 KB |      850.75 |
-| Lightweight           |   416.4 ms | 32.16 ms |  3.52 |  167947.38 KB |      680.81 |
-| MiniExcelXlsx         |   416.8 ms |  7.56 ms |  3.53 |  648459.31 KB |    2,628.67 |
-| ExcelDataReaderXlsx   |   450.6 ms |  3.89 ms |  3.81 |   267931.8 KB |    1,086.12 |
-| EPPlusXlsx            |   668.7 ms |  7.15 ms |  5.66 |   417820.7 KB |    1,693.72 |
-| ClosedXmlXlsx         | 1,067.8 ms | 40.01 ms |  9.04 |  671747.17 KB |    2,723.07 |
-| FastExcelXlsx         | 1,140.7 ms | 27.91 ms |  9.65 | 1189998.52 KB |    4,823.91 |
-| OpenXmlXlsx           | 1,375.4 ms | 98.78 ms | 11.64 |  502385.81 KB |    2,036.53 |
-| NpoiXlsx              | 1,766.2 ms | 58.83 ms | 14.94 | 1050100.94 KB |    4,256.81 |
+| Baseline              |   119.1 ms |  1.46 ms |  1.00 |     246.69 KB |        1.00 |
+| SylvanXlsx            |   167.9 ms |  3.48 ms |  1.41 |     666.42 KB |        2.70 |
+| SylvanXlsx_BindT      |   170.3 ms |  2.94 ms |  1.43 |   11931.32 KB |       48.37 |
+| SylvanXlsxObj         |   174.9 ms |  2.53 ms |  1.47 |   14474.54 KB |       58.68 |
+| XlsxHelperXlsx        |   208.6 ms |  3.69 ms |  1.75 |   93306.52 KB |      378.24 |
+| PrimeXlsxObj          |   222.7 ms |  3.65 ms |  1.87 |   83860.64 KB |      339.95 |
+| HypeLabXlsx_SheetData |   231.1 ms |  6.04 ms |  1.94 |   85184.77 KB |      345.31 |
+| HypeLabXlsx_BindT     |   236.4 ms |  7.22 ms |  1.98 |    95985.4 KB |      389.10 |
+| PrimeXlsx             |   245.1 ms |  3.37 ms |  2.06 |   85396.79 KB |      346.17 |
+| AsposeXlsx            |   318.8 ms | 23.87 ms |  2.68 |  209869.11 KB |      850.75 |
+| MiniExcelXlsx         |   425.4 ms |  6.70 ms |  3.57 |  648459.31 KB |    2,628.67 |
+| Lightweight           |   441.9 ms | 24.47 ms |  3.71 |  167948.33 KB |      680.81 |
+| ExcelDataReaderXlsx   |   453.1 ms |  8.84 ms |  3.80 |  267931.52 KB |    1,086.12 |
+| EPPlusXlsx            |   670.9 ms | 11.61 ms |  5.63 |  417822.21 KB |    1,693.73 |
+| ClosedXmlXlsx         | 1,076.3 ms | 21.00 ms |  9.03 |  671740.68 KB |    2,723.04 |
+| FastExcelXlsx         | 1,160.5 ms | 15.23 ms |  9.74 | 1189997.51 KB |    4,823.91 |
+| OpenXmlXlsx           | 1,427.0 ms | 85.97 ms | 11.98 |  502384.91 KB |    2,036.52 |
+| NpoiXlsx              | 1,791.9 ms | 32.25 ms | 15.04 | 1050100.93 KB |    4,256.81 |
 ## Excel .xlsb Benchmarks
 
 | Method              | Mean        | Error     | Ratio  | Allocated    | Alloc Ratio |
 |-------------------- |------------:|----------:|-------:|-------------:|------------:|
-| SylvanXlsb          |    24.89 ms |  0.470 ms |   1.00 |    359.12 KB |        1.00 |
-| ExcelDataReaderXlsb |   136.58 ms |  1.263 ms |   5.49 | 150657.41 KB |      419.52 |
-| AsposeXlsb          |   221.08 ms | 17.821 ms |   8.88 | 247967.76 KB |      690.49 |
-| AceOleDbXlsb        | 3,520.58 ms | 61.037 ms | 141.43 |  27035.63 KB |       75.28 |
+| SylvanXlsb          |    25.15 ms |  0.451 ms |   1.00 |    359.12 KB |        1.00 |
+| PrimeXlsbObj        |    59.06 ms |  0.908 ms |   2.35 | 143663.32 KB |      400.05 |
+| PrimeXlsb           |    61.42 ms |  1.108 ms |   2.44 | 131375.32 KB |      365.83 |
+| ExcelDataReaderXlsb |   140.21 ms |  4.392 ms |   5.58 | 150655.71 KB |      419.52 |
+| AsposeXlsb          |   226.85 ms | 19.297 ms |   9.02 | 247967.74 KB |      690.49 |
+| AceOleDbXlsb        | 3,651.75 ms | 42.592 ms | 145.21 |   27032.4 KB |       75.27 |
 
 ## Excel .xls Benchmarks
 

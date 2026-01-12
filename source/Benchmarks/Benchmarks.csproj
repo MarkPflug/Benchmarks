@@ -23,7 +23,7 @@
 
 		<PackageReference Include="DocumentFormat.OpenXml" Version="3.3.0" />
 
-		<PackageReference Include="Excel-PRIME" Version="2.2512.14" />
+		<PackageReference Include="Excel-PRIME" Version="3.2601.11" />
 		<PackageReference Include="FastCsvParser" Version="1.1.1" />
 		<PackageReference Include="FlameCsv" Version="0.3.1" />
 		<PackageReference Include="FlatFiles" Version="5.0.4" />
@@ -64,8 +64,7 @@
 		<PackageReference Include="TinyCsvParser" Version="2.7.1" />
 		<PackageReference Include="XlsxHelper" Version="2.1.0" />
 
-	</ItemGroup>
-
+	</ItemGroup>	
 
 	<ItemGroup>
 		<None Update="Data/**/*">
