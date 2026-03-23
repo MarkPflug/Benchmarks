@@ -169,7 +169,7 @@ public class ExcelWriterBenchmarks
 	void WriteNPOI(DbDataReader reader)
 	{
 		using var ns = GetStream();
-		using var workbook = new SXSSFWorkbook(1000);
+		using var workbook = new SXSSFWorkbook();
 		var excelSheet = workbook.CreateSheet("Sheet1");
 
 		var columns = new List<string>();
