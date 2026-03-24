@@ -4,7 +4,7 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using MiniExcelLibs;
 using NPOI.SS.UserModel;
-using NPOI.XSSF.UserModel;
+using NPOI.XSSF.Streaming;
 using OfficeOpenXml;
 using Sylvan.Data.Excel;
 using System;
@@ -169,8 +169,8 @@ public class ExcelWriterBenchmarks
 	void WriteNPOI(DbDataReader reader)
 	{
 		using var ns = GetStream();
-		IWorkbook workbook = new XSSFWorkbook();
-		ISheet excelSheet = workbook.CreateSheet("Sheet1");
+		using var workbook = new SXSSFWorkbook();
+		var excelSheet = workbook.CreateSheet("Sheet1");
 
 		var columns = new List<string>();
 		IRow row = excelSheet.CreateRow(0);
@@ -218,8 +218,7 @@ public class ExcelWriterBenchmarks
 
 			rowIndex++;
 		}
-		workbook.Write(ns, false);
-		workbook.Close();
+		workbook.Write(ns);
 	}
 
 	[Benchmark]
