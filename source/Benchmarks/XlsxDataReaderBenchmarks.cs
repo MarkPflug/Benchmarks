@@ -13,6 +13,7 @@ using System.Linq;
 using System.Runtime.Versioning;
 using System.Text;
 using System.Xml;
+using NPOI.SS.UserModel;
 
 namespace Benchmarks;
 
@@ -218,32 +219,15 @@ public class XlsxReaderBenchmarks
 	[Benchmark]
 	public void NpoiXlsx()
 	{
-		var wb = new NPOI.XSSF.UserModel.XSSFWorkbook(file);
+		using var wb = new NPOI.XSSF.UserModel.XSSFWorkbook(file, true);
 		var sheet = wb.GetSheetAt(0);
-		NPOI.SS.UserModel.IRow headerRow = sheet.GetRow(0);
-		int cellCount = headerRow.LastCellNum;
-		for (int j = 0; j < cellCount; j++)
+		//only iterate existing rows
+		foreach (var row in sheet)
 		{
-			NPOI.SS.UserModel.ICell cell = headerRow.GetCell(j);
-			var str = cell.ToString();
-		}
-		for (int i = (sheet.FirstRowNum + 1); i <= sheet.LastRowNum; i++)
-		{
-			NPOI.SS.UserModel.IRow row = sheet.GetRow(i);
-			if (row == null) continue;
-			if (row.Cells.All(d => d.CellType == NPOI.SS.UserModel.CellType.Blank)) continue;
-
-
-			for (int j = row.FirstCellNum; j < cellCount; j++)
+			// only iterate existing cells
+			foreach (var cell in row)
 			{
-				var cell = row.GetCell(j);
-				if (cell == null || cell.CellType == NPOI.SS.UserModel.CellType.Blank)
-					continue;
-				try
-				{
-					var str = cell?.ToString();
-				}
-				catch (Exception) { }
+				var str = cell.ToString();
 			}
 		}
 	}

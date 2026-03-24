@@ -92,7 +92,7 @@ public class XlsReaderBenchmarks
 	public void NpoiXls()
 	{
 		using var stream = File.OpenRead(file);
-		var wb = new HSSFWorkbook(stream);
+		using var wb = new HSSFWorkbook(stream);
 		for (int sheetIdx = 0; sheetIdx < wb.NumberOfSheets; sheetIdx++)
 		{
 			var sheet = wb.GetSheetAt(sheetIdx);
