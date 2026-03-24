@@ -24,6 +24,8 @@
 		<PackageReference Include="DocumentFormat.OpenXml" Version="3.3.0" />
 
 		<PackageReference Include="Excel-PRIME" Version="3.2601.11" />
+
+		<PackageReference Include="ExcelMapper" Version="6.0.615" />
 		<PackageReference Include="FastCsvParser" Version="1.1.1" />
 		<PackageReference Include="FlameCsv" Version="0.3.1" />
 		<PackageReference Include="FlatFiles" Version="5.0.4" />
@@ -38,6 +40,7 @@
 		<PackageReference Include="MiniExcel" Version="1.42.0" />
 		<PackageReference Include="NanoXLSX" Version="2.6.7" />
 		<PackageReference Include="NLight" Version="2.1.1" />
+		<PackageReference Include="Npoi.Mapper" Version="6.2.2" />
 		<PackageReference Include="NReco.Csv" Version="1.0.3" />
 		<PackageReference Include="FSharp.Data" Version="6.6.0" />
 		<PackageReference Include="Microsoft.VisualBasic" Version="10.3.0" />

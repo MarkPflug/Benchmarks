@@ -1,6 +1,8 @@
 ﻿using BenchmarkDotNet.Attributes;
 using MiniExcelLibs;
 using System.IO;
+using Ganss.Excel;
+using Npoi.Mapper;
 
 namespace Benchmarks;
 
@@ -24,6 +26,25 @@ public class ExcelBinderBenchmarks
 	{
 		using var s = File.OpenRead(file);
 		foreach(var rec in s.Query<SalesRecord>())
+		{
+		}
+	}
+
+	[Benchmark(Description =  "ExcelMapperXlsx (based on NPOI)")]
+	public void ExcelMapperXlsx()
+	{
+		var excel = new ExcelMapper(file);
+		var salesRecords = excel.Fetch<SalesRecord>();
+		foreach(var rec in salesRecords)
+		{
+		}
+	}
+	[Benchmark(Description =  "NPOI.MapperXlsx (based on NPOI)")]
+	public void NPOIMapperXlsx()
+	{
+		var mapper = new Mapper(file);
+		var salesRecords = mapper.Take<SalesRecord>();
+		foreach(var rec in salesRecords)
 		{
 		}
 	}
