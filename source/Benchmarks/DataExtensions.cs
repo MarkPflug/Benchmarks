@@ -3,8 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Threading.Tasks;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Benchmarks;
 
@@ -262,5 +262,35 @@ static class DataExtensions
 		var totalRevenue = (decimal)row[11].DoubleValue;
 		var totalCost = (decimal)row[12].DoubleValue;
 		var totalProfit = (decimal)row[13].DoubleValue;
+	}
+
+	public static void ProcessSalesDataNpoi(this NPOI.SS.UserModel.IWorkbook wb)
+	{
+		var sheet = wb.GetSheetAt(0);
+
+		// skip the first header row.
+		bool first = true;
+		foreach (var row in sheet)
+		{
+			if (first)
+			{
+				first = false;
+				continue;
+			}
+			var region = row.Cells[0].StringCellValue;
+			var country = row.Cells[1].StringCellValue;
+			var type = row.Cells[2].StringCellValue;
+			var channel = row.Cells[3].StringCellValue;
+			var priority = row.Cells[4].StringCellValue;
+			var orderDate = row.Cells[5].DateCellValue;
+			var id = (int)row.Cells[6].NumericCellValue;
+			var shipDate = row.Cells[7].DateCellValue;
+			var unitsSold = (int)row.Cells[8].NumericCellValue;
+			var unitPrice = (decimal)row.Cells[9].NumericCellValue;
+			var unitCost = (decimal)row.Cells[10].NumericCellValue;
+			var totalRevenue = (decimal)row.Cells[11].NumericCellValue;
+			var totalCost = (decimal)row.Cells[12].NumericCellValue;
+			var totalProfit = (decimal)row.Cells[13].NumericCellValue;
+		}
 	}
 }
