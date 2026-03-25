@@ -245,4 +245,22 @@ static class DataExtensions
 		var totalCost = reader.GetString(12);
 		var totalProfit = reader.GetString(13);
 	}
+
+	public static void ProcessAsposeRecord(this Aspose.Cells.Row row)
+	{
+		var region = row[0].StringValue;
+		var country = row[1].StringValue;
+		var type = row[2].StringValue;
+		var channel = row[3].StringValue;
+		var priority = row[4].StringValue;
+		var orderDate = row[5].DateTimeValue;
+		var id = row[6].IntValue;
+		var shipDate = row[7].DateTimeValue;
+		var unitsSold = row[8].IntValue;
+		var unitPrice = (decimal)row[9].DoubleValue;
+		var unitCost = (decimal)row[10].DoubleValue;
+		var totalRevenue = (decimal)row[11].DoubleValue;
+		var totalCost = (decimal)row[12].DoubleValue;
+		var totalProfit = (decimal)row[13].DoubleValue;
+	}
 }

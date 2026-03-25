@@ -1,10 +1,6 @@
-﻿using Aspose.Cells;
-using BenchmarkDotNet.Attributes;
+﻿using BenchmarkDotNet.Attributes;
 using ExcelDataReader;
 using NPOI.HSSF.UserModel;
-using NPOI.SS.UserModel;
-using Sylvan.Data.Excel;
-using System;
 using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
@@ -24,27 +20,13 @@ public class XlsReaderBenchmarks
 	}
 
 	[Benchmark(Baseline = true)]
-	public void SylvanStringXls()
+	public void SylvanXls()
 	{
 		var reader = Sylvan.Data.Excel.ExcelDataReader.Create(file);
-		do
+		while (reader.Read())
 		{
-			while (reader.Read())
-			{
-				reader.Process();
-			}
-		} while (reader.NextResult());
-	}
-
-	[Benchmark]
-	public void SylvanSchemaXls()
-	{
-		var opts = new ExcelDataReaderOptions { Schema = new ExcelSchema(true, TestData.GetSchema()) };
-		var reader = Sylvan.Data.Excel.ExcelDataReader.Create(file, opts);
-		do
-		{
-			reader.Process();
-		} while (reader.NextResult());
+			reader.ProcessSalesRecord();
+		}
 	}
 
 	[Benchmark]
@@ -60,67 +42,44 @@ public class XlsReaderBenchmarks
 		using var stream = File.OpenRead(file);
 		using (var reader = ExcelReaderFactory.CreateReader(stream))
 		{
-			do
+			reader.Read();//skip headers
+			while (reader.Read())
 			{
-				reader.Read();//skip headers
-				while (reader.Read())
-				{
-					reader.ProcessSalesRecordEDR();
-				}
-			} while (reader.NextResult());
+				reader.ProcessSalesRecordEDR();
+			}
 		}
 	}
-
-	//[Benchmark]
-	//public void ExcelDataReaderStringXls()
-	//{
-	//	using var stream = File.OpenRead(file);
-	//	using (var reader = ExcelReaderFactory.CreateReader(stream))
-	//	{
-	//		do
-	//		{
-	//			reader.Read();//skip headers
-	//			while (reader.Read())
-	//			{
-	//				reader.ProcessSalesRecordEDRString();
-	//			}
-	//		} while (reader.NextResult());
-	//	}
-	//}
 
 	[Benchmark]
 	public void NpoiXls()
 	{
 		using var stream = File.OpenRead(file);
 		using var wb = new HSSFWorkbook(stream);
-		for (int sheetIdx = 0; sheetIdx < wb.NumberOfSheets; sheetIdx++)
+		var sheet = wb.GetSheetAt(0);
+
+		// skip the first header row.
+		bool first = true;
+		foreach (var row in sheet)
 		{
-			var sheet = wb.GetSheetAt(sheetIdx);
-			IRow headerRow = sheet.GetRow(0);
-			if (headerRow == null) continue;
-			int cellCount = headerRow.LastCellNum;
-			for (int j = 0; j < cellCount; j++)
+			if (first)
 			{
-				ICell cell = headerRow.GetCell(j);
-				var str = cell.ToString();
+				first = false;
+				continue;
 			}
-			for (int i = (sheet.FirstRowNum + 1); i <= sheet.LastRowNum; i++)
-			{
-				IRow row = sheet.GetRow(i);
-				if (row == null) continue;
-				if (row.Cells.All(d => d.CellType == CellType.Blank)) continue;
-				for (int j = row.FirstCellNum; j < cellCount; j++)
-				{
-					var cell = row.GetCell(j);
-					if (cell == null || cell.CellType == CellType.Blank)
-						continue;
-					try
-					{
-						var str = cell?.ToString();
-					}
-					catch (Exception) { }
-				}
-			}
+			var region = row.Cells[0].StringCellValue;
+			var country = row.Cells[1].StringCellValue;
+			var type = row.Cells[2].StringCellValue;
+			var channel = row.Cells[3].StringCellValue;
+			var priority = row.Cells[4].StringCellValue;
+			var orderDate = row.Cells[5].DateCellValue;
+			var id = (int)row.Cells[6].NumericCellValue;
+			var shipDate = row.Cells[7].DateCellValue;
+			var unitsSold = (int)row.Cells[8].NumericCellValue;
+			var unitPrice = (decimal)row.Cells[9].NumericCellValue;
+			var unitCost = (decimal)row.Cells[10].NumericCellValue;
+			var totalRevenue = (decimal)row.Cells[11].NumericCellValue;
+			var totalCost = (decimal)row.Cells[12].NumericCellValue;
+			var totalProfit = (decimal)row.Cells[13].NumericCellValue;
 		}
 	}
 
@@ -128,25 +87,18 @@ public class XlsReaderBenchmarks
 	public void AsposeXls()
 	{
 		var wb = new Aspose.Cells.Workbook(file);
-		foreach (var ws in wb.Worksheets)
+		var ws = wb.Worksheets.First();
+		var cells = ws.Cells;
+		var rowCount = cells.GetLastDataRow(0);
+		bool header = true;
+		foreach (Aspose.Cells.Row row in cells.Rows)
 		{
-			var cells = ws.Cells;
-			var rowCount = cells.GetLastDataRow(0);
-			foreach (Aspose.Cells.Row row in cells.Rows)
+			if (header)
 			{
-				foreach (Aspose.Cells.Cell ce in row)
-				{
-					switch (ce.Type)
-					{
-						case CellValueType.IsString:
-							var s = ce.StringValue;
-							break;
-						case CellValueType.IsNumeric:
-							var n = ce.DoubleValue;
-							break;
-					}
-				}
+				header = false;
+				continue;
 			}
+			row.ProcessAsposeRecord();
 		}
 	}
 }

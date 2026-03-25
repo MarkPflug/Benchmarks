@@ -149,28 +149,24 @@ public class XlsxReaderBenchmarks
 		var o = new ExcelDataReaderOptions { Schema = ExcelSchema.Dynamic };
 		using var reader = Sylvan.Data.Excel.ExcelDataReader.Create(file, o);
 
-		do
+		var values = new object[reader.FieldCount];
+		while (reader.Read())
 		{
-			var values = new object[reader.FieldCount];
-			while (reader.Read())
-			{
-				// the dynamic schema will cause cells to be read
-				// as the most "intuitive" type for their value
-				// this means that numeric values might be int or double
-				// depending on whether they have fractional components
-				// the values array will contain boxed values of the
-				// intuited type
-				// this is useful when the data has no tabular schema
-				// and might vary from row to row
-				reader.GetValues(values);
-			}
-
-		} while (reader.NextResult());
+			// the dynamic schema will cause cells to be read
+			// as the most "intuitive" type for their value
+			// this means that numeric values might be int or double
+			// depending on whether they have fractional components
+			// the values array will contain boxed values of the
+			// intuited type
+			// this is useful when the data has no tabular schema
+			// and might vary from row to row
+			reader.GetValues(values);
+		}
 	}
 
 	// For some reason the ACE driver leaves some thread spinning in the process
 	// which alone is terrible, but also affects the results of subsequent benchmarks
-	//[Benchmark]
+	[Benchmark]
 	[SupportedOSPlatform("windows")]
 	public void AceOleDbXls()
 	{
@@ -183,14 +179,11 @@ public class XlsxReaderBenchmarks
 		using var stream = File.OpenRead(file);
 		using (var reader = ExcelDataReader.ExcelReaderFactory.CreateReader(stream))
 		{
-			do
+			reader.Read();//skip header
+			while (reader.Read())
 			{
-				reader.Read();//skip header
-				while (reader.Read())
-				{
-					reader.ProcessSalesRecordEDR();
-				}
-			} while (reader.NextResult());
+				reader.ProcessSalesRecordEDR();
+			}
 		}
 	}
 
@@ -200,17 +193,15 @@ public class XlsxReaderBenchmarks
 		using var stream = File.OpenRead(file);
 		using (var book = XlsxHelper.XlsxReader.OpenWorkbook(stream))
 		{
-			foreach (var sheet in book.Worksheets)
+			var sheet = book.Worksheets.First();
+			using var reader = sheet.WorksheetReader;
+			int i = 0;
+			foreach (var row in reader)
 			{
-				using var reader = sheet.WorksheetReader;
-				int i = 0;
-				foreach (var row in reader)
-				{
-					i++;
-					// skip header row
-					if (i == 1) continue;
-					ProcessXlsxHelperRecord(row);
-				}
+				i++;
+				// skip header row
+				if (i == 1) continue;
+				ProcessXlsxHelperRecord(row);
 			}
 		}
 	}
@@ -337,34 +328,31 @@ public class XlsxReaderBenchmarks
 		var pkg = new ExcelPackage(new FileInfo(file));
 		ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 		var workbook = pkg.Workbook;
-		foreach (var worksheet in workbook.Worksheets)
+		var worksheet = workbook.Worksheets.First();
+		var r = 0;
+		var dim = worksheet.Dimension;
+		var data = worksheet.Cells;
+		var rows = dim.Rows;
+		var cols = dim.Columns;
+		// start at 2 to skip header row
+		for (r = 2; r < rows; r++)
 		{
-			var r = 0;
-			var dim = worksheet.Dimension;
-			if (dim == null) continue;
-			var data = worksheet.Cells;
-			var rows = dim.Rows;
-			var cols = dim.Columns;
-			// start at 2 to skip header row
-			for (r = 2; r < rows; r++)
-			{
-				var region = (string)data[r, 1].Value;
-				var country = (string)data[r, 2].Value;
-				var type = (string)data[r, 3].Value;
-				var channel = (string)data[r, 4].Value;
-				var priority = (string)data[r, 5].Value;
+			var region = (string)data[r, 1].Value;
+			var country = (string)data[r, 2].Value;
+			var type = (string)data[r, 3].Value;
+			var channel = (string)data[r, 4].Value;
+			var priority = (string)data[r, 5].Value;
 
-				// this is actually sane, amazing
-				var orderDate = (DateTime)data[r, 6].Value;
-				var id = (int)(double)data[r, 7].Value;
-				var shipDate = (DateTime)data[r, 8].Value;
-				var unitsSold = (int)(double)data[r, 9].Value;
-				var unitPrice = (decimal)(double)data[r, 10].Value;
-				var unitCost = (decimal)(double)data[r, 11].Value;
-				var totalRevenue = (decimal)(double)data[r, 12].Value;
-				var totalCost = (decimal)(double)data[r, 13].Value;
-				var totalProfit = (decimal)(double)data[r, 14].Value;
-			}
+			// this is actually sane, amazing
+			var orderDate = (DateTime)data[r, 6].Value;
+			var id = (int)(double)data[r, 7].Value;
+			var shipDate = (DateTime)data[r, 8].Value;
+			var unitsSold = (int)(double)data[r, 9].Value;
+			var unitPrice = (decimal)(double)data[r, 10].Value;
+			var unitCost = (decimal)(double)data[r, 11].Value;
+			var totalRevenue = (decimal)(double)data[r, 12].Value;
+			var totalCost = (decimal)(double)data[r, 13].Value;
+			var totalProfit = (decimal)(double)data[r, 14].Value;
 		}
 	}
 
@@ -397,42 +385,24 @@ public class XlsxReaderBenchmarks
 		}
 	}
 
-	static void ProcessAsposeRecord(Aspose.Cells.Row row)
-	{
-		var region = row[0].StringValue;
-		var country = row[1].StringValue;
-		var type = row[2].StringValue;
-		var channel = row[3].StringValue;
-		var priority = row[4].StringValue;
-		var orderDate = row[5].DateTimeValue;
-		var id = row[6].IntValue;
-		var shipDate = row[7].DateTimeValue;
-		var unitsSold = row[8].IntValue;
-		var unitPrice = (decimal)row[9].DoubleValue;
-		var unitCost = (decimal)row[10].DoubleValue;
-		var totalRevenue = (decimal)row[11].DoubleValue;
-		var totalCost = (decimal)row[12].DoubleValue;
-		var totalProfit = (decimal)row[13].DoubleValue;
-	}
+	
 
 	[Benchmark]
 	public void AsposeXlsx()
 	{
 		var wb = new Aspose.Cells.Workbook(file);
-		foreach (var ws in wb.Worksheets)
+		var ws = wb.Worksheets.First();
+		var cells = ws.Cells;
+		var rowCount = cells.GetLastDataRow(0);
+		bool header = true;
+		foreach (Aspose.Cells.Row row in cells.Rows)
 		{
-			var cells = ws.Cells;
-			var rowCount = cells.GetLastDataRow(0);
-			bool header = true;
-			foreach (Aspose.Cells.Row row in cells.Rows)
+			if (header)
 			{
-				if (header)
-				{
-					header = false;
-					continue;
-				}
-				ProcessAsposeRecord(row);
+				header = false;
+				continue;
 			}
+			row.ProcessAsposeRecord();
 		}
 	}
 
@@ -546,34 +516,32 @@ public class XlsxReaderBenchmarks
 	{
 		using Excel_PRIME workbook = new();
 		workbook.Open(file);
-		foreach (string sheetName in workbook.SheetNames())
+		var sheetName = workbook.SheetNames().First();
+		using var worksheet = workbook.GetSheet(sheetName);
+		foreach (var row in worksheet!.GetRowData(1, RowCellGet.PreGet))// skip header row
 		{
-			using var worksheet = workbook.GetSheet(sheetName);
-			foreach (var row in worksheet!.GetRowData(1, RowCellGet.PreGet))// skip header row
-			{
-				if (row == null)
-				{   // Because this returns upto the dimension of the sheet Height
-					break;
-				}
-
-				var cells = row.GetAllCells();
-				var region = cells[0].CellValue.ToString();
-				var country = cells[1].CellValue.ToString();
-				var type = cells[2].CellValue.ToString();
-				var channel = cells[3].CellValue.ToString();
-				var priority = cells[4].CellValue.ToString();
-				var orderDate = cells[5].CellValue.AsDateTime;
-				var id = cells[6].CellValue.AsInt32;
-				var shipDate = cells[7].CellValue.AsDateTime;
-				var unitsSold = cells[8].CellValue.AsInt32;
-				// can't use AsDecimal, it returns the wrong precision
-				var unitPrice = (decimal)cells[9].CellValue.AsDouble;
-				var unitCost = (decimal)cells[10].CellValue.AsDouble;
-				var totalRevenue = (decimal)cells[11].CellValue.AsDouble;
-				var totalCost = (decimal)cells[12].CellValue.AsDouble;
-				var totalProfit = (decimal)cells[13].CellValue.AsDouble;
-				row.Dispose();
+			if (row == null)
+			{   // Because this returns upto the dimension of the sheet Height
+				break;
 			}
+
+			var cells = row.GetAllCells();
+			var region = cells[0].CellValue.ToString();
+			var country = cells[1].CellValue.ToString();
+			var type = cells[2].CellValue.ToString();
+			var channel = cells[3].CellValue.ToString();
+			var priority = cells[4].CellValue.ToString();
+			var orderDate = cells[5].CellValue.AsDateTime;
+			var id = cells[6].CellValue.AsInt32;
+			var shipDate = cells[7].CellValue.AsDateTime;
+			var unitsSold = cells[8].CellValue.AsInt32;
+			// can't use AsDecimal, it returns the wrong precision
+			var unitPrice = (decimal)cells[9].CellValue.AsDouble;
+			var unitCost = (decimal)cells[10].CellValue.AsDouble;
+			var totalRevenue = (decimal)cells[11].CellValue.AsDouble;
+			var totalCost = (decimal)cells[12].CellValue.AsDouble;
+			var totalProfit = (decimal)cells[13].CellValue.AsDouble;
+			row.Dispose();
 		}
 	}
 
@@ -585,21 +553,19 @@ public class XlsxReaderBenchmarks
 		// just pure trash.
 		using Excel_PRIME workbook = new();
 		workbook.Open(file);
-		foreach (string sheetName in workbook.SheetNames())
+		var sheetName = workbook.SheetNames().First();
+		using var worksheet = workbook.GetSheet(sheetName);
+		var values = new object?[worksheet.SheetDimensions.Width];
+		foreach (var row in worksheet!.GetRowData(1, RowCellGet.PreGet)) // skip header row
 		{
-			using var worksheet = workbook.GetSheet(sheetName);
-			var values = new object?[worksheet.SheetDimensions.Width];
-			foreach (var row in worksheet!.GetRowData(1, RowCellGet.PreGet)) // skip header row
+			if (row == null)
 			{
-				if (row == null)
-				{
-					// Because this returns upto the dimension of the sheet Height
-					break;
-				}
-
-				row.CopyBoxedToArray(values);
-				row.Dispose();
+				// Because this returns upto the dimension of the sheet Height
+				break;
 			}
+
+			row.CopyBoxedToArray(values);
+			row.Dispose();
 		}
 	}
 }
