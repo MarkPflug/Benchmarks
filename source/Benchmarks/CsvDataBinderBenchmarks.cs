@@ -14,7 +14,6 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using TinyCsvParser;
-using TinyCsvParser.Mapping;
 
 namespace Benchmarks;
 
@@ -75,8 +74,10 @@ public class CsvDataBinderBenchmarks
 	[Benchmark]
 	public void TinyCsvManual()
 	{
-		var csvP = new CsvParser<SalesRecord>(new CsvParserOptions(true, ','), new SalesRecordMapping());
-		var dr = csvP.ReadFromString(new CsvReaderOptions(new[] { "\r\n", "\n", "\r" }), TestData.CachedData);
+		// the default uses semicolon as the delimiter so we have to specify comma explicitly, odd.
+		var opt = new TinyCsvParser.Models.CsvOptions(',', '"', '"');
+		var csvP = new CsvParser<SalesRecord>(opt, new SalesRecordMapping());
+		var dr = csvP.ReadFromStream(TestData.GetUtf8Stream());
 		foreach (var record in dr)
 		{
 		}

@@ -3,6 +3,7 @@ using BenchmarkDotNet.Attributes;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using MiniExcelLibs;
+using NanoXLSX;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.Streaming;
 using OfficeOpenXml;

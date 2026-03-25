@@ -1,4 +1,6 @@
 ﻿using BenchmarkDotNet.Attributes;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Spreadsheet;
 using ExcelPRIME;
 using MiniExcelLibs;
 using OfficeOpenXml;
@@ -8,12 +10,10 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
 using System.IO.Compression;
-using System.IO.Packaging;
 using System.Linq;
 using System.Runtime.Versioning;
 using System.Text;
 using System.Xml;
-using NPOI.SS.UserModel;
 
 namespace Benchmarks;
 
@@ -81,7 +81,7 @@ public class XlsxReaderBenchmarks
 			sheet.ReadNextInRow();
 			var totalCost = (decimal)(double)sheet.Value;
 			sheet.ReadNextInRow();
-			var totalProfit = (decimal)(double)sheet.Value;			
+			var totalProfit = (decimal)(double)sheet.Value;
 		}
 	}
 
@@ -89,12 +89,35 @@ public class XlsxReaderBenchmarks
 	public void HypeLabXlsx_SheetData()
 	{
 		var data = HypeLab.IO.Excel.ExcelReader.ExtractSheetData(file);
+
+		foreach (var row in data.Rows)
+		{
+			var region = row[0];
+			var country = row[1];
+			var type = row[2];
+			var channel = row[3];
+			var priority = row[4];
+			var orderDate = DateTime.FromOADate(double.Parse(row[5]));
+			var id = int.Parse(row[6]);
+			var shipDate = DateTime.FromOADate(double.Parse(row[7]));
+			var unitsSold = int.Parse(row[8]);
+			// double.parse then cast to decimal is
+			// required to get the correct value, otherwise
+			// the precision will be wrong. You cannot just decimal.Parse.
+			var unitPrice = (decimal)double.Parse(row[9]);
+			var unitCost = (decimal)double.Parse(row[10]);
+			var totalRevenue = (decimal)double.Parse(row[11]);
+			var totalCost = (decimal)double.Parse(row[12]);
+			var totalProfit = (decimal)double.Parse(row[13]);
+		}
 	}
 
-	[Benchmark]
+	//[Benchmark]
 	public void HypeLabXlsx_BindT()
 	{
 		var data = HypeLab.IO.Excel.ExcelReader.ExtractSheetData(file);
+		// this doesn't work. It returns partially bound objects with only
+		// the string properties assigned.
 		var records = HypeLab.IO.Excel.ExcelParser.ParseTo<SalesRecord>(data);
 	}
 
@@ -112,11 +135,16 @@ public class XlsxReaderBenchmarks
 	public void SylvanXlsx_BindT()
 	{
 		var reader = Sylvan.Data.Excel.ExcelDataReader.Create(file);
-		var recs = reader.GetRecords<SalesRecord>().ToList();
+		// fully bind to the SalesRecord objects
+		foreach(var record in reader.GetRecords<SalesRecord>())
+		{
+			// enumerate the bound records
+			// without the enumeration, no work is done.
+		}
 	}
 
 	[Benchmark]
-	public void SylvanXlsxObj()
+	public void SylvanXlsxDynamic()
 	{
 		var o = new ExcelDataReaderOptions { Schema = ExcelSchema.Dynamic };
 		using var reader = Sylvan.Data.Excel.ExcelDataReader.Create(file, o);
@@ -126,13 +154,19 @@ public class XlsxReaderBenchmarks
 			var values = new object[reader.FieldCount];
 			while (reader.Read())
 			{
+				// the dynamic schema will cause cells to be read
+				// as the most "intuitive" type for their value
+				// this means that numeric values might be int or double
+				// depending on whether they have fractional components
+				// the values array will contain boxed values of the
+				// intuited type
+				// this is useful when the data has no tabular schema
+				// and might vary from row to row
 				reader.GetValues(values);
 			}
 
 		} while (reader.NextResult());
 	}
-
-
 
 	// For some reason the ACE driver leaves some thread spinning in the process
 	// which alone is terrible, but also affects the results of subsequent benchmarks
@@ -193,26 +227,75 @@ public class XlsxReaderBenchmarks
 		var id = row[6].GetInt32();
 		var shipDate = row[7].GetDateTime();
 		var unitsSold = row[8].GetInt32();
-		var unitPrice = row[9].GetDecimal();
-		var unitCost = row[10].GetDecimal();
-		var totalRevenue = row[11].GetDecimal();
-		var totalCost = row[12].GetDecimal();
-		var totalProfit = row[13].GetDecimal();
+
+		// can't use GetDecimal(), returns incorrect precision
+
+		var unitPrice = (decimal)row[9].GetDouble();
+		var unitCost = (decimal)row[10].GetDouble();
+		var totalRevenue = (decimal)row[11].GetDouble();
+		var totalCost = (decimal)row[12].GetDouble();
+		var totalProfit = (decimal)row[13].GetDouble();
 	}
 
 	[Benchmark]
 	public void FastExcelXlsx()
 	{
+		// neither fast, nor easy to use.
 		using var fastExcel = new FastExcel.FastExcel(new FileInfo(file), true);
 		// Read the rows using worksheet name
 		var worksheet = fastExcel.Worksheets.First();
+		
+		// this accepts an "existingHeadingRows" argument
+		// but I don't understand what it does. Enumerating the rows
+		// still returns the headers.
 		worksheet.Read();
+		// skip header
+		bool first = true;
 		foreach (var row in worksheet.Rows)
 		{
-			foreach (var cell in row.Cells)
+			if (first)
 			{
-				var val = cell.Value;
+				first = false;
+				continue;
 			}
+			
+			// this is absurd, having to manually enumerate the cells
+			// since there is no indexer.
+			using var e = row.Cells.GetEnumerator();
+			e.MoveNext();
+			var region = e.Current.Value;
+			e.MoveNext();
+			var country = e.Current.Value;
+			e.MoveNext();
+			var type = e.Current.Value;
+			e.MoveNext();
+			var channel = e.Current.Value;
+			e.MoveNext();
+			var priority = e.Current.Value;
+			e.MoveNext();
+			// this might be even more absurd. "Value" is of type `object`, but
+			// always contains a string. derp
+			// IMO, any Excel library that requires the user to understand what an Ole Automation Date is, has failed the user.
+			var orderDate = DateTime.FromOADate(double.Parse((string)e.Current.Value));
+
+			e.MoveNext();
+			var id = int.Parse((string)e.Current.Value);
+			e.MoveNext();
+			var shipDate = DateTime.FromOADate(double.Parse((string)e.Current.Value));
+
+			e.MoveNext();
+			var unitsSold = int.Parse((string)e.Current.Value);
+
+			e.MoveNext();
+			var unitPrice = (decimal)double.Parse((string)e.Current.Value);
+			e.MoveNext();
+			var unitCost = (decimal)double.Parse((string)e.Current.Value);
+			e.MoveNext();
+			var totalRevenue = (decimal)double.Parse((string)e.Current.Value);
+			e.MoveNext();
+			var totalCost = (decimal)double.Parse((string)e.Current.Value);
+			e.MoveNext();
+			var totalProfit = (decimal)double.Parse((string)e.Current.Value);
 		}
 	}
 
@@ -221,14 +304,30 @@ public class XlsxReaderBenchmarks
 	{
 		using var wb = new NPOI.XSSF.UserModel.XSSFWorkbook(file, true);
 		var sheet = wb.GetSheetAt(0);
-		//only iterate existing rows
+
+		// skip the first header row.
+		bool first = true;
 		foreach (var row in sheet)
 		{
-			// only iterate existing cells
-			foreach (var cell in row)
+			if (first)
 			{
-				var str = cell.ToString();
+				first = false;
+				continue;
 			}
+			var region = row.Cells[0].StringCellValue;
+			var country = row.Cells[1].StringCellValue;
+			var type = row.Cells[2].StringCellValue;
+			var channel = row.Cells[3].StringCellValue;
+			var priority = row.Cells[4].StringCellValue;
+			var orderDate = row.Cells[5].DateCellValue;
+			var id = (int)row.Cells[6].NumericCellValue;
+			var shipDate = row.Cells[7].DateCellValue;
+			var unitsSold = (int)row.Cells[8].NumericCellValue;
+			var unitPrice = (decimal)row.Cells[9].NumericCellValue;
+			var unitCost = (decimal)row.Cells[10].NumericCellValue;
+			var totalRevenue = (decimal)row.Cells[11].NumericCellValue;
+			var totalCost = (decimal)row.Cells[12].NumericCellValue;
+			var totalProfit = (decimal)row.Cells[13].NumericCellValue;
 		}
 	}
 
@@ -246,12 +345,25 @@ public class XlsxReaderBenchmarks
 			var data = worksheet.Cells;
 			var rows = dim.Rows;
 			var cols = dim.Columns;
-			for (r = 1; r < rows; r++)
+			// start at 2 to skip header row
+			for (r = 2; r < rows; r++)
 			{
-				for (int c = 1; c < cols; c++)
-				{
-					var val = data[r, c].Value;
-				}
+				var region = (string)data[r, 1].Value;
+				var country = (string)data[r, 2].Value;
+				var type = (string)data[r, 3].Value;
+				var channel = (string)data[r, 4].Value;
+				var priority = (string)data[r, 5].Value;
+
+				// this is actually sane, amazing
+				var orderDate = (DateTime)data[r, 6].Value;
+				var id = (int)(double)data[r, 7].Value;
+				var shipDate = (DateTime)data[r, 8].Value;
+				var unitsSold = (int)(double)data[r, 9].Value;
+				var unitPrice = (decimal)(double)data[r, 10].Value;
+				var unitCost = (decimal)(double)data[r, 11].Value;
+				var totalRevenue = (decimal)(double)data[r, 12].Value;
+				var totalCost = (decimal)(double)data[r, 13].Value;
+				var totalProfit = (decimal)(double)data[r, 14].Value;
 			}
 		}
 	}
@@ -263,15 +375,25 @@ public class XlsxReaderBenchmarks
 		var ws = pkg.Worksheets.First();
 
 		var rc = ushort.MaxValue;
-		var cc = 14;
-		for (int r = 1; r <= rc; r++)
+		// start at 2 to skip header row
+		for (int r = 2; r <= rc; r++)
 		{
 			var row = ws.Row(r);
-			for (int i = 1; i <= cc; i++)
-			{
-				var cell = row.Cell(i);
-				var value = cell.Value;
-			}
+
+			var region = row.Cell(1).Value.GetText();
+			var country = row.Cell(2).Value.GetText();
+			var type = row.Cell(3).Value.GetText();
+			var channel = row.Cell(4).Value.GetText();
+			var priority = row.Cell(5).Value.GetText();
+			var orderDate = row.Cell(6).Value.GetDateTime();
+			var id = (int)row.Cell(7).Value.GetNumber();
+			var shipDate = row.Cell(8).Value.GetDateTime();
+			var unitsSold = (int)row.Cell(9).Value.GetNumber();
+			var unitPrice = (decimal)row.Cell(10).Value.GetNumber();
+			var unitCost = (decimal)row.Cell(11).Value.GetNumber();
+			var totalRevenue = (decimal)row.Cell(12).Value.GetNumber();
+			var totalCost = (decimal)row.Cell(13).Value.GetNumber();
+			var totalProfit = (decimal)row.Cell(14).Value.GetNumber();
 		}
 	}
 
@@ -314,22 +436,82 @@ public class XlsxReaderBenchmarks
 		}
 	}
 
-	[Benchmark]
+	//[Benchmark]
 	public void OpenXmlXlsx()
 	{
-		var s = File.OpenRead(file);
-		var pkg = Package.Open(s);
-		var doc = DocumentFormat.OpenXml.Packaging.SpreadsheetDocument.Open(pkg);
-		foreach (var wsp in doc.WorkbookPart.WorksheetParts)
+		// I'm not benchmarking this anymore. ClosedXml is built on top of this
+		// and provides a more reasonable API. The ClosedXml benchmark beats this
+		// implementation, so clearly this code is flawed. Probably shared string
+		// access. I'm not interested in maintaining this mess, so...
+		using (SpreadsheetDocument doc = SpreadsheetDocument.Open(file, false))
 		{
-			var sd = wsp.Worksheet.GetFirstChild<DocumentFormat.OpenXml.Spreadsheet.SheetData>();
-			foreach (DocumentFormat.OpenXml.Spreadsheet.Row r in sd)
+			WorkbookPart workbookPart = doc.WorkbookPart;
+			Sheet firstSheet = workbookPart.Workbook.Sheets.GetFirstChild<Sheet>();
+
+			if (firstSheet == null)
+				throw new Exception("No sheets found in Excel file.");
+
+			WorksheetPart worksheetPart = (WorksheetPart)workbookPart.GetPartById(firstSheet.Id);
+			SharedStringTablePart ssp = workbookPart.SharedStringTablePart;
+
+			bool first = true;
+			foreach (Row row in worksheetPart.Worksheet.Descendants<Row>())
 			{
-				foreach (DocumentFormat.OpenXml.Spreadsheet.Cell c in r)
+				if (first)
 				{
-					var v = c.CellValue;
+					first = false;
+					continue;
+				}
+
+				var e = row.Elements<Cell>().GetEnumerator();
+
+				e.MoveNext();
+				var region = GetCellValue(e.Current, ssp);
+				e.MoveNext();
+				var country = GetCellValue(e.Current, ssp);
+				e.MoveNext();
+				var type = GetCellValue(e.Current, ssp);
+				e.MoveNext();
+				var channel = GetCellValue(e.Current, ssp);
+				e.MoveNext();
+				var priority = GetCellValue(e.Current, ssp);
+				e.MoveNext();
+				var orderDate = DateTime.FromOADate(double.Parse(GetCellValue(e.Current, ssp)));
+				e.MoveNext();
+				var id = int.Parse(GetCellValue(e.Current, ssp));
+				e.MoveNext();
+				var shipDate = DateTime.FromOADate(double.Parse(GetCellValue(e.Current, ssp)));
+				e.MoveNext();
+				var unitsSold = int.Parse(GetCellValue(e.Current, ssp));
+				e.MoveNext();
+				var unitPrice = (decimal)double.Parse(GetCellValue(e.Current, ssp));
+				e.MoveNext();
+				var unitCost = (decimal)double.Parse(GetCellValue(e.Current, ssp));
+				e.MoveNext();
+				var totalRevenue = (decimal)double.Parse(GetCellValue(e.Current, ssp));
+				e.MoveNext();
+				var totalCost = (decimal)double.Parse(GetCellValue(e.Current, ssp));
+				e.MoveNext();
+				var totalProfit = (decimal)double.Parse(GetCellValue(e.Current, ssp));
+			}
+		}
+		
+		static string GetCellValue(Cell cell, SharedStringTablePart sharedStringPart)
+		{
+			if (cell == null || cell.CellValue == null)
+				return string.Empty;
+
+			string value = cell.CellValue.InnerText;
+
+			if (cell.DataType != null && cell.DataType.Value == CellValues.SharedString)
+			{
+				if (int.TryParse(value, out int index) && sharedStringPart != null)
+				{
+					return sharedStringPart.SharedStringTable.ElementAt(index).InnerText;
 				}
 			}
+
+			return value;
 		}
 	}
 
@@ -384,19 +566,23 @@ public class XlsxReaderBenchmarks
 				var id = cells[6].CellValue.AsInt32;
 				var shipDate = cells[7].CellValue.AsDateTime;
 				var unitsSold = cells[8].CellValue.AsInt32;
-				var unitPrice = cells[9].CellValue.AsDecimal;
-				var unitCost = cells[10].CellValue.AsDecimal;
-				var totalRevenue = cells[11].CellValue.AsDecimal;
-				var totalCost = cells[12].CellValue.AsDecimal;
-				var totalProfit = cells[13].CellValue.AsDecimal;
+				// can't use AsDecimal, it returns the wrong precision
+				var unitPrice = (decimal)cells[9].CellValue.AsDouble;
+				var unitCost = (decimal)cells[10].CellValue.AsDouble;
+				var totalRevenue = (decimal)cells[11].CellValue.AsDouble;
+				var totalCost = (decimal)cells[12].CellValue.AsDouble;
+				var totalProfit = (decimal)cells[13].CellValue.AsDouble;
 				row.Dispose();
 			}
 		}
 	}
 
-	[Benchmark]
+	//[Benchmark]
 	public void PrimeXlsxObj()
 	{
+		// this isn't useful. It fills the values array with the raw strings from the xml
+		// meaning that dates come through as the ole automation double value as a string
+		// just pure trash.
 		using Excel_PRIME workbook = new();
 		workbook.Open(file);
 		foreach (string sheetName in workbook.SheetNames())
