@@ -13,6 +13,10 @@ the values must be accessed as a double, then cast to a decimal, which will prod
 expected precision. Many libraries provide decimal accessors that are a "pit of failure"
 in this regard. See benchmark implementations for full details.
 
+OpenXml is no longer included in these results. It is so difficult to use that I
+cannot figure out how to write a correct and fair benchmark for it. Since ClosedXml
+is a wrapper around OpenXml, one could assume that they'd have similar performance.
+
 ## Excel .xlsx Benchmarks
 
 The `Baseline` in this group, measure the time taken to unzip the Sheet1.xml and using `XmlReader.Read` to process every node.
@@ -47,6 +51,7 @@ It represents the minimal work that must be done assuming those classes are used
 | ExcelDataReaderXlsb |   138.58 ms |  3.805 ms |   5.58 | 150655.65 KB |      419.74 |
 | AsposeXlsb          |   226.25 ms |  3.101 ms |   9.12 | 247968.29 KB |      690.86 |
 | AceOleDbXlsb        | 3,359.50 ms | 30.683 ms | 135.36 |  27035.96 KB |       75.32 |
+
 ## Excel .xls Benchmarks
 
 | Method             | Mean      | Error     | Ratio | Allocated    | Alloc Ratio |
