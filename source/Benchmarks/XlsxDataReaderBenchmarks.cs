@@ -381,82 +381,91 @@ public class XlsxReaderBenchmarks
 		}
 	}
 
-	//[Benchmark]
+	[Benchmark]
 	public void OpenXmlXlsx()
 	{
-		// I'm not benchmarking this anymore. ClosedXml is built on top of this
-		// and provides a more reasonable API. The ClosedXml benchmark beats this
-		// implementation, so clearly this code is flawed. Probably shared string
-		// access. I'm not interested in maintaining this mess, so...
-		using (SpreadsheetDocument doc = SpreadsheetDocument.Open(file, false))
+		using SpreadsheetDocument doc = SpreadsheetDocument.Open(file, false);
+		WorkbookPart workbookPart = doc.WorkbookPart;
+		Sheet firstSheet = workbookPart.Workbook.Sheets.GetFirstChild<Sheet>();
+
+		if (firstSheet == null)
+			throw new Exception("No sheets found in Excel file.");
+
+		WorksheetPart worksheetPart = (WorksheetPart)workbookPart.GetPartById(firstSheet.Id);
+		SharedStringTablePart ssp = workbookPart.SharedStringTablePart;
+		var sharedStrings = ssp?.SharedStringTable;
+
+		var rc = ushort.MaxValue;
+		for (int r = 2; r <= rc; r++)
 		{
-			WorkbookPart workbookPart = doc.WorkbookPart;
-			Sheet firstSheet = workbookPart.Workbook.Sheets.GetFirstChild<Sheet>();
+			var row = worksheetPart.Worksheet.Descendants<Row>().FirstOrDefault(row => row.RowIndex == r);
+			if (row == null)
+				continue;
 
-			if (firstSheet == null)
-				throw new Exception("No sheets found in Excel file.");
-
-			WorksheetPart worksheetPart = (WorksheetPart)workbookPart.GetPartById(firstSheet.Id);
-			SharedStringTablePart ssp = workbookPart.SharedStringTablePart;
-
-			bool first = true;
-			foreach (Row row in worksheetPart.Worksheet.Descendants<Row>())
-			{
-				if (first)
-				{
-					first = false;
-					continue;
-				}
-
-				var e = row.Elements<Cell>().GetEnumerator();
-
-				e.MoveNext();
-				var region = GetCellValue(e.Current, ssp);
-				e.MoveNext();
-				var country = GetCellValue(e.Current, ssp);
-				e.MoveNext();
-				var type = GetCellValue(e.Current, ssp);
-				e.MoveNext();
-				var channel = GetCellValue(e.Current, ssp);
-				e.MoveNext();
-				var priority = GetCellValue(e.Current, ssp);
-				e.MoveNext();
-				var orderDate = DateTime.FromOADate(double.Parse(GetCellValue(e.Current, ssp)));
-				e.MoveNext();
-				var id = int.Parse(GetCellValue(e.Current, ssp));
-				e.MoveNext();
-				var shipDate = DateTime.FromOADate(double.Parse(GetCellValue(e.Current, ssp)));
-				e.MoveNext();
-				var unitsSold = int.Parse(GetCellValue(e.Current, ssp));
-				e.MoveNext();
-				var unitPrice = (decimal)double.Parse(GetCellValue(e.Current, ssp));
-				e.MoveNext();
-				var unitCost = (decimal)double.Parse(GetCellValue(e.Current, ssp));
-				e.MoveNext();
-				var totalRevenue = (decimal)double.Parse(GetCellValue(e.Current, ssp));
-				e.MoveNext();
-				var totalCost = (decimal)double.Parse(GetCellValue(e.Current, ssp));
-				e.MoveNext();
-				var totalProfit = (decimal)double.Parse(GetCellValue(e.Current, ssp));
-			}
+			var region = GetCellValue(row, 1, sharedStrings);
+			var country = GetCellValue(row, 2, sharedStrings);
+			var type = GetCellValue(row, 3, sharedStrings);
+			var channel = GetCellValue(row, 4, sharedStrings);
+			var priority = GetCellValue(row, 5, sharedStrings);
+			var orderDate = GetCellDateTime(row, 6);
+			var id = (int)GetCellNumber(row, 7);
+			var shipDate = GetCellDateTime(row, 8);
+			var unitsSold = (int)GetCellNumber(row, 9);
+			var unitPrice = (decimal)GetCellNumber(row, 10);
+			var unitCost = (decimal)GetCellNumber(row, 11);
+			var totalRevenue = (decimal)GetCellNumber(row, 12);
+			var totalCost = (decimal)GetCellNumber(row, 13);
+			var totalProfit = (decimal)GetCellNumber(row, 14);
 		}
-		
-		static string GetCellValue(Cell cell, SharedStringTablePart sharedStringPart)
+
+		static string GetCellValue(Row row, int columnIndex, SharedStringTable sharedStrings)
 		{
+			var cell = row.Elements<Cell>().FirstOrDefault(c => GetColumnIndex(c.CellReference?.Value) == columnIndex);
 			if (cell == null || cell.CellValue == null)
 				return string.Empty;
 
-			string value = cell.CellValue.InnerText;
-
-			if (cell.DataType != null && cell.DataType.Value == CellValues.SharedString)
+			if (cell.DataType?.Value == CellValues.SharedString)
 			{
-				if (int.TryParse(value, out int index) && sharedStringPart != null)
+				if (int.TryParse(cell.CellValue.InnerText, out int index) && sharedStrings != null)
 				{
-					return sharedStringPart.SharedStringTable.ElementAt(index).InnerText;
+					return sharedStrings.ElementAt(index).InnerText;
 				}
 			}
+			return cell.CellValue.InnerText;
+		}
 
-			return value;
+		static DateTime GetCellDateTime(Row row, int columnIndex)
+		{
+			var cell = row.Elements<Cell>().FirstOrDefault(c => GetColumnIndex(c.CellReference?.Value) == columnIndex);
+			if (cell?.CellValue == null)
+				return default;
+			return DateTime.FromOADate(double.Parse(cell.CellValue.InnerText));
+		}
+
+		static double GetCellNumber(Row row, int columnIndex)
+		{
+			var cell = row.Elements<Cell>().FirstOrDefault(c => GetColumnIndex(c.CellReference?.Value) == columnIndex);
+			if (cell?.CellValue == null)
+				return 0;
+			return double.Parse(cell.CellValue.InnerText);
+		}
+
+		static int GetColumnIndex(string cellRef)
+		{
+			if (string.IsNullOrEmpty(cellRef))
+				return 0;
+
+			int colIndex = 0;
+			foreach (char c in cellRef)
+			{
+				if (c >= 'A' && c <= 'Z')
+					colIndex = colIndex * 26 + (c - 'A' + 1);
+				else if (c >= 'a' && c <= 'z')
+					colIndex = colIndex * 26 + (c - 'a' + 1);
+				else
+					break;
+			}
+			return colIndex;
 		}
 	}
 
