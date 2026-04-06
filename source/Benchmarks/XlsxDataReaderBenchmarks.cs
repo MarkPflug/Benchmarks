@@ -402,6 +402,7 @@ public class XlsxReaderBenchmarks
 		{
 			foreach (var cell in row.Elements<Cell>())
 			{ 
+				//it would be faster not to calculate column index from cellreference attribute 
 				var cellvalue = GetCellValue(cell, sharedStrings);
 			}
 		}
