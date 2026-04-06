@@ -14,6 +14,7 @@ using System.Linq;
 using System.Runtime.Versioning;
 using System.Text;
 using System.Xml;
+using CellValue = DocumentFormat.OpenXml.Spreadsheet.CellValue;
 
 namespace Benchmarks;
 
@@ -401,22 +402,33 @@ public class XlsxReaderBenchmarks
 		{
 			foreach (var cell in row.Elements<Cell>())
 			{ 
-				var cellvalue = GetCellStringValue(cell, sharedStrings);
+				var cellvalue = GetCellValue(cell, sharedStrings);
 			}
 		}
 	}
 
-	static string GetCellStringValue(Cell cell, SharedStringTable sharedStrings)
+	static object GetCellValue(Cell cell, SharedStringTable sharedStrings)
 	{
-		if (cell.DataType?.Value != CellValues.SharedString)
+		if (cell.DataType?.Value == CellValues.SharedString)
 		{
-			return null;
-		}
-		if (int.TryParse(cell.CellValue.InnerText, out int index) && sharedStrings != null)
+			if (cell.CellValue == null)
+				return null;
+			if (int.TryParse(cell.CellValue.InnerText, out int index) && sharedStrings != null)
+			{
+				return sharedStrings.ElementAt(index).InnerText;
+			}
+		}else if (cell.DataType?.Value == CellValues.Number)
 		{
-			return sharedStrings.ElementAt(index).InnerText;
+			if (cell.CellValue == null)
+				return 0;
+			return double.Parse(cell.CellValue.InnerText);
+		}else if (cell.DataType?.Value == CellValues.Date)
+		{
+			if (cell.CellValue == null)
+				return default(DateTime);
+			return DateTime.FromOADate(double.Parse(cell.CellValue.InnerText));	
+			//simplified conversion from Excel date to .NET date. It is simpler than NPOI's DateUtil.GetJavaDate, for example, 1900 leap year compensation, 1904 windowing
 		}
-
 		return null;
 	}
 	
