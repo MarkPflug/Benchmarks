@@ -14,6 +14,7 @@ using System.Linq;
 using System.Runtime.Versioning;
 using System.Text;
 using System.Xml;
+using CellValue = DocumentFormat.OpenXml.Spreadsheet.CellValue;
 
 namespace Benchmarks;
 
@@ -381,85 +382,57 @@ public class XlsxReaderBenchmarks
 		}
 	}
 
-	//[Benchmark]
+	[Benchmark]
 	public void OpenXmlXlsx()
 	{
-		// I'm not benchmarking this anymore. ClosedXml is built on top of this
-		// and provides a more reasonable API. The ClosedXml benchmark beats this
-		// implementation, so clearly this code is flawed. Probably shared string
-		// access. I'm not interested in maintaining this mess, so...
-		using (SpreadsheetDocument doc = SpreadsheetDocument.Open(file, false))
+		using SpreadsheetDocument doc = SpreadsheetDocument.Open(file, false);
+		WorkbookPart workbookPart = doc.WorkbookPart;
+		Sheet firstSheet = workbookPart.Workbook.Sheets.GetFirstChild<Sheet>();
+
+		if (firstSheet == null)
+			throw new Exception("No sheets found in Excel file.");
+
+		WorksheetPart worksheetPart = (WorksheetPart)workbookPart.GetPartById(firstSheet.Id);
+		SharedStringTablePart ssp = workbookPart.SharedStringTablePart;
+		var sharedStrings = ssp?.SharedStringTable;
+
+		var rows = worksheetPart.Worksheet.Descendants<Row>();
+
+		foreach (var row in rows)
 		{
-			WorkbookPart workbookPart = doc.WorkbookPart;
-			Sheet firstSheet = workbookPart.Workbook.Sheets.GetFirstChild<Sheet>();
-
-			if (firstSheet == null)
-				throw new Exception("No sheets found in Excel file.");
-
-			WorksheetPart worksheetPart = (WorksheetPart)workbookPart.GetPartById(firstSheet.Id);
-			SharedStringTablePart ssp = workbookPart.SharedStringTablePart;
-
-			bool first = true;
-			foreach (Row row in worksheetPart.Worksheet.Descendants<Row>())
-			{
-				if (first)
-				{
-					first = false;
-					continue;
-				}
-
-				var e = row.Elements<Cell>().GetEnumerator();
-
-				e.MoveNext();
-				var region = GetCellValue(e.Current, ssp);
-				e.MoveNext();
-				var country = GetCellValue(e.Current, ssp);
-				e.MoveNext();
-				var type = GetCellValue(e.Current, ssp);
-				e.MoveNext();
-				var channel = GetCellValue(e.Current, ssp);
-				e.MoveNext();
-				var priority = GetCellValue(e.Current, ssp);
-				e.MoveNext();
-				var orderDate = DateTime.FromOADate(double.Parse(GetCellValue(e.Current, ssp)));
-				e.MoveNext();
-				var id = int.Parse(GetCellValue(e.Current, ssp));
-				e.MoveNext();
-				var shipDate = DateTime.FromOADate(double.Parse(GetCellValue(e.Current, ssp)));
-				e.MoveNext();
-				var unitsSold = int.Parse(GetCellValue(e.Current, ssp));
-				e.MoveNext();
-				var unitPrice = (decimal)double.Parse(GetCellValue(e.Current, ssp));
-				e.MoveNext();
-				var unitCost = (decimal)double.Parse(GetCellValue(e.Current, ssp));
-				e.MoveNext();
-				var totalRevenue = (decimal)double.Parse(GetCellValue(e.Current, ssp));
-				e.MoveNext();
-				var totalCost = (decimal)double.Parse(GetCellValue(e.Current, ssp));
-				e.MoveNext();
-				var totalProfit = (decimal)double.Parse(GetCellValue(e.Current, ssp));
+			foreach (var cell in row.Elements<Cell>())
+			{ 
+				//it would be faster not to calculate column index from cellreference attribute 
+				var cellvalue = GetCellValue(cell, sharedStrings);
 			}
-		}
-		
-		static string GetCellValue(Cell cell, SharedStringTablePart sharedStringPart)
-		{
-			if (cell == null || cell.CellValue == null)
-				return string.Empty;
-
-			string value = cell.CellValue.InnerText;
-
-			if (cell.DataType != null && cell.DataType.Value == CellValues.SharedString)
-			{
-				if (int.TryParse(value, out int index) && sharedStringPart != null)
-				{
-					return sharedStringPart.SharedStringTable.ElementAt(index).InnerText;
-				}
-			}
-
-			return value;
 		}
 	}
 
+	static object GetCellValue(Cell cell, SharedStringTable sharedStrings)
+	{
+		if (cell.DataType?.Value == CellValues.SharedString)
+		{
+			if (cell.CellValue == null)
+				return null;
+			if (int.TryParse(cell.CellValue.InnerText, out int index) && sharedStrings != null)
+			{
+				return sharedStrings.ElementAt(index).InnerText;
+			}
+		}else if (cell.DataType?.Value == CellValues.Number)
+		{
+			if (cell.CellValue == null)
+				return 0;
+			return double.Parse(cell.CellValue.InnerText);
+		}else if (cell.DataType?.Value == CellValues.Date)
+		{
+			if (cell.CellValue == null)
+				return default(DateTime);
+			return DateTime.FromOADate(double.Parse(cell.CellValue.InnerText));	
+			//simplified conversion from Excel date to .NET date. It is simpler than NPOI's DateUtil.GetJavaDate, for example, 1900 leap year compensation, 1904 windowing
+		}
+		return null;
+	}
+	
 	[Benchmark]
 	public void MiniExcelXlsx()
 	{
