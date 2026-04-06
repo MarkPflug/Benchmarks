@@ -395,80 +395,31 @@ public class XlsxReaderBenchmarks
 		SharedStringTablePart ssp = workbookPart.SharedStringTablePart;
 		var sharedStrings = ssp?.SharedStringTable;
 
-		var rc = ushort.MaxValue;
-		for (int r = 2; r <= rc; r++)
+		var rows = worksheetPart.Worksheet.Descendants<Row>();
+
+		foreach (var row in rows)
 		{
-			var row = worksheetPart.Worksheet.Descendants<Row>().FirstOrDefault(row => row.RowIndex == r);
-			if (row == null)
-				continue;
-
-			var region = GetCellValue(row, 1, sharedStrings);
-			var country = GetCellValue(row, 2, sharedStrings);
-			var type = GetCellValue(row, 3, sharedStrings);
-			var channel = GetCellValue(row, 4, sharedStrings);
-			var priority = GetCellValue(row, 5, sharedStrings);
-			var orderDate = GetCellDateTime(row, 6);
-			var id = (int)GetCellNumber(row, 7);
-			var shipDate = GetCellDateTime(row, 8);
-			var unitsSold = (int)GetCellNumber(row, 9);
-			var unitPrice = (decimal)GetCellNumber(row, 10);
-			var unitCost = (decimal)GetCellNumber(row, 11);
-			var totalRevenue = (decimal)GetCellNumber(row, 12);
-			var totalCost = (decimal)GetCellNumber(row, 13);
-			var totalProfit = (decimal)GetCellNumber(row, 14);
-		}
-
-		static string GetCellValue(Row row, int columnIndex, SharedStringTable sharedStrings)
-		{
-			var cell = row.Elements<Cell>().FirstOrDefault(c => GetColumnIndex(c.CellReference?.Value) == columnIndex);
-			if (cell == null || cell.CellValue == null)
-				return string.Empty;
-
-			if (cell.DataType?.Value == CellValues.SharedString)
-			{
-				if (int.TryParse(cell.CellValue.InnerText, out int index) && sharedStrings != null)
-				{
-					return sharedStrings.ElementAt(index).InnerText;
-				}
+			foreach (var cell in row.Elements<Cell>())
+			{ 
+				var cellvalue = GetCellStringValue(cell, sharedStrings);
 			}
-			return cell.CellValue.InnerText;
-		}
-
-		static DateTime GetCellDateTime(Row row, int columnIndex)
-		{
-			var cell = row.Elements<Cell>().FirstOrDefault(c => GetColumnIndex(c.CellReference?.Value) == columnIndex);
-			if (cell?.CellValue == null)
-				return default;
-			return DateTime.FromOADate(double.Parse(cell.CellValue.InnerText));
-		}
-
-		static double GetCellNumber(Row row, int columnIndex)
-		{
-			var cell = row.Elements<Cell>().FirstOrDefault(c => GetColumnIndex(c.CellReference?.Value) == columnIndex);
-			if (cell?.CellValue == null)
-				return 0;
-			return double.Parse(cell.CellValue.InnerText);
-		}
-
-		static int GetColumnIndex(string cellRef)
-		{
-			if (string.IsNullOrEmpty(cellRef))
-				return 0;
-
-			int colIndex = 0;
-			foreach (char c in cellRef)
-			{
-				if (c >= 'A' && c <= 'Z')
-					colIndex = colIndex * 26 + (c - 'A' + 1);
-				else if (c >= 'a' && c <= 'z')
-					colIndex = colIndex * 26 + (c - 'a' + 1);
-				else
-					break;
-			}
-			return colIndex;
 		}
 	}
 
+	static string GetCellStringValue(Cell cell, SharedStringTable sharedStrings)
+	{
+		if (cell.DataType?.Value != CellValues.SharedString)
+		{
+			return null;
+		}
+		if (int.TryParse(cell.CellValue.InnerText, out int index) && sharedStrings != null)
+		{
+			return sharedStrings.ElementAt(index).InnerText;
+		}
+
+		return null;
+	}
+	
 	[Benchmark]
 	public void MiniExcelXlsx()
 	{
