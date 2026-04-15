@@ -1,0 +1,18 @@
+<Solution>
+  <Folder Name="/Build/">
+    <File Path="../.gitignore" />
+    <File Path="../benchmark.cmd" />
+    <File Path="../Directory.Build.props" />
+  </Folder>
+  <Folder Name="/Docs/">
+    <File Path="../docs/CsvReaderBenchmarks.md" />
+    <File Path="../docs/CsvWriterBenchmarks.md" />
+    <File Path="../docs/ExcelReaderBenchmarks.md" />
+    <File Path="../docs/ExcelWriterBenchmarks.md" />
+    <File Path="../docs/Libraries.md" />
+    <File Path="../docs/XBaseDataReaderBenchmarks.md" />
+    <File Path="../readme.md" />
+  </Folder>
+  <Project Path="Benchmarks/Benchmarks.csproj" />
+  <Project Path="NetFxBench/NetFxBench.csproj" />
+</Solution>
