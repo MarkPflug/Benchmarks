@@ -44,85 +44,6 @@ public class XlsxReaderBenchmarks
 	}
 
 	[Benchmark]
-	public void Lightweight()
-	{
-		var reader = new LightWeightExcelReader.ExcelReader(file);
-		var sheet = reader[0];
-
-		// skip the header row
-		sheet.ReadNext();
-		while (sheet.ReadNextInRow()) ;
-
-		// read the data
-		while (sheet.ReadNext())
-		{
-			var region = (string)sheet.Value;
-			sheet.ReadNextInRow();
-			var country = (string)sheet.Value;
-			sheet.ReadNextInRow();
-			var type = (string)sheet.Value;
-			sheet.ReadNextInRow();
-			var channel = (string)sheet.Value;
-			sheet.ReadNextInRow();
-			var priority = (string)sheet.Value;
-			sheet.ReadNextInRow();
-			var orderDate = (DateTime)sheet.Value;
-			sheet.ReadNextInRow();
-			var id = (int)(double)sheet.Value;
-			sheet.ReadNextInRow();
-			var shipDate = (DateTime)sheet.Value;
-			sheet.ReadNextInRow();
-			var unitsSold = (int)(double)sheet.Value;
-			sheet.ReadNextInRow();
-			var unitPrice = (decimal)(double)sheet.Value;
-			sheet.ReadNextInRow();
-			var unitCost = (decimal)(double)sheet.Value;
-			sheet.ReadNextInRow();
-			var totalRevenue = (decimal)(double)sheet.Value;
-			sheet.ReadNextInRow();
-			var totalCost = (decimal)(double)sheet.Value;
-			sheet.ReadNextInRow();
-			var totalProfit = (decimal)(double)sheet.Value;
-		}
-	}
-
-	[Benchmark]
-	public void HypeLabXlsx_SheetData()
-	{
-		var data = HypeLab.IO.Excel.ExcelReader.ExtractSheetData(file);
-
-		foreach (var row in data.Rows)
-		{
-			var region = row[0];
-			var country = row[1];
-			var type = row[2];
-			var channel = row[3];
-			var priority = row[4];
-			var orderDate = DateTime.FromOADate(double.Parse(row[5]));
-			var id = int.Parse(row[6]);
-			var shipDate = DateTime.FromOADate(double.Parse(row[7]));
-			var unitsSold = int.Parse(row[8]);
-			// double.parse then cast to decimal is
-			// required to get the correct value, otherwise
-			// the precision will be wrong. You cannot just decimal.Parse.
-			var unitPrice = (decimal)double.Parse(row[9]);
-			var unitCost = (decimal)double.Parse(row[10]);
-			var totalRevenue = (decimal)double.Parse(row[11]);
-			var totalCost = (decimal)double.Parse(row[12]);
-			var totalProfit = (decimal)double.Parse(row[13]);
-		}
-	}
-
-	//[Benchmark]
-	public void HypeLabXlsx_BindT()
-	{
-		var data = HypeLab.IO.Excel.ExcelReader.ExtractSheetData(file);
-		// this doesn't work. It returns partially bound objects with only
-		// the string properties assigned.
-		var records = HypeLab.IO.Excel.ExcelParser.ParseTo<SalesRecord>(data);
-	}
-
-	[Benchmark]
 	public void SylvanXlsx()
 	{
 		var reader = Sylvan.Data.Excel.ExcelDataReader.Create(file);
@@ -516,4 +437,86 @@ public class XlsxReaderBenchmarks
 			row.Dispose();
 		}
 	}
+
+	[Benchmark]
+	public void HypeLabXlsx_SheetData()
+	{
+		var data = HypeLab.IO.Excel.ExcelReader.ExtractSheetData(file);
+
+		foreach (var row in data.Rows)
+		{
+			var region = row[0];
+			var country = row[1];
+			var type = row[2];
+			var channel = row[3];
+			var priority = row[4];
+			var orderDate = DateTime.FromOADate(double.Parse(row[5]));
+			var id = int.Parse(row[6]);
+			var shipDate = DateTime.FromOADate(double.Parse(row[7]));
+			var unitsSold = int.Parse(row[8]);
+			// double.parse then cast to decimal is
+			// required to get the correct value, otherwise
+			// the precision will be wrong. You cannot just decimal.Parse.
+			var unitPrice = (decimal)double.Parse(row[9]);
+			var unitCost = (decimal)double.Parse(row[10]);
+			var totalRevenue = (decimal)double.Parse(row[11]);
+			var totalCost = (decimal)double.Parse(row[12]);
+			var totalProfit = (decimal)double.Parse(row[13]);
+		}
+	}
+
+	//[Benchmark]
+	public void HypeLabXlsx_BindT()
+	{
+		var data = HypeLab.IO.Excel.ExcelReader.ExtractSheetData(file);
+		// this doesn't work. It returns partially bound objects with only
+		// the string properties assigned.
+		var records = HypeLab.IO.Excel.ExcelParser.ParseTo<SalesRecord>(data);
+	}
+
+
+	[Benchmark]
+	public void Lightweight()
+	{
+		var reader = new LightWeightExcelReader.ExcelReader(file);
+		var sheet = reader[0];
+
+		// skip the header row
+		sheet.ReadNext();
+		while (sheet.ReadNextInRow()) ;
+
+		// read the data
+		while (sheet.ReadNext())
+		{
+			var region = (string)sheet.Value;
+			sheet.ReadNextInRow();
+			var country = (string)sheet.Value;
+			sheet.ReadNextInRow();
+			var type = (string)sheet.Value;
+			sheet.ReadNextInRow();
+			var channel = (string)sheet.Value;
+			sheet.ReadNextInRow();
+			var priority = (string)sheet.Value;
+			sheet.ReadNextInRow();
+			var orderDate = (DateTime)sheet.Value;
+			sheet.ReadNextInRow();
+			var id = (int)(double)sheet.Value;
+			sheet.ReadNextInRow();
+			var shipDate = (DateTime)sheet.Value;
+			sheet.ReadNextInRow();
+			var unitsSold = (int)(double)sheet.Value;
+			sheet.ReadNextInRow();
+			var unitPrice = (decimal)(double)sheet.Value;
+			sheet.ReadNextInRow();
+			var unitCost = (decimal)(double)sheet.Value;
+			sheet.ReadNextInRow();
+			var totalRevenue = (decimal)(double)sheet.Value;
+			sheet.ReadNextInRow();
+			var totalCost = (decimal)(double)sheet.Value;
+			sheet.ReadNextInRow();
+			var totalProfit = (decimal)(double)sheet.Value;
+		}
+	}
+
+
 }

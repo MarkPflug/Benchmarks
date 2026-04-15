@@ -24,7 +24,7 @@ class MyConfig : ManualConfig
 {
 	public MyConfig() : base()
 	{
-		AddJob(Job.InProcess.WithMinIterationCount(1).WithWarmupCount(2).WithMaxIterationCount(6));
+		AddJob(Job.InProcess);
 		AddLogger(ConsoleLogger.Default)
 			.WithOrderer(new DefaultOrderer(SummaryOrderPolicy.FastestToSlowest));
 		AddColumnProvider(DefaultColumnProviders.Instance);
