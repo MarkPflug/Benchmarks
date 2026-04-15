@@ -77,7 +77,7 @@ public class CsvDataBinderBenchmarks
 		// the default uses semicolon as the delimiter so we have to specify comma explicitly, odd.
 		var opt = new TinyCsvParser.Models.CsvOptions(',', '"', '"');
 		var csvP = new CsvParser<SalesRecord>(opt, new SalesRecordMapping());
-		var dr = csvP.ReadFromStream(TestData.GetUtf8Stream());
+		var dr = csvP.Read(TestData.GetUtf8Stream());
 		foreach (var record in dr)
 		{
 		}
