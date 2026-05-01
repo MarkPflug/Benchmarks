@@ -1,4 +1,5 @@
-﻿using System.Data.OleDb;
+﻿using System.Data.Common;
+using System.Data.OleDb;
 using System.Runtime.Versioning;
 
 namespace Benchmarks;
@@ -16,14 +17,29 @@ static class AceOleDb
 		using var cmd = c.CreateCommand();
 		cmd.CommandText = "select * from [500000 Sales Records$]";
 		using var r = cmd.ExecuteReader();
-		var count = r.FieldCount;
-		int rc = 0;
-		while (r.Read() && rc++ < rowCount)
+
+		while (r.Read())
 		{
-			for (int i = 0; i < count; i++)
-			{
-				var s = r.GetValue(i);
-			}
+			r.ProcessSalesRecordAce();
 		}
+
+	}
+
+	static void ProcessSalesRecordAce(this DbDataReader reader)
+	{
+		var region = reader.GetString(0);
+		var country = reader.GetString(1);
+		var type = reader.GetString(2);
+		var channel = reader.GetString(3);
+		var priority = reader.GetString(4);
+		var orderDate = reader.GetDateTime(5);
+		var id = (int)reader.GetDouble(6);
+		var shipDate = reader.GetDateTime(7);
+		var unitsSold = (int)reader.GetDouble(8);
+		var unitPrice = (decimal)reader.GetDouble(9);
+		var unitCost = (decimal)reader.GetDouble(10);
+		var totalRevenue = (decimal)reader.GetDouble(11);
+		var totalCost = (decimal)reader.GetDouble(12);
+		var totalProfit = (decimal)reader.GetDouble(13);
 	}
 }
