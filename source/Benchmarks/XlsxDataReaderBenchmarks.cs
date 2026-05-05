@@ -14,7 +14,6 @@ using System.Linq;
 using System.Runtime.Versioning;
 using System.Text;
 using System.Xml;
-using CellValue = DocumentFormat.OpenXml.Spreadsheet.CellValue;
 
 namespace Benchmarks;
 
@@ -58,7 +57,7 @@ public class XlsxReaderBenchmarks
 	{
 		var reader = Sylvan.Data.Excel.ExcelDataReader.Create(file);
 		// fully bind to the SalesRecord objects
-		foreach(var record in reader.GetRecords<SalesRecord>())
+		foreach (var record in reader.GetRecords<SalesRecord>())
 		{
 			// enumerate the bound records
 			// without the enumeration, no work is done.
@@ -88,7 +87,7 @@ public class XlsxReaderBenchmarks
 
 	// For some reason the ACE driver leaves some thread spinning in the process
 	// which alone is terrible, but also affects the results of subsequent benchmarks
-	[Benchmark]
+	//[Benchmark]
 	[SupportedOSPlatform("windows")]
 	public void AceOleDbXls()
 	{
@@ -157,7 +156,7 @@ public class XlsxReaderBenchmarks
 		using var fastExcel = new FastExcel.FastExcel(new FileInfo(file), true);
 		// Read the rows using worksheet name
 		var worksheet = fastExcel.Worksheets.First();
-		
+
 		// this accepts an "existingHeadingRows" argument
 		// but I don't understand what it does. Enumerating the rows
 		// still returns the headers.
@@ -171,7 +170,7 @@ public class XlsxReaderBenchmarks
 				first = false;
 				continue;
 			}
-			
+
 			// this is absurd, having to manually enumerate the cells
 			// since there is no indexer.
 			using var e = row.Cells.GetEnumerator();
@@ -232,7 +231,7 @@ public class XlsxReaderBenchmarks
 		var rows = dim.Rows;
 		var cols = dim.Columns;
 		// start at 2 to skip header row
-		for (r = 2; r < rows; r++)
+		for (r = 2; r <= rows; r++)
 		{
 			var region = (string)data[r, 1].Value;
 			var country = (string)data[r, 2].Value;
@@ -282,8 +281,6 @@ public class XlsxReaderBenchmarks
 		}
 	}
 
-	
-
 	[Benchmark]
 	public void AsposeXlsx()
 	{
@@ -303,7 +300,7 @@ public class XlsxReaderBenchmarks
 		}
 	}
 
-	[Benchmark]
+	//[Benchmark]
 	public void OpenXmlXlsx()
 	{
 		using SpreadsheetDocument doc = SpreadsheetDocument.Open(file, false);
@@ -322,7 +319,7 @@ public class XlsxReaderBenchmarks
 		foreach (var row in rows)
 		{
 			foreach (var cell in row.Elements<Cell>())
-			{ 
+			{
 				//it would be faster not to calculate column index from cellreference attribute 
 				var cellvalue = GetCellValue(cell, sharedStrings);
 			}
@@ -339,21 +336,23 @@ public class XlsxReaderBenchmarks
 			{
 				return sharedStrings.ElementAt(index).InnerText;
 			}
-		}else if (cell.DataType?.Value == CellValues.Number)
+		}
+		else if (cell.DataType?.Value == CellValues.Number)
 		{
 			if (cell.CellValue == null)
 				return 0;
 			return double.Parse(cell.CellValue.InnerText);
-		}else if (cell.DataType?.Value == CellValues.Date)
+		}
+		else if (cell.DataType?.Value == CellValues.Date)
 		{
 			if (cell.CellValue == null)
 				return default(DateTime);
-			return DateTime.FromOADate(double.Parse(cell.CellValue.InnerText));	
+			return DateTime.FromOADate(double.Parse(cell.CellValue.InnerText));
 			//simplified conversion from Excel date to .NET date. It is simpler than NPOI's DateUtil.GetJavaDate, for example, 1900 leap year compensation, 1904 windowing
 		}
 		return null;
 	}
-	
+
 	[Benchmark]
 	public void MiniExcelXlsx()
 	{
@@ -379,64 +378,46 @@ public class XlsxReaderBenchmarks
 		}
 	}
 
-
 	[Benchmark]
 	public void PrimeXlsx()
 	{
 		using Excel_PRIME workbook = new();
-		workbook.Open(file);
-		var sheetName = workbook.SheetNames().First();
-		using var worksheet = workbook.GetSheet(sheetName);
-		foreach (var row in worksheet!.GetRowData(1, RowCellGet.PreGet))// skip header row
+		workbook.Open(file, new Options { CellConversionType = CellConversion.ExcelCellType });
+		foreach (string sheetName in workbook.SheetNames())
 		{
-			if (row == null)
-			{   // Because this returns upto the dimension of the sheet Height
-				break;
-			}
-
-			var cells = row.GetAllCells();
-			var region = cells[0].CellValue.ToString();
-			var country = cells[1].CellValue.ToString();
-			var type = cells[2].CellValue.ToString();
-			var channel = cells[3].CellValue.ToString();
-			var priority = cells[4].CellValue.ToString();
-			var orderDate = cells[5].CellValue.AsDateTime;
-			var id = cells[6].CellValue.AsInt32;
-			var shipDate = cells[7].CellValue.AsDateTime;
-			var unitsSold = cells[8].CellValue.AsInt32;
-			// can't use AsDecimal, it returns the wrong precision
-			var unitPrice = (decimal)cells[9].CellValue.AsDouble;
-			var unitCost = (decimal)cells[10].CellValue.AsDouble;
-			var totalRevenue = (decimal)cells[11].CellValue.AsDouble;
-			var totalCost = (decimal)cells[12].CellValue.AsDouble;
-			var totalProfit = (decimal)cells[13].CellValue.AsDouble;
-			row.Dispose();
-		}
-	}
-
-	//[Benchmark]
-	public void PrimeXlsxObj()
-	{
-		// this isn't useful. It fills the values array with the raw strings from the xml
-		// meaning that dates come through as the ole automation double value as a string
-		// just pure trash.
-		using Excel_PRIME workbook = new();
-		workbook.Open(file);
-		var sheetName = workbook.SheetNames().First();
-		using var worksheet = workbook.GetSheet(sheetName);
-		var values = new object?[worksheet.SheetDimensions.Width];
-		foreach (var row in worksheet!.GetRowData(1, RowCellGet.PreGet)) // skip header row
-		{
-			if (row == null)
+			using var worksheet = workbook.GetSheet(sheetName);
+			foreach (var row in worksheet!.GetRowData(1, RowCellGet.PreGet))// skip header row
 			{
-				// Because this returns upto the dimension of the sheet Height
-				break;
-			}
+				if (row == null)
+				{   // Because this returns upto the dimension of the sheet Height
+					break;
+				}
 
-			row.CopyBoxedToArray(values);
-			row.Dispose();
+				ProcessPrimeRow(row);
+				row.Dispose();
+			}
 		}
 	}
+
+	static void ProcessPrimeRow(IRow row)
+	{
+		var cells = row.GetAllCells();
+		var region = cells[0].CellValue.ToString();
+		var country = cells[1].CellValue.ToString();
+		var type = cells[2].CellValue.ToString();
+		var channel = cells[3].CellValue.ToString();
+		var priority = cells[4].CellValue.ToString();
+		var orderDate = cells[5].CellValue.AsDateTime;
+		var id = cells[6].CellValue.AsInt32;
+		var shipDate = cells[7].CellValue.AsDateTime;
+		var unitsSold = cells[8].CellValue.AsInt32;
+		var unitPrice = (decimal)cells[9].CellValue.AsDouble;
+		var unitCost = (decimal)cells[10].CellValue.AsDouble;
+		var totalRevenue = (decimal)cells[11].CellValue.AsDouble;
+		var totalCost = (decimal)cells[12].CellValue.AsDouble;
+		var totalProfit = (decimal)cells[13].CellValue.AsDouble;
+	}
+
 
 	[Benchmark]
 	public void HypeLabXlsx_SheetData()
@@ -517,6 +498,4 @@ public class XlsxReaderBenchmarks
 			var totalProfit = (decimal)(double)sheet.Value;
 		}
 	}
-
-
 }

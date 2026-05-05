@@ -1,4 +1,6 @@
 ﻿using BenchmarkDotNet.Attributes;
+using ExcelPRIME;
+using OfficeOpenXml;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -112,7 +114,7 @@ public class XlsxSumBenchmarks
 		decimal total = 0m;
 
 		using ExcelPRIME.Excel_PRIME workbook = new();
-		workbook.Open(file);
+		workbook.Open(file, new Options { CellConversionType = CellConversion.ExcelCellType });
 		var sheetName = workbook.SheetNames().First();
 		using var worksheet = workbook.GetSheet(sheetName);
 
@@ -145,9 +147,28 @@ public class XlsxSumBenchmarks
 			//var val = row.GetCell(idx).CellValue.AsDecimal;
 			// Using the above line produces the wrong result 
 			var val = (decimal)row.GetCell(idx).CellValue.AsDouble;
-			//Console.WriteLine(val);
 			total += val;
 			row.Dispose();
+		}
+		return total;
+	}
+
+	[Benchmark]
+	public decimal EPPlusXlsx()
+	{
+		var pkg = new ExcelPackage(new FileInfo(file));
+		ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+		var workbook = pkg.Workbook;
+		var worksheet = workbook.Worksheets.First();
+		var r = 0;
+		var dim = worksheet.Dimension;
+		var data = worksheet.Cells;
+		var rows = dim.Rows;
+		// start at 2 to skip header row
+		var total = 0m;
+		for (r = 2; r <= rows; r++)
+		{
+			total += (decimal)(double)data[r, 14].Value;
 		}
 		return total;
 	}
