@@ -300,58 +300,58 @@ public class XlsxReaderBenchmarks
 		}
 	}
 
-	//[Benchmark]
-	public void OpenXmlXlsx()
-	{
-		using SpreadsheetDocument doc = SpreadsheetDocument.Open(file, false);
-		WorkbookPart workbookPart = doc.WorkbookPart;
-		Sheet firstSheet = workbookPart.Workbook.Sheets.GetFirstChild<Sheet>();
+	////[Benchmark]
+	//public void OpenXmlXlsx()
+	//{
+	//	using SpreadsheetDocument doc = SpreadsheetDocument.Open(file, false);
+	//	WorkbookPart workbookPart = doc.WorkbookPart;
+	//	Sheet firstSheet = workbookPart.Workbook.Sheets.GetFirstChild<Sheet>();
 
-		if (firstSheet == null)
-			throw new Exception("No sheets found in Excel file.");
+	//	if (firstSheet == null)
+	//		throw new Exception("No sheets found in Excel file.");
 
-		WorksheetPart worksheetPart = (WorksheetPart)workbookPart.GetPartById(firstSheet.Id);
-		SharedStringTablePart ssp = workbookPart.SharedStringTablePart;
-		var sharedStrings = ssp?.SharedStringTable;
+	//	WorksheetPart worksheetPart = (WorksheetPart)workbookPart.GetPartById(firstSheet.Id);
+	//	SharedStringTablePart ssp = workbookPart.SharedStringTablePart;
+	//	var sharedStrings = ssp?.SharedStringTable;
 
-		var rows = worksheetPart.Worksheet.Descendants<Row>();
+	//	var rows = worksheetPart.Worksheet.Descendants<Row>();
 
-		foreach (var row in rows)
-		{
-			foreach (var cell in row.Elements<Cell>())
-			{
-				//it would be faster not to calculate column index from cellreference attribute 
-				var cellvalue = GetCellValue(cell, sharedStrings);
-			}
-		}
-	}
+	//	foreach (var row in rows)
+	//	{
+	//		foreach (var cell in row.Elements<Cell>())
+	//		{
+	//			//it would be faster not to calculate column index from cellreference attribute 
+	//			var cellvalue = GetCellValue(cell, sharedStrings);
+	//		}
+	//	}
+	//}
 
-	static object GetCellValue(Cell cell, SharedStringTable sharedStrings)
-	{
-		if (cell.DataType?.Value == CellValues.SharedString)
-		{
-			if (cell.CellValue == null)
-				return null;
-			if (int.TryParse(cell.CellValue.InnerText, out int index) && sharedStrings != null)
-			{
-				return sharedStrings.ElementAt(index).InnerText;
-			}
-		}
-		else if (cell.DataType?.Value == CellValues.Number)
-		{
-			if (cell.CellValue == null)
-				return 0;
-			return double.Parse(cell.CellValue.InnerText);
-		}
-		else if (cell.DataType?.Value == CellValues.Date)
-		{
-			if (cell.CellValue == null)
-				return default(DateTime);
-			return DateTime.FromOADate(double.Parse(cell.CellValue.InnerText));
-			//simplified conversion from Excel date to .NET date. It is simpler than NPOI's DateUtil.GetJavaDate, for example, 1900 leap year compensation, 1904 windowing
-		}
-		return null;
-	}
+	//static object GetCellValue(Cell cell, SharedStringTable sharedStrings)
+	//{
+	//	if (cell.DataType?.Value == CellValues.SharedString)
+	//	{
+	//		if (cell.CellValue == null)
+	//			return null;
+	//		if (int.TryParse(cell.CellValue.InnerText, out int index) && sharedStrings != null)
+	//		{
+	//			return sharedStrings.ElementAt(index).InnerText;
+	//		}
+	//	}
+	//	else if (cell.DataType?.Value == CellValues.Number)
+	//	{
+	//		if (cell.CellValue == null)
+	//			return 0;
+	//		return double.Parse(cell.CellValue.InnerText);
+	//	}
+	//	else if (cell.DataType?.Value == CellValues.Date)
+	//	{
+	//		if (cell.CellValue == null)
+	//			return default(DateTime);
+	//		return DateTime.FromOADate(double.Parse(cell.CellValue.InnerText));
+	//		//simplified conversion from Excel date to .NET date. It is simpler than NPOI's DateUtil.GetJavaDate, for example, 1900 leap year compensation, 1904 windowing
+	//	}
+	//	return null;
+	//}
 
 	[Benchmark]
 	public void MiniExcelXlsx()
