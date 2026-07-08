@@ -14,6 +14,7 @@ using System.Data;
 using System.Data.Common;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 namespace Benchmarks;
 
@@ -84,6 +85,119 @@ public class ExcelWriterBenchmarks
 		{
 			xw.Write(reader);
 		}
+	}
+
+	[Benchmark]
+	public async Task ExcelReaderNetXlsx()
+	{
+		using var ns = GetStream();
+		await using var wb = await ExcelReader.Core.Writer.WorkbookWriter.CreateAsync(ns, leaveOpen: true);
+		await WriteExcelReaderNet<ExcelReader.Core.Writer.WorkbookWriter, ExcelReader.Core.Writer.SheetWriter, ExcelReader.Core.Writer.RowWriter>(wb, GetData());
+	}
+
+	[Benchmark]
+	public async Task ExcelReaderNetXls()
+	{
+		using var ns = GetStream();
+		await using var wb = ExcelReader.Core.Writer.XlsWorkbookWriter.Create(ns, leaveOpen: true);
+		await WriteExcelReaderNet<ExcelReader.Core.Writer.XlsWorkbookWriter, ExcelReader.Core.Writer.XlsSheetWriter, ExcelReader.Core.Writer.XlsRowWriter>(wb, GetData());
+	}
+
+	// Generic over the low-level IWorkbookWriter/ISheetWriter/IRowWriter interfaces (the same
+	// pattern ExcelReader's own WorkbookRecordWriter and benchmark suite use), so one method
+	// drives the XLSX and XLS writers with identical field-by-field logic.
+	static async Task WriteExcelReaderNet<TWorkbook, TSheet, TRow>(TWorkbook workbook, DbDataReader reader)
+		where TWorkbook : ExcelReader.Core.Writer.IWorkbookWriter<TSheet>
+		where TSheet : ExcelReader.Core.Writer.ISheetWriter<TRow>
+		where TRow : ExcelReader.Core.Writer.IRowWriter
+	{
+		await workbook.StartAsync();
+		await using (var sheet = workbook.AddSheet("Sheet1"))
+		{
+			await sheet.StartAsync();
+			await using (var header = await sheet.StartRowAsync())
+			{
+				for (int i = 0; i < reader.FieldCount; i++)
+				{
+					header.Write(reader.GetName(i));
+				}
+			}
+			while (reader.Read())
+			{
+				await using var row = await sheet.StartRowAsync();
+				for (int i = 0; i < reader.FieldCount; i++)
+				{
+					WriteExcelReaderNetCell(row, reader, i);
+				}
+			}
+		}
+		await workbook.EndAsync();
+	}
+
+	static void WriteExcelReaderNetCell(ExcelReader.Core.Writer.IRowWriter row, DbDataReader reader, int i)
+	{
+		var t = reader.GetFieldType(i);
+		switch (Type.GetTypeCode(t))
+		{
+			case TypeCode.String:
+				row.Write(reader.GetString(i));
+				break;
+			case TypeCode.Int32:
+				row.Write(reader.GetInt32(i));
+				break;
+			case TypeCode.DateTime:
+				row.Write(reader.GetDateTime(i));
+				break;
+			case TypeCode.Decimal:
+				row.Write(reader.GetDecimal(i));
+				break;
+			default:
+				throw new NotSupportedException();
+		}
+	}
+
+	// XLSB's StartRowAsync allocates a new XlsbRowWriter per row (unlike XLSX/XLS, which reuse one
+	// row-writer instance), so the fair-and-fastest path is XlsbSheetWriter.WriteRow(ReadOnlySpan<XlsbCell>) —
+	// the same batch API ExcelReader's own "Workbook writing" XLSB benchmark uses — which writes
+	// straight from a reused cell buffer with no per-row allocation.
+	[Benchmark]
+	public async Task ExcelReaderNetXlsb()
+	{
+		using var ns = GetStream();
+		await using var wb = await ExcelReader.Core.Writer.XlsbWorkbookWriter.CreateAsync(ns, leaveOpen: true);
+		await wb.StartAsync();
+		var reader = GetData();
+		var sheet = wb.AddSheet("Sheet1");
+		await sheet.StartAsync();
+		var cells = new ExcelReader.Core.Writer.XlsbCell[reader.FieldCount];
+		for (int i = 0; i < reader.FieldCount; i++)
+		{
+			cells[i] = ExcelReader.Core.Writer.XlsbCell.Create(reader.GetName(i));
+		}
+		sheet.WriteRow(cells);
+		while (reader.Read())
+		{
+			for (int i = 0; i < reader.FieldCount; i++)
+			{
+				cells[i] = WriteExcelReaderNetXlsbCell(reader, i);
+			}
+			sheet.WriteRow(cells);
+		}
+		await sheet.EndAsync();
+		await wb.EndAsync();
+	}
+
+	static ExcelReader.Core.Writer.XlsbCell WriteExcelReaderNetXlsbCell(DbDataReader reader, int i)
+	{
+		var t = reader.GetFieldType(i);
+		return Type.GetTypeCode(t) switch
+		{
+			TypeCode.String => ExcelReader.Core.Writer.XlsbCell.Create(reader.GetString(i)),
+			TypeCode.Int32 => ExcelReader.Core.Writer.XlsbCell.Create(reader.GetInt32(i)),
+			TypeCode.DateTime => ExcelReader.Core.Writer.XlsbCell.Create(reader.GetDateTime(i)),
+			TypeCode.Decimal => ExcelReader.Core.Writer.XlsbCell.Create(reader.GetDecimal(i)),
+			_ => throw new NotSupportedException(),
+		};
 	}
 
 	[Benchmark]

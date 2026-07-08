@@ -236,6 +236,40 @@ public class CsvWriterBenchmarks
 	}
 
 	[Benchmark]
+	public void ExcelReaderNet()
+	{
+		using var s = GetStream();
+		using var csv = ExcelReader.Core.Writer.CsvWriter.Create(s);
+		var data = GetData();
+		var count = data.FieldCount;
+		while (data.Read())
+		{
+			using var row = csv.StartRow();
+			for (int i = 0; i < count; i++)
+			{
+				var t = data.GetFieldType(i);
+				switch (Type.GetTypeCode(t))
+				{
+					case TypeCode.String:
+						row.Write(data.GetString(i));
+						break;
+					case TypeCode.Decimal:
+						row.Write(data.GetDecimal(i));
+						break;
+					case TypeCode.Int32:
+						row.Write(data.GetInt32(i));
+						break;
+					case TypeCode.DateTime:
+						row.Write(data.GetDateTime(i));
+						break;
+					default:
+						throw new NotImplementedException();
+				}
+			}
+		}
+	}
+
+	[Benchmark]
 	public void NLightCsv()
 	{
 		using var tw = GetWriter();

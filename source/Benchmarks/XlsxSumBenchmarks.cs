@@ -1,6 +1,8 @@
 ﻿using BenchmarkDotNet.Attributes;
 using ExcelPRIME;
+using ExcelReader.Core.Reader;
 using OfficeOpenXml;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -169,6 +171,21 @@ public class XlsxSumBenchmarks
 		for (r = 2; r <= rows; r++)
 		{
 			total += (decimal)(double)data[r, 14].Value;
+		}
+		return total;
+	}
+
+	[Benchmark]
+	public decimal ExcelReaderNet()
+	{
+		decimal total = 0m;
+		using var reader = Excel.FromFile(file);
+		using var enumerator = reader.GetEnumerator();
+		enumerator.MoveNext(); // skip headers
+		while (enumerator.MoveNext())
+		{
+			var row = enumerator.Current;
+			total += row[13].TryParse<decimal>(CultureInfo.InvariantCulture, out var d) ? d : default;
 		}
 		return total;
 	}

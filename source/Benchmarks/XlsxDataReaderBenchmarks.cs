@@ -212,6 +212,19 @@ public class XlsxReaderBenchmarks
 	}
 
 	[Benchmark]
+	public void ExcelReaderNetXlsx()
+	{
+		using var reader = ExcelReader.Core.Reader.Excel.FromFile(file);
+		using var enumerator = reader.GetEnumerator();
+		enumerator.MoveNext(); // skip header row
+		while (enumerator.MoveNext())
+		{
+			var row = enumerator.Current;
+			row.ProcessSalesRecordExcelReader(reader.IsDate1904);
+		}
+	}
+
+	[Benchmark]
 	public void NpoiXlsx()
 	{
 		using var wb = new NPOI.XSSF.UserModel.XSSFWorkbook(file, true);

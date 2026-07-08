@@ -1,8 +1,10 @@
 ﻿using Dapper;
+using ExcelReader.Core.ValueObjects;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -262,6 +264,24 @@ static class DataExtensions
 		var totalRevenue = (decimal)row[11].DoubleValue;
 		var totalCost = (decimal)row[12].DoubleValue;
 		var totalProfit = (decimal)row[13].DoubleValue;
+	}
+
+	public static void ProcessSalesRecordExcelReader(this Row row, bool isDate1904 = false)
+	{
+		var region = row[0].GetString();
+		var country = row[1].GetString();
+		var type = row[2].GetString();
+		var channel = row[3].GetString();
+		var priority = row[4].GetString();
+		row[5].TryGetDateTime(isDate1904, out var orderDate);
+		row[6].TryParse<int>(CultureInfo.InvariantCulture, out var id);
+		row[7].TryGetDateTime(isDate1904, out var shipDate);
+		row[8].TryParse<int>(CultureInfo.InvariantCulture, out var unitsSold);
+		row[9].TryParse<decimal>(CultureInfo.InvariantCulture, out var unitPrice);
+		row[10].TryParse<decimal>(CultureInfo.InvariantCulture, out var unitCost);
+		row[11].TryParse<decimal>(CultureInfo.InvariantCulture, out var totalRevenue);
+		row[12].TryParse<decimal>(CultureInfo.InvariantCulture, out var totalCost);
+		row[13].TryParse<decimal>(CultureInfo.InvariantCulture, out var totalProfit);
 	}
 
 	public static void ProcessSalesDataNpoi(this NPOI.SS.UserModel.IWorkbook wb)

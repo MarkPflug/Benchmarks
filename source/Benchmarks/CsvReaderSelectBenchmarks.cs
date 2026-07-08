@@ -1,7 +1,8 @@
 ﻿using BenchmarkDotNet.Attributes;
-using Cursively;
+using ExcelReader.Core.Reader;
 using Sylvan.Data.Csv;
 using System;
+using System.Globalization;
 using static fastCSV;
 
 namespace Benchmarks;
@@ -86,6 +87,23 @@ public class CsvReaderSelectBenchmarks
 			var orderDate = dr.GetDateTime(5);
 			var id = dr.GetInt32(6);
 			var profit = dr.GetDecimal(13);
+		}
+	}
+
+	[Benchmark]
+	public void ExcelReaderNetSelect()
+	{
+		var stream = TestData.GetUtf8Stream();
+		using var reader = Excel.FromCsv(stream, true);
+		using var enumerator = reader.GetEnumerator();
+		enumerator.MoveNext(); // skip headers
+		while (enumerator.MoveNext())
+		{
+			var row = enumerator.Current;
+			var type = row[2].ToString();
+			var orderDate = row[5].TryGetDateTime(out var dt) ? dt : default;
+			var id = row[6].TryParse<int>(CultureInfo.InvariantCulture, out var i) ? i : default;
+			var profit = row[13].TryParse<decimal>(CultureInfo.InvariantCulture, out var p) ? p : default;
 		}
 	}
 }
