@@ -27,7 +27,7 @@
 		<PackageReference Include="Excel-PRIME" Version="5.2606.20" />
 
 		<PackageReference Include="ExcelMapper" Version="6.0.641" />
-		<PackageReference Include="ExcelReader.NET" Version="1.2.3" />
+		<PackageReference Include="ExcelReader.NET" Version="1.2.5" />
 		<PackageReference Include="FastCsvParser" Version="1.1.1" />
 		<PackageReference Include="FlameCsv" Version="0.3.1" />
 		<PackageReference Include="FlatFiles" Version="5.0.4" />
