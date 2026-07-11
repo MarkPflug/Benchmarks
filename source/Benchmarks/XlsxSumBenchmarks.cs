@@ -181,11 +181,25 @@ public class XlsxSumBenchmarks
 		decimal total = 0m;
 		using var reader = Excel.FromFile(file);
 		using var enumerator = reader.GetEnumerator();
-		enumerator.MoveNext(); // skip headers
+		enumerator.MoveNext(); // header row
+		var header = enumerator.Current;
+		int idx = 0;
+		for (; idx < header.ColumnCount; idx++)
+		{
+			if (header[idx].GetString() == ColumnName)
+			{
+				break;
+			}
+		}
+		if (idx >= header.ColumnCount)
+		{
+			// couldn't find the column
+			throw new System.IndexOutOfRangeException();
+		}
 		while (enumerator.MoveNext())
 		{
 			var row = enumerator.Current;
-			total += row[13].TryParse<decimal>(CultureInfo.InvariantCulture, out var d) ? d : default;
+			total += row[idx].TryParse<decimal>(CultureInfo.InvariantCulture, out var d) ? d : default;
 		}
 		return total;
 	}
