@@ -1,5 +1,6 @@
 ﻿using BenchmarkDotNet.Attributes;
 using Cursively;
+using ExcelReader.Core.Reader;
 using Microsoft.VisualBasic.FileIO;
 using nietras.SeparatedValues;
 using RecordParser.Extensions;
@@ -409,6 +410,23 @@ public class CsvReaderBenchmarks
 			for (int i = 0; i < r.FieldCount; i++)
 			{
 				var str = r.GetString(i);
+			}
+		}
+	}
+
+	[Benchmark]
+	public void ExcelReaderNet()
+	{
+		var stream = TestData.GetUtf8Stream();
+		using var reader = Excel.FromCsv(stream, true);
+		using var enumerator = reader.GetEnumerator();
+		enumerator.MoveNext();
+		while (enumerator.MoveNext())
+		{
+			var row = enumerator.Current;
+			foreach(var cell in row.Cells)
+			{
+				var str = cell.Value.ToString();
 			}
 		}
 	}

@@ -51,6 +51,19 @@ public class XlsbReaderBenchmarks
 
 
 	[Benchmark]
+	public void ExcelReaderNetXlsb()
+	{
+		using var reader = ExcelReader.Core.Reader.Excel.FromXlsbFile(file);
+		using var enumerator = reader.GetEnumerator();
+		enumerator.MoveNext(); // skip header row
+		while (enumerator.MoveNext())
+		{
+			var row = enumerator.Current;
+			row.ProcessSalesRecordExcelReader(reader.IsDate1904);
+		}
+	}
+
+	[Benchmark]
 	public void AsposeXlsb()
 	{
 		var wb = new Aspose.Cells.Workbook(file);

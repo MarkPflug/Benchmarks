@@ -2,6 +2,8 @@
 using Cesil;
 using CsvHelper.Configuration;
 using Dapper;
+using ExcelReader.Core.Parser;
+using ExcelReader.Core.Reader;
 using nietras.SeparatedValues;
 using RecordParser.Builders.Reader;
 using RecordParser.Extensions;
@@ -303,6 +305,44 @@ public class CsvDataBinderBenchmarks
 				TotalRevenue = r.GetDecimal(11),
 				TotalCost = r.GetDecimal(12),
 				TotalProfit = r.GetDecimal(13)
+			};
+		}
+	}
+
+	[Benchmark]
+	public void ExcelReaderNetAuto()
+	{
+		var stream = TestData.GetUtf8Stream();
+		using var reader = Excel.FromCsv(stream, true);
+		ExcelParser<SalesRecord> parser = new();
+		foreach (var _ in parser.Parse(reader))
+		{
+		}
+	}
+
+	[Benchmark]
+	public void ExcelReaderNetManual()
+	{
+		var stream = TestData.GetUtf8Stream();
+		using var reader = Excel.FromCsv(stream, true);
+		foreach(var row in reader)
+		{
+			var rec = new SalesRecord
+			{
+				Region = row[0].ToString(),
+				Country = row[1].ToString(),
+				ItemType = row[2].ToString(),
+				SalesChannel = row[3].ToString(),
+				OrderPriority = row[4].ToString(),
+				OrderDate = row[5].TryGetDateTime(out var dt) ? dt : default,
+				OrderId = row[6].TryParse<int>(CultureInfo.InvariantCulture, out var id) ? id : default,
+				ShipDate = row[7].TryGetDateTime(out var shipDate) ? shipDate : default,
+				UnitsSold = row[8].TryParse<int>(CultureInfo.InvariantCulture, out var units) ? units : default,
+				UnitPrice = row[9].TryParse<decimal>(CultureInfo.InvariantCulture, out var price) ? price : default,
+				UnitCost = row[10].TryParse<decimal>(CultureInfo.InvariantCulture, out var cost) ? cost : default,
+				TotalRevenue = row[11].TryParse<decimal>(CultureInfo.InvariantCulture, out var revenue) ? revenue : default,
+				TotalCost = row[12].TryParse<decimal>(CultureInfo.InvariantCulture, out var totalCost) ? totalCost : default,
+				TotalProfit = row[13].TryParse<decimal>(CultureInfo.InvariantCulture, out var totalProfit) ? totalProfit : default
 			};
 		}
 	}

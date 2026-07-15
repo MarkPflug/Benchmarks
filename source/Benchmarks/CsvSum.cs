@@ -1,7 +1,9 @@
 ﻿using BenchmarkDotNet.Attributes;
+using ExcelReader.Core.Reader;
 using nietras.SeparatedValues;
 using RecordParser.Builders.Reader;
 using RecordParser.Extensions;
+using System;
 using System.Data;
 using System.Globalization;
 
@@ -216,6 +218,32 @@ public class CsvSum
 		while (data.ReadNext())
 		{
 			a += data.GetDecimal(index);
+		}
+		return a;
+	}
+
+	[Benchmark]
+	public decimal ExcelReaderNet()
+	{
+		using var stream = TestData.GetUtf8Stream();
+		using var reader = Excel.FromCsv(stream);
+		using var enumerator = reader.GetEnumerator();
+		decimal a = 0m;
+		int index = -1;
+		enumerator.MoveNext();
+		foreach (var cell in enumerator.Current.Cells)
+		{
+			if (cell.Value.Value.SequenceEqual("Total Profit"u8))
+			{
+				index = cell.ColumnIndex;
+				break;
+			}
+		}
+		while (enumerator.MoveNext())
+		{
+			var row = enumerator.Current;
+			var col = row[index];
+			a += col.TryParse<decimal>(CultureInfo.InvariantCulture, out var dec) ? dec : 0m;
 		}
 		return a;
 	}
