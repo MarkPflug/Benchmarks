@@ -28,6 +28,32 @@ public class XlsxReaderBenchmarks
 		Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 	}
 
+	// Measures a baseline of decompressing just the sheet1.xml as bytes
+	[Benchmark]
+	public void BaselineZip()
+	{
+		var stream = File.OpenRead(file);
+		var za = new ZipArchive(stream, ZipArchiveMode.Read);
+		var e = za.GetEntry("xl/worksheets/sheet1.xml");
+		using var s = e.Open();
+		var buf = new byte[0x10000];
+		while (s.Read(buf, 0, buf.Length) != 0) ;
+	}
+
+	// Measures a baseline of decompressing just the sheet1.xml as utf8 text
+	[Benchmark]
+	public void BaselineText()
+	{
+		var stream = File.OpenRead(file);
+		var za = new ZipArchive(stream, ZipArchiveMode.Read);
+		var e = za.GetEntry("xl/worksheets/sheet1.xml");
+		using var s = e.Open();
+		using var tr = new StreamReader(s, Encoding.UTF8);
+		var buf = new char[0x8000];
+		while (tr.Read(buf, 0, buf.Length) != 0) ;
+	}
+
+
 	// Measures a baseline of decompressing and reading xml.
 	// Nothing can go faster than this without implementing
 	// a custom decompressor or xml reader.
@@ -37,7 +63,7 @@ public class XlsxReaderBenchmarks
 		var stream = File.OpenRead(file);
 		var za = new ZipArchive(stream, ZipArchiveMode.Read);
 		var e = za.GetEntry("xl/worksheets/sheet1.xml");
-		var s = e.Open();
+		using var s = e.Open();
 		using var x = XmlReader.Create(s);
 		while (x.Read()) ;
 	}
